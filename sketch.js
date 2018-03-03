@@ -8,7 +8,7 @@ let a = 25;
 let img;
 
 function preload() {
-  img = loadImage("image/sa.png");
+  img = loadImage("images/sa.png");
 }
 
 function setup() {
@@ -22,7 +22,7 @@ function draw() {
   background(51);
   population.run();
   textSize(32);
-  text("Büyük Usta Güneşer,Tayfun ve Alperen'e selam olsun",0,50);
+  text("Büyük Usta Güneşer,Tayfun ve Alperen'e selam olsun",0,40);
   if (count == lifespan) {
     population.evaluate();
     population.selection();
