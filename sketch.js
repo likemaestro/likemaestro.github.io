@@ -16,7 +16,8 @@ function setup() {
 function draw() {
   background(51);
   population.run();
-  text("Büyük Usta Güneşer,Tayfun ve Alperen'e selam olsun");
+  textSize(32);
+  text("Büyük Usta Güneşer,Tayfun ve Alperen'e selam olsun",0,0);
   if (count == lifespan) {
     population.evaluate();
     population.selection();
