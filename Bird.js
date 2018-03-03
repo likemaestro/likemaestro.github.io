@@ -55,9 +55,7 @@ class Bird {
   show() {
     push();
     translate(this.pos.x, this.pos.y);
-    fill(255, 50, 150);
-    stroke(255);
-    ellipse(0, 0, 2 * a, 2 * a);
+    image(img,0,0,img.height/a);
     pop();
   }
 }

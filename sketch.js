@@ -5,6 +5,11 @@ let pipes = [];
 let maxFit = 0;
 let count = 0;
 let a = 25;
+let img;
+
+function preload() {
+  img = loadImage("image/sa.png");
+}
 
 function setup() {
   createCanvas(windowWidth, windowHeight);
