@@ -55,7 +55,7 @@ class Bird {
   show() {
     push();
     translate(this.pos.x, this.pos.y);
-    image(img,0,0,img.width*a/img.height,a);
+    image(img,0,0,img.width*2*a/img.height,2*a);
     pop();
   }
 }
