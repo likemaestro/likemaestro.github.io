@@ -9,8 +9,8 @@ function setup() {
 }
 
 function draw() {
-  //while (y < height) {
-  if (y < height) {
+  while (y < height) {
+  //if (y < height) {
     let c = map(y, 0, height, 100, 255);
     stroke(180, 0, c);
     if (random(1) < 0.5) {
