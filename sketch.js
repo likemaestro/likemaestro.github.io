@@ -3,14 +3,14 @@ let x = 0;
 let y = 0;
 
 function setup() {
-  createCanvas(600, 600);
+  createCanvas(windowWidth,windowHeight);
   background(51);
   strokeWeight(1.8);
 }
 
 function draw() {
-  while (y < height) {
-  //if (y < height) {
+  //while (y < height) {
+  if (y < height) {
     let c = map(y, 0, height, 100, 255);
     stroke(180, 0, c);
     if (random(1) < 0.5) {
