@@ -57,6 +57,7 @@ function addReinf() {
   section.add(new Reinforcement(float(n.value()), float(D.value()), float(fyk.value()), float(y.value())));
   section.PMDiag();
   section.drawSection(width / 2, 350);
+  print(section.summary);
 }
 
 function draw() {
