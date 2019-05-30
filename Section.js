@@ -78,7 +78,7 @@ class Section {
       this.n.push(N);
 
       this.summary = { "c(mm)": c, "M(kNm)": nf(M, 1, 5), "N(kN)": nf(N, 1, 5), "e(mm)": nf(M / N * 1000, 1, 5) };
-      print(summary);
+      print(this.summary);
     }
     this.drawDiag();
   }
