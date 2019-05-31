@@ -1,65 +1,49 @@
 
 let section;
 
-let h, b, fck, cover;
-let n, D, fyk, y;
-let button1, button2;
-let greeting;
-
-let cx = 480, cy = 10;
+let h, b, fck, cover, n, D, fyk, y;
+let button1, button2, button3;
+let checkM, checkN;
 
 function setup() {
-  createCanvas(700, 700);
+  createCanvas(windowWidth, windowHeight);
   background(0);
 
-  b = createInput().size(80).attribute('placeholder', 'b');
-  h = createInput().size(80).attribute('placeholder', 'h');
-  fck = createInput().size(80).attribute('placeholder', 'fck');
-  cover = createInput().size(80).attribute('placeholder', 'cover');
+  //----------------------------------------------------------------------------------------//
+  let size = 80;
+  let cx = 1280, cy = 20;
 
-  b.position(cx, cy);
-  h.position(cx, cy + b.height);
-  fck.position(cx, cy + 2 * b.height);
-  cover.position(cx, cy + 3 * b.height);
+  b = createInput().size(size).attribute('placeholder', 'b (mm)').position(cx, cy);
+  h = createInput().size(size).attribute('placeholder', 'h (mm)').position(cx, cy + 1.1 * b.height);
+  fck = createInput().size(size).attribute('placeholder', 'fck (MPa)').position(cx, cy + 2 * 1.1 * b.height);
+  cover = createInput().size(size).attribute('placeholder', 'cover (mm)').position(cx, cy + 3 * 1.1 * b.height);
 
-  n = createInput().size(100).attribute('placeholder', 'n');
-  D = createInput().size(100).attribute('placeholder', 'D');
-  fyk = createInput().size(100).attribute('placeholder', 'fyk');
-  y = createInput().size(100).attribute('placeholder', 'y');
+  n = createInput().size(size + 40).attribute('placeholder', 'n').position(cx + 1.1 * b.width, cy);
+  D = createInput().size(size + 40).attribute('placeholder', 'D (mm)').position(cx + 1.1 * b.width, cy + 1.1 * b.height);
+  fyk = createInput().size(size + 40).attribute('placeholder', 'fyk (MPa)').position(cx + 1.1 * b.width, cy + 2 * 1.1 * b.height);
+  y = createInput().size(size + 40).attribute('placeholder', 'y (mm)').position(cx + 1.1 * b.width, cy + 3 * 1.1 * b.height);
 
-  n.position(n.width + cx, cy);
-  D.position(n.width + cx, cy + b.height);
-  fyk.position(n.width + cx, cy + 2 * b.height);
-  y.position(n.width + cx, cy + 3 * b.height);
+  checkM = createInput().size(size).attribute('placeholder', 'M (kNm)').position(cx - 2.2 * b.width, cy);
+  checkN = createInput().size(size).attribute('placeholder', 'N (kN)').position(cx - 1.1 * b.width, cy);
 
-
-  button1 = createButton('Create Section').size(80);
-  button1.position(h.x + 2, cy + 4 * b.height + 2);
-
-  button2 = createButton('Add Reinforcement').size(100);
-  button2.position(n.x + 2, cy + 4 * b.height + 2);
-
+  button1 = createButton('Create Section').size(size).position(h.x, cy + 4.7 * b.height);
+  button2 = createButton('Add Reinforcement').size(size + 40).position(n.x, cy + 4.7 * b.height);
+  button3 = createButton('Check M/N').size(2 * size + 8).position(cx - 2.2 * b.width, cy + 1.4 * b.height);
+  //----------------------------------------------------------------------------------------//
 
   button1.mousePressed(createSection);
   button2.mousePressed(addReinf);
-
+  button3.mousePressed(check);
 }
 
 function createSection() {
-  background(0);
   section = new Section(float(b.value()), float(h.value()), float(fck.value()), float(cover.value()));
   section.PMDiag();
-  section.drawSection(width / 2, 350);
-
 }
 function addReinf() {
-  background(0);
   section.add(new Reinforcement(float(n.value()), float(D.value()), float(fyk.value()), float(y.value())));
   section.PMDiag();
-  section.drawSection(width / 2, 350);
 }
-
-function draw() {
-
-
+function check() {
+  section.PM.checkMN();
 }
