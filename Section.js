@@ -49,7 +49,7 @@ class Section {
     this.m = []
     this.n = [];
 
-    for (let c = 0; c <= 3 * this.h; c += 0.5) {
+    for (let c = 4 * this.h; c >= 0; c -= 0.5) {
 
       let a = this.k1 * c;
       if (a > this.h) {
@@ -69,15 +69,31 @@ class Section {
         let Fs = fs * reinf.As;
         N += Fs / 1000;
         M += Fs * (this.PC - reinf.y) / pow(10, 6);
-        if (round(N) == 0) {
-          print(M);
-        }
       }
+
       this.m.push(M);
       this.n.push(N);
     }
     this.PM = new Graph(this.m, this.n);
+    this.pure();
   }
+
+  pure() {
+    for (let i = 0; i < this.m.length; i++) {
+      let x = this.PM.mapX(this.m[i]);
+      let y = this.PM.mapY(this.n[i]);
+      if (this.m[i] == 0) {
+        text(" M: " + this.m[i] + " , " + "N: " + this.n[i], x, y);
+        ellipse(x, y, 5, 5);
+      }
+      if (Math.sign(this.n[i]) != Math.sign(this.n[i + 1])) {
+        let m0 = (this.m[i] * this.n[i + 1] + this.m[i + 1] * this.n[i]) / (this.n[i] + this.n[i + 1]);
+        text(" M: " + nf(m0, 1, 3) + " , " + "N: " + 0, this.PM.mapX(m0), this.PM.mapY(0));
+        ellipse(this.PM.mapX(m0), this.PM.mapY(0), 5, 5);
+      }
+    }
+  }
+
 
   add(rebar) {
     this.reinfs.push(rebar);

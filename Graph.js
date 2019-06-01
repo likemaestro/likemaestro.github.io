@@ -19,6 +19,16 @@ class Graph {
         }
         endShape();
 
+        //Draw Grid
+        let scl = 120;
+        stroke(85);
+        noFill();
+        for (let i = 0; i < width / scl; i++) {
+            for (let j = 0; j < height / scl; j++) {
+                rect(i * scl, j * scl, scl, scl);
+            }
+        }
+
         //Draw Axes.
         stroke(255, 0, 255);
         line(0, this.mapY(0), width, this.mapY(0));//x axis
@@ -54,8 +64,8 @@ class Graph {
     drawSection() {
 
         push();
-        translate(1170, 400);
-        scale(section.b/300);
+        translate(1350, 400);
+        scale(section.b / section.h);
         noFill();
         strokeWeight(2);
         stroke(255, 150, 0);
@@ -90,7 +100,7 @@ class Graph {
         let x = this.mapX(float(checkM.value()));
         let y = this.mapY(float(checkN.value()));
         fill(255);
-        text(" M: "+checkM.value() +" , "+"N: "+checkN.value(), x, y);
+        text(" M: " + checkM.value() + " , " + "N: " + checkN.value(), x, y);
         ellipse(x, y, 5, 5);
     }
 
