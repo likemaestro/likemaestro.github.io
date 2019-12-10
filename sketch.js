@@ -5,8 +5,16 @@ let h, b, fck, cover, n, D, fyk, y;
 let button1, button2, button3;
 let checkM, checkN;
 
+window.onresize = function() {
+  var w = window.innerWidth;
+  var h = window.innerHeight;  
+  canvas.size(w,h);
+  width = w;
+  height = h;
+};
+
 function setup() {
-  createCanvas(windowWidth, windowHeight);
+  createCanvas(window.innerWidth, window.innerHeight);
   background(0);
 
   //----------------------------------------------------------------------------------------//
