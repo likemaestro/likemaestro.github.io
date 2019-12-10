@@ -19,7 +19,7 @@ function setup() {
 
   //----------------------------------------------------------------------------------------//
   let size = 80;
-  let cx = 1280, cy = 20;
+  let cx = 1280/1980*window.innerWidth, cy = 20/1080*window.innerHeight;
 
   b = createInput().size(size).attribute('placeholder', 'b (mm)').position(cx, cy);
   h = createInput().size(size).attribute('placeholder', 'h (mm)').position(cx, cy + 1.1 * b.height);
