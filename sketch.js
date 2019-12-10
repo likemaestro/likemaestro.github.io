@@ -14,12 +14,12 @@ window.onresize = function() {
 };
 
 function setup() {
-  createCanvas(window.innerWidth, window.innerHeight);
+  createCanvas(windowWidth, windowHeight);
   background(0);
 
   //----------------------------------------------------------------------------------------//
   let size = 80;
-  let cx = 1280/1980*window.innerWidth, cy = 20/1080*window.innerHeight;
+  let cx = 1280/1980*windowWidth, cy = 20/1080*windowHeight;
 
   b = createInput().size(size).attribute('placeholder', 'b (mm)').position(cx, cy);
   h = createInput().size(size).attribute('placeholder', 'h (mm)').position(cx, cy + 1.1 * b.height);
