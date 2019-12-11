@@ -24,7 +24,8 @@ class Section {
     }
 
     this.e_min = (15 + 0.03 * this.h);
-    this.N_limit = 0.4 * this.Area * this.fck / 1000;
+    this.N_limit = 0.4 * this.Area * this.fck / 1000; //TBDY-2018
+    //this.N_limit = 0.9 * this.Area * this.fcd / 1000; //TS-500
 
     this.reinfs = [];
     this.m = []
@@ -49,7 +50,7 @@ class Section {
     this.m = []
     this.n = [];
 
-    for (let c = 4 * this.h; c >= 0; c -= 0.5) {
+    for (let c = 4 * this.h; c >= 0; c -= this.h / 50) {
 
       let a = this.k1 * c;
       if (a > this.h) {
@@ -74,6 +75,10 @@ class Section {
       this.m.push(M);
       this.n.push(N);
     }
+
+  }
+
+  graph() {
     this.PM = new Graph(this.m, this.n);
     this.pure();
   }
@@ -82,22 +87,33 @@ class Section {
     for (let i = 0; i < this.m.length; i++) {
       let x = this.PM.mapX(this.m[i]);
       let y = this.PM.mapY(this.n[i]);
-      if (this.m[i] == 0) {
-        text(" M: " + this.m[i] + " , " + "N: " + this.n[i], x, y);
+      if (floor(this.m[i]) == 0) {
+        text(" M: " + nf(this.m[i], 1, 3) + " , " + "N: " + nf(this.n[i], 1, 3), x, y);
         ellipse(x, y, 5, 5);
       }
       if (Math.sign(this.n[i]) != Math.sign(this.n[i + 1])) {
-        let m0 = (this.m[i] * this.n[i + 1] + this.m[i + 1] * this.n[i]) / (this.n[i] + this.n[i + 1]);
+        var m0 = (this.m[i + 1] - this.m[i]) / (this.n[i + 1] - this.n[i]) * (0 - this.n[i]) + this.m[i];
         text(" M: " + nf(m0, 1, 3) + " , " + "N: " + 0, this.PM.mapX(m0), this.PM.mapY(0));
         ellipse(this.PM.mapX(m0), this.PM.mapY(0), 5, 5);
       }
     }
+
+    let maxM = max(this.m);
+    let Np = this.n[this.m.indexOf(maxM)];
+    let x = this.PM.mapX(maxM);
+    let y = this.PM.mapY(Np);
+    text(" M: " + nf(maxM, 1, 3) + " , " + "N: " + nf(float(Np), 1, 3), x, y);
+    ellipse(x, y, 5, 5);
+
   }
 
 
   add(rebar) {
-    this.reinfs.push(rebar);
+    if (this.reinfs.find(x => x.y === rebar.y)) {
+      alert("Aynı konuma birden fazla donatı konulamaz.");
+    } else {
+      this.reinfs.push(rebar);
+    }
   }
-
 
 }
