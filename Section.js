@@ -50,7 +50,7 @@ class Section {
     this.m = []
     this.n = [];
 
-    for (let c = 4 * this.h; c >= 0; c -= this.h / 50) {
+    for (let c = 4 * this.h; c >= 0; c -= this.h / 25) {
 
       let a = this.k1 * c;
       if (a > this.h) {
