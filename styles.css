@@ -26,21 +26,6 @@ body {
   transition: all 0.3s ease; /* Smooth transitions for layout changes */
 }
 
-/* Fullscreen toggle button */
-.fullscreen-toggle {
-  position: absolute;
-  top: 20px;
-  right: 20px;
-  background: #ffffff;
-  border: 1px solid #e0e0e0;
-  padding: 8px;
-  border-radius: 6px;
-  cursor: pointer;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  display: none; /* Hidden by default, shown via JS/media query on larger screens */
-  z-index: 10;
-}
-
 .controls-section,
 .output-section {
   flex: 1;
@@ -57,20 +42,6 @@ body {
 .output-section {
   order: 2; /* Output second in vertical layout */
   align-items: center;
-}
-
-/* When output fullscreen is active */
-.output-fullscreen .controls-section {
-  display: none;
-}
-
-.output-fullscreen .output-section {
-  flex: 1;
-  max-width: 100%;
-}
-
-.output-fullscreen #gaugeOutput {
-  max-width: 500px; /* Larger gauge when in fullscreen */
 }
 
 .controls {
@@ -239,11 +210,6 @@ input[type="range"] {
   .container {
     flex-direction: row;
   }
-
-  /* Show only fullscreen toggle on screens wider than 900px */
-  .fullscreen-toggle {
-    display: block;
-  }
 }
 
 @media (max-width: 900px) {
@@ -257,11 +223,6 @@ input[type="range"] {
   .controls-section,
   .output-section {
     max-width: 100% !important;
-  }
-
-  /* Ensure toggle buttons are hidden on smaller screens */
-  .fullscreen-toggle {
-    display: none !important;
   }
 }
 
