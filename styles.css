@@ -2,14 +2,14 @@ body {
   font-family: "Arial", sans-serif;
   margin: 0;
   padding: 20px;
-  min-height: 100vh;
+  min-height: 100vh; /* Ensure body takes full viewport height */
   background-color: #f0f2f5;
   overflow-x: hidden;
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
+  align-items: center; /* Center children (container) horizontally */
+  justify-content: center; /* Center children (container) vertically */
 }
 
 .container {
@@ -192,12 +192,10 @@ input[type="range"] {
 
 /* Footer styling */
 .footer {
-  position: fixed;
-  bottom: 0;
-  left: 0;
   width: 100%;
   text-align: center;
-  padding: 8px 0;
+  padding: 15px 0; /* Add some padding */
+  margin-top: 20px; /* Add space above the footer */
   font-size: 12px;
   color: #777;
   background-color: transparent;
@@ -228,9 +226,8 @@ input[type="range"] {
 
 @media (max-width: 768px) {
   body {
-    align-items: flex-start;
     padding: 15px;
-    overflow-y: auto;
+    overflow-y: auto; /* Allow scrolling if content overflows */
   }
 
   .container {
@@ -243,7 +240,7 @@ input[type="range"] {
   }
 
   .footer {
-    position: relative;
+    position: relative; /* Keep relative positioning */
     margin-top: 20px;
     padding-top: 15px;
   }
