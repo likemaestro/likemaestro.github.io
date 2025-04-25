@@ -1,0 +1,194 @@
+body {
+  font-family: "Arial", sans-serif; /* Use only Arial font */
+  margin: 0;
+  padding: 0; /* Remove padding */
+  display: flex;
+  justify-content: center; /* Center horizontally */
+  align-items: center; /* Center vertically */
+  height: 100vh; /* Full viewport height */
+  background-color: #f0f2f5; /* Lighter background */
+  overflow: hidden; /* Remove scrollbar */
+}
+
+.container {
+  display: flex; /* Enable flexbox for side-by-side layout */
+  gap: 30px; /* Increase gap between sections */
+  background: #ffffff; /* White background for the card */
+  padding: 30px; /* Increase padding */
+  border-radius: 12px; /* More rounded corners */
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1); /* Softer shadow */
+  max-width: 900px; /* Adjust max width if needed */
+  width: 100%;
+}
+
+.controls-section,
+.output-section {
+  flex: 1; /* Make sections share space equally */
+  display: flex;
+  flex-direction: column;
+  gap: 20px; /* Increase gap within sections */
+}
+
+.controls {
+  display: flex;
+  flex-direction: column;
+  gap: 18px; /* Space between controls */
+}
+
+.controls input {
+  width: 100%;
+}
+
+.output-section {
+  align-items: center; /* Center preview and button */
+}
+
+h1 {
+  font-size: 22px; /* Slightly larger heading */
+  margin-bottom: 15px;
+  color: #333; /* Darker heading color */
+  border-bottom: 1px solid #eee; /* Subtle separator */
+  padding-bottom: 10px;
+}
+
+form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+label {
+  font-size: 14px;
+  font-weight: 600; /* Bolder labels */
+  color: #555; /* Slightly lighter label color */
+  margin-bottom: -10px; /* Reduce space below label */
+}
+
+input[type="number"],
+input[type="text"],
+textarea,
+select {
+  padding: 12px; /* More padding */
+  font-size: 15px;
+  border: 1px solid #d9d9d9; /* Lighter border */
+  border-radius: 6px; /* Softer radius */
+  transition: border-color 0.3s, box-shadow 0.3s; /* Smooth transitions */
+  width: 100%;
+  box-sizing: border-box; /* Include padding and border in width */
+}
+
+input[type="number"]:focus,
+input[type="text"]:focus,
+textarea:focus,
+select:focus {
+  border-color: #007bff; /* Highlight focus */
+  box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.2); /* Focus ring */
+  outline: none;
+}
+
+textarea {
+  resize: none; /* Prevent resizing */
+  min-height: 60px;
+  font-family: "Arial", sans-serif; /* Ensure textarea uses Arial */
+  height: auto; /* Allow content to determine height */
+}
+
+button {
+  padding: 12px 20px; /* Larger button padding */
+  font-size: 15px;
+  font-weight: 600;
+  border: none; /* Remove default border */
+  border-radius: 6px;
+  background-color: #007bff;
+  color: white;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+button:hover {
+  background-color: #0056b3;
+}
+
+#gaugeOutput {
+  width: 100%; /* Make gauge container responsive */
+  max-width: 350px; /* Limit max gauge size if needed */
+  margin-bottom: 20px; /* More space below gauge */
+}
+
+#gaugeOutput svg {
+  width: 100%; /* Make SVG fill its container */
+  height: auto; /* Maintain aspect ratio */
+}
+
+#downloadButton {
+  padding: 8px 16px;
+}
+
+/* Pickr styling adjustments */
+.pcr-button {
+  width: 100% !important;
+  height: 45px !important; /* Match input height */
+  border-radius: 6px !important;
+  border: 1px solid #d9d9d9 !important;
+  box-shadow: none !important;
+}
+
+.pcr-button::before {
+  border-radius: 4px !important; /* Adjust inner color swatch */
+}
+
+#lowColorPicker,
+#highColorPicker {
+  /* Remove fixed height/border, Pickr handles it */
+  border: none;
+  height: auto;
+  width: auto; /* Let Pickr control the button size */
+  cursor: pointer;
+}
+
+.color-pickers {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.color-pickers > div {
+  flex: 1;
+}
+
+input[type="range"] {
+  width: 100%;
+  margin-top: 10px;
+}
+
+/* Checkbox styling */
+.checkbox-container {
+  display: flex;
+  align-items: center;
+  margin-top: 5px;
+}
+
+.checkbox-container input[type="checkbox"] {
+  width: auto;
+  margin-right: 10px;
+  cursor: pointer;
+}
+
+.checkbox-container label {
+  margin-bottom: 0;
+  cursor: pointer;
+}
+
+/* Footer styling */
+.footer {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  text-align: center;
+  padding: 8px 0;
+  font-size: 12px;
+  color: #777;
+  background-color: transparent;
+  font-weight: 400;
+}
