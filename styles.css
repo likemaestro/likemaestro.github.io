@@ -1,32 +1,76 @@
 body {
-  font-family: "Arial", sans-serif; /* Use only Arial font */
+  font-family: "Arial", sans-serif;
   margin: 0;
-  padding: 0; /* Remove padding */
+  padding: 20px;
+  min-height: 100vh;
+  background-color: #f0f2f5;
+  overflow-x: hidden;
+  box-sizing: border-box;
   display: flex;
-  justify-content: center; /* Center horizontally */
-  align-items: center; /* Center vertically */
-  height: 100vh; /* Full viewport height */
-  background-color: #f0f2f5; /* Lighter background */
-  overflow: hidden; /* Remove scrollbar */
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
 }
 
 .container {
-  display: flex; /* Enable flexbox for side-by-side layout */
-  gap: 30px; /* Increase gap between sections */
-  background: #ffffff; /* White background for the card */
-  padding: 30px; /* Increase padding */
-  border-radius: 12px; /* More rounded corners */
-  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1); /* Softer shadow */
-  max-width: 900px; /* Adjust max width if needed */
+  display: flex;
+  /* flex-direction will be set by media queries */
+  gap: 30px;
+  background: #ffffff;
+  padding: 30px;
+  border-radius: 12px;
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+  max-width: 900px;
   width: 100%;
+  box-sizing: border-box;
+  transition: all 0.3s ease; /* Smooth transitions for layout changes */
+}
+
+/* Fullscreen toggle button */
+.fullscreen-toggle {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  background: #ffffff;
+  border: 1px solid #e0e0e0;
+  padding: 8px;
+  border-radius: 6px;
+  cursor: pointer;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  display: none; /* Hidden by default, shown via JS/media query on larger screens */
+  z-index: 10;
 }
 
 .controls-section,
 .output-section {
-  flex: 1; /* Make sections share space equally */
+  flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 20px; /* Increase gap within sections */
+  gap: 20px;
+  transition: all 0.3s ease;
+}
+
+.controls-section {
+  order: 1; /* Controls first in vertical layout */
+}
+
+.output-section {
+  order: 2; /* Output second in vertical layout */
+  align-items: center;
+}
+
+/* When output fullscreen is active */
+.output-fullscreen .controls-section {
+  display: none;
+}
+
+.output-fullscreen .output-section {
+  flex: 1;
+  max-width: 100%;
+}
+
+.output-fullscreen #gaugeOutput {
+  max-width: 500px; /* Larger gauge when in fullscreen */
 }
 
 .controls {
@@ -37,10 +81,6 @@ body {
 
 .controls input {
   width: 100%;
-}
-
-.output-section {
-  align-items: center; /* Center preview and button */
 }
 
 h1 {
@@ -191,4 +231,112 @@ input[type="range"] {
   color: #777;
   background-color: transparent;
   font-weight: 400;
+}
+
+/* Responsive styles */
+@media (min-width: 901px) {
+  /* Default to horizontal layout on large screens */
+  .container {
+    flex-direction: row;
+  }
+
+  /* Show only fullscreen toggle on screens wider than 900px */
+  .fullscreen-toggle {
+    display: block;
+  }
+}
+
+@media (max-width: 900px) {
+  /* Default to vertical layout on small screens */
+  .container {
+    flex-direction: column !important; /* Force vertical */
+    max-width: 95%;
+    padding: 20px;
+  }
+
+  .controls-section,
+  .output-section {
+    max-width: 100% !important;
+  }
+
+  /* Ensure toggle buttons are hidden on smaller screens */
+  .fullscreen-toggle {
+    display: none !important;
+  }
+}
+
+@media (max-width: 768px) {
+  body {
+    align-items: flex-start;
+    padding: 15px;
+    overflow-y: auto;
+  }
+
+  .container {
+    gap: 20px;
+    padding: 20px;
+  }
+
+  h1 {
+    font-size: 20px;
+  }
+
+  .footer {
+    position: relative;
+    margin-top: 20px;
+    padding-top: 15px;
+  }
+}
+
+@media (max-width: 480px) {
+  body {
+    padding: 10px;
+  }
+
+  .container {
+    padding: 15px;
+    gap: 15px;
+  }
+
+  h1 {
+    font-size: 18px;
+    margin-bottom: 10px;
+  }
+
+  label {
+    font-size: 13px;
+  }
+
+  input[type="number"],
+  input[type="text"],
+  textarea,
+  select,
+  button {
+    padding: 10px;
+    font-size: 14px;
+  }
+
+  #gaugeOutput {
+    max-width: 280px;
+  }
+}
+
+/* Handle very small screens */
+@media (max-width: 320px) {
+  .container {
+    padding: 10px;
+  }
+
+  h1 {
+    font-size: 16px;
+  }
+
+  input[type="number"],
+  input[type="text"],
+  textarea,
+  select,
+  button {
+    padding: 8px;
+    font-size: 13px;
+  }
 }

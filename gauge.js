@@ -11,13 +11,18 @@ function createGauge(
   const ns = "http://www.w3.org/2000/svg";
   const container = document.getElementById(outputElementId);
 
+  // Calculate container width to create a responsive gauge
+  const containerWidth = container.clientWidth;
+  const size = Math.min(containerWidth, 300); // Cap at 300px but scale down as needed
+
   // Ensure SVG container exists
   let svg = container.querySelector("svg");
   if (!svg) {
     svg = document.createElementNS(ns, "svg");
-    svg.setAttribute("width", 300);
-    svg.setAttribute("height", 300);
-    svg.setAttribute("viewBox", "0 0 300 300");
+    svg.setAttribute("width", "100%"); // Make width responsive
+    svg.setAttribute("height", "auto"); // Maintain aspect ratio
+    svg.setAttribute("viewBox", "0 0 300 300"); // Keep viewBox constant for scaling
+    svg.setAttribute("preserveAspectRatio", "xMidYMid meet"); // Ensure proper scaling
 
     // Embed font styles in SVG
     const defs = document.createElementNS(ns, "defs");
@@ -37,10 +42,10 @@ function createGauge(
     container.appendChild(svg);
   }
 
-  const size = 300;
-  const cx = size / 2;
-  const cy = size / 2;
-  const radius = (0.85 * size) / 2 - thickness / 2;
+  // Size calculations use viewBox coordinates (300x300)
+  const cx = 150; // Center X
+  const cy = 150; // Center Y
+  const radius = (0.85 * 300) / 2 - thickness / 2;
   const n = 150; // Number of segments
   const theta1 = -60; // Start angle
   const theta2 = 240; // End angle
@@ -133,7 +138,7 @@ function createGauge(
   }
   center.setAttribute("cx", cx);
   center.setAttribute("cy", cy);
-  center.setAttribute("r", radius - thickness / 2 - 0.025 * size);
+  center.setAttribute("r", radius - thickness / 2 - 0.025 * 300);
   center.setAttribute("fill", "white");
   center.setAttribute("stroke", "gray");
 
@@ -147,12 +152,12 @@ function createGauge(
       norm * (1 - 2 * needleStartOffset) * (theta1 - theta2)
   );
 
-  const needleLength = 0.4 * size;
+  const needleLength = 0.4 * 300;
   const dx = needleLength * Math.cos(angle);
   const dy = -needleLength * Math.sin(angle);
 
   // Match Python implementation's needle width calculation
-  const needleWidth = 0.025 * size;
+  const needleWidth = 0.025 * 300;
   const perpAngle = angle + Math.PI / 2;
   // Divide by 2 to match Python's handling of perpendicular offset
   const dxp = (needleWidth / 2) * Math.cos(perpAngle);
@@ -188,7 +193,7 @@ function createGauge(
   }
   pivot.setAttribute("cx", cx);
   pivot.setAttribute("cy", cy);
-  pivot.setAttribute("r", 0.02 * size);
+  pivot.setAttribute("r", 0.02 * 300);
   pivot.setAttribute("fill", "gray");
   pivot.setAttribute("stroke", "black"); // Add black edge
   pivot.setAttribute("stroke-width", "1");
@@ -209,7 +214,7 @@ function createGauge(
   const lineCount = lines.length;
 
   // Adjust vertical positions based on number of title lines
-  const textY = 0.6 * size; // Move title up slightly
+  const textY = 0.6 * 300; // Move title up slightly
   const lineHeight = textY / 15; // Height of each line in pixels
   const unitY = textY + lineCount * lineHeight + 10; // Dynamic spacing based on title length
 
