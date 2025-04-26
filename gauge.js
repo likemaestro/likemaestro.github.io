@@ -157,7 +157,7 @@ function createGauge(
   const dy = -needleLength * Math.sin(angle);
 
   // Match Python implementation's needle width calculation
-  const needleWidth = 0.025 * 300;
+  const needleWidth = 0.045 * 300;
   const perpAngle = angle + Math.PI / 2;
   // Divide by 2 to match Python's handling of perpendicular offset
   const dxp = (needleWidth / 2) * Math.cos(perpAngle);
