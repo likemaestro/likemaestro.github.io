@@ -1,46 +1,116 @@
-# Getting Started with Create React App
+# Murat Güven - Personal Portfolio & Project Showcase
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+This repository contains the source code for my personal website, showcasing my projects, publications, and tools. The site is built using modern web technologies to provide a clean, responsive, and engaging user experience.
 
-## Available Scripts
+**Live Site:** [https://likemaestro.github.io/](https://likemaestro.github.io/)
+
+## About This Site
+
+This website serves as a central hub for my work, including:
+
+- **Interactive Tools:** Such as CUTT-IA (an expert cutting assistant for steel structures) and a Gauge Tool.
+- **Publications:** A collection of my research papers and articles, including my thesis (`GUVEN_THESIS.pdf`).
+- **Project Showcase:** Highlighting my skills and projects in web development and potentially other areas.
+
+## Features
+
+- **Responsive Design:** Adapts to various screen sizes for optimal viewing on desktops, tablets, and mobile devices.
+- **Interactive Tools Showcase:**
+  - **CUTT-IA:** An embedded expert system for steel structure cutting assistance, accessible via an iframe.
+  - **Gauge Tool:** A versatile gauge for displaying various metrics.
+- **Publications Section:** Provides access to my academic work and research.
+- **Modern UI/UX:** Built with a focus on user experience, featuring smooth animations (like the particle network and animated text) and a clean aesthetic.
+- **Easy Navigation:** Clear routing and back buttons for a seamless user journey.
+
+## Technologies Used
+
+- **React:** A JavaScript library for building user interfaces.
+- **TypeScript:** A typed superset of JavaScript that compiles to plain JavaScript.
+- **Tailwind CSS:** A utility-first CSS framework for rapid UI development.
+- **React Router:** For declarative routing in the application.
+- **GitHub Pages:** For deployment (as indicated by the repository name).
+
+## Project Structure
+
+Key components of the project include:
+
+```
+/public
+    GUVEN_THESIS.pdf  # Example of a publication asset
+/src
+    App.tsx             # Main application component
+    index.tsx           # Entry point of the application
+    /components
+        AnimatedTextSection.tsx # Component for animated text
+        ParticleNetwork.tsx     # Component for particle background
+        /common
+            BackButton.tsx      # Reusable back button
+        /pages
+            PublicationsPage.tsx # Page for listing publications
+            ToolsPage.tsx        # Page for showcasing tools
+        /tools
+            /CUTT-IA
+                CUTT-IA.tsx     # Component for the CUTT-IA tool
+            /GaugeTool
+                GaugeTool.tsx   # Component for the Gauge tool
+```
+
+## Getting Started (Development)
+
+To get a local copy up and running, follow these simple steps.
+
+### Prerequisites
+
+- Node.js (v16.x or later recommended)
+- npm (comes with Node.js)
+
+### Installation
+
+1.  Clone the repo:
+    ```powershell
+    git clone https://github.com/likemaestro/likemaestro.github.io.git
+    ```
+2.  Navigate to the project directory:
+    ```powershell
+    cd likemaestro.github.io
+    ```
+3.  Install NPM packages:
+    ```powershell
+    npm install
+    ```
+
+### Available Scripts
 
 In the project directory, you can run:
 
-### `npm start`
+- `npm start`:
+  Runs the app in development mode.
+  Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+  The page will reload if you make edits.
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+- `npm run build`:
+  Builds the app for production to the `build` folder.
+  It correctly bundles React in production mode and optimizes the build for the best performance.
 
-The page will reload if you make edits.\
-You will also see any lint errors in the console.
+- `npm test`:
+  Launches the test runner in interactive watch mode.
 
-### `npm test`
+- `npm run eject`:
+  **Note: this is a one-way operation. Once you `eject`, you can’t go back!**
+  This command will remove the single build dependency from your project and copy all configuration files and transitive dependencies into your project.
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+## Deployment
 
-### `npm run build`
+This site is deployed using GitHub Pages. The `npm run build` script creates a `build` folder, and GitHub Pages is typically configured to serve from this folder (or a `docs` folder, or the `gh-pages` branch).
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+## Author
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+**Murat Güven**
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+- GitHub: [@likemaestro](https://github.com/likemaestro)
 
-### `npm run eject`
+## Acknowledgements
 
-**Note: this is a one-way operation. Once you `eject`, you can’t go back!**
-
-If you aren’t satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
-
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you’re on your own.
-
-You don’t have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn’t feel obligated to use this feature. However we understand that this tool wouldn’t be useful if you couldn’t customize it when you are ready for it.
-
-## Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
+- Create React App
+- Tailwind CSS
+- React Router

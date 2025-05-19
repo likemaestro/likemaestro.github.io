@@ -326,7 +326,7 @@ const MainContent: React.FC<{
             or opportunities. Feel free to reach out!
           </p>
           <a
-            href="mailto:murat.gueven@polimi.it"
+            href="mailto:murat.guven@polimi.it"
             className="inline-block bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-4 px-10 rounded-lg text-xl transition duration-300 ease-in-out transform hover:scale-105 shadow-lg"
           >
             Send me an Email
