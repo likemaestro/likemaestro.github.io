@@ -1,0 +1,27 @@
+{
+  "files": {
+    "main.css": "/static/css/main.2aa952ae.css",
+    "main.js": "/static/js/main.316c651b.js",
+    "static/media/manrope-latin-700-normal.woff": "/static/media/manrope-latin-700-normal.df11bf1babe843a247d7.woff",
+    "static/media/manrope-latin-600-normal.woff": "/static/media/manrope-latin-600-normal.058ad2fe6f41b44355cc.woff",
+    "static/media/manrope-latin-300-normal.woff": "/static/media/manrope-latin-300-normal.33cb0b8fa8435a3281e3.woff",
+    "static/media/manrope-latin-400-normal.woff": "/static/media/manrope-latin-400-normal.82cf2a7ba70209a07253.woff",
+    "static/media/manrope-latin-500-normal.woff": "/static/media/manrope-latin-500-normal.06f2cc232601c056a79f.woff",
+    "static/media/manrope-latin-800-normal.woff": "/static/media/manrope-latin-800-normal.7e27d1f4272e98665264.woff",
+    "static/media/manrope-latin-200-normal.woff": "/static/media/manrope-latin-200-normal.6c0e2116f4b633b99bac.woff",
+    "static/media/manrope-latin-700-normal.woff2": "/static/media/manrope-latin-700-normal.395302d2c51659f98a07.woff2",
+    "static/media/manrope-latin-600-normal.woff2": "/static/media/manrope-latin-600-normal.ec61c26ae9843c74c66e.woff2",
+    "static/media/manrope-latin-400-normal.woff2": "/static/media/manrope-latin-400-normal.5b06bf94f857e4244b64.woff2",
+    "static/media/manrope-latin-300-normal.woff2": "/static/media/manrope-latin-300-normal.a4da2dbb19a5a79c57e5.woff2",
+    "static/media/manrope-latin-500-normal.woff2": "/static/media/manrope-latin-500-normal.b6bf3db6256270076d37.woff2",
+    "static/media/manrope-latin-800-normal.woff2": "/static/media/manrope-latin-800-normal.9058577ea41f50bdd721.woff2",
+    "static/media/manrope-latin-200-normal.woff2": "/static/media/manrope-latin-200-normal.de406e55c1428924d2c1.woff2",
+    "index.html": "/index.html",
+    "main.2aa952ae.css.map": "/static/css/main.2aa952ae.css.map",
+    "main.316c651b.js.map": "/static/js/main.316c651b.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.2aa952ae.css",
+    "static/js/main.316c651b.js"
+  ]
+}
