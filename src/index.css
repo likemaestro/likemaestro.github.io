@@ -1,0 +1,142 @@
+/* Purge unused styles in production */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Removed @fontsource/frank-ruhl-libre/latin.css as it's not used */
+@import "@fontsource/manrope/latin.css";
+
+/* Add a shared gradient background for the entire page */
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  /* Updated gradient to use custom-dark-blue and custom-deep-ocean */
+  @apply bg-gradient-to-br from-custom-dark-blue to-custom-deep-ocean text-white font-sans;
+  scroll-behavior: smooth;
+
+  /* Prevent text selection */
+  -webkit-user-select: none; /* Safari */
+  -ms-user-select: none; /* IE 10 and IE 11 */
+  user-select: none; /* Standard syntax */
+}
+
+.scroll-snap-container {
+  scroll-snap-type: y mandatory;
+  overflow-y: scroll;
+  height: 100vh;
+}
+
+.scroll-snap-section {
+  scroll-snap-align: start;
+  padding-top: 5rem; /* Added padding to account for fixed navbar */
+  padding-bottom: 2rem;
+}
+
+/* Ensure sections still occupy significant viewport height for snapping */
+#home,
+#about,
+#research,
+#contact {
+  min-height: 100vh;
+}
+
+/* Kinetic Typography Base Style */
+.kinetic-title span {
+  display: inline-block; /* Ensures spans flow like words but can be transformed */
+  opacity: 0;
+  transform: translateY(30px) rotateX(-90deg); /* Start slightly down and rotated back */
+  transform-origin: bottom center; /* Rotate around the bottom center */
+  transition: opacity 0.7s cubic-bezier(0.215, 0.61, 0.355, 1),
+    transform 0.7s cubic-bezier(0.215, 0.61, 0.355, 1);
+  will-change: opacity, transform;
+}
+
+/* Kinetic Typography Animation Triggered State (when parent has .is-visible) */
+.kinetic-title.is-visible span {
+  opacity: 1;
+  transform: translateY(0) rotateX(0deg); /* End in normal position */
+}
+
+/* Staggered delay for individual letters/words within a .kinetic-title.is-visible container */
+/* These will apply if the parent .kinetic-title also has .is-visible */
+.kinetic-title.is-visible span:nth-child(1) {
+  transition-delay: 0.1s;
+}
+.kinetic-title.is-visible span:nth-child(2) {
+  transition-delay: 0.18s;
+}
+.kinetic-title.is-visible span:nth-child(3) {
+  transition-delay: 0.26s;
+}
+.kinetic-title.is-visible span:nth-child(4) {
+  transition-delay: 0.34s;
+} /* For titles like "About Me" or "Get In Touch" */
+.kinetic-title.is-visible span:nth-child(5) {
+  transition-delay: 0.42s;
+}
+
+/* --- Interactive Nav Link Hover --- */
+.nav-link-interactive {
+  position: relative;
+  padding-bottom: 8px; /* Add some padding for the underline */
+}
+
+.nav-link-interactive::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  width: 0%;
+  height: 2px;
+  background-color: #a5b4fc; /* Tailwind indigo-300 */
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transform: translateX(-50%);
+}
+
+.nav-link-interactive:hover::after {
+  width: 100%;
+}
+
+/* --- Interactive Card Tilt --- */
+.research-card-interactive {
+  will-change: transform, box-shadow;
+  transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275),
+    box-shadow 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.research-card-interactive:hover {
+  transform: perspective(1000px) rotateX(5deg) rotateY(-3deg) scale(1.05);
+  box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.3); /* Enhanced shadow */
+}
+
+/* --- Enhanced Button Hover --- */
+.email-button-enhanced {
+  transition: transform 0.3s ease, box-shadow 0.3s ease,
+    background-color 0.3s ease !important;
+  /* important to override potential specificity issues with Tailwind hover */
+}
+
+.email-button-enhanced:hover {
+  transform: scale(1.08) translateY(-2px) !important;
+  box-shadow: 0 10px 20px -5px rgba(99, 102, 241, 0.5) !important; /* Shadow color related to indigo-500 */
+  /* background-color: #4f46e5 !important; */ /* Tailwind indigo-600, if you want a darker shade */
+}
+
+/* Animation delay utilities - if you need more, extend in tailwind.config.js */
+.animation-delay-300 {
+  animation-delay: 0.3s;
+}
+.animation-delay-500 {
+  animation-delay: 0.5s;
+}
+.animation-delay-700 {
+  animation-delay: 0.7s;
+}
+.animation-delay-900 {
+  animation-delay: 0.9s;
+}
+
+/* Removed .App, .App-header, .about-me, .research-areas, .App-footer as Tailwind is used directly */
+/* Responsive adjustments can be handled by Tailwind's responsive prefixes (sm:, md:, lg:) */
