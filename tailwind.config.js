@@ -4,7 +4,7 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        "custom-dark-blue": "#102c53", // This will be the lighter end of the gradient
+        "custom-dark-blue": "#102c53", // Custom dark blue color
         "custom-deep-ocean": "#030B1A", // This is the new much darker color
       },
       fontFamily: {

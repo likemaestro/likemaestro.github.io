@@ -30,17 +30,17 @@ const PublicationsPage: React.FC = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-custom-dark-blue to-custom-deep-ocean text-white flex flex-col items-center pt-28 p-8">
-      <h1 className="text-5xl font-extrabold mb-12 text-center animate-fade-in-down">
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 text-white flex flex-col items-center pt-28 p-4">
+      <h1 className="text-4xl sm:text-5xl font-extrabold mb-8 sm:mb-12 text-center animate-fade-in-down">
         My Publications
       </h1>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 w-full max-w-6xl">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-8 w-full max-w-6xl">
         {publications.map((pub, index) => {
           const CardContent = (
             <div
               // Apply animation delay if you want staggered appearance, similar to the old version
               // style={{ animationDelay: `${index * 100}ms` }}
-              className="h-full bg-white rounded-lg p-6 shadow-lg hover:shadow-xl transition-shadow duration-300 flex flex-col justify-between border border-transparent hover:border-indigo-400 group"
+              className="h-full bg-white rounded-xl p-4 sm:p-6 shadow-lg hover:shadow-xl transition-shadow duration-300 flex flex-col justify-between border border-transparent hover:border-indigo-400 group min-h-[160px]"
             >
               <div>
                 <div className="flex items-center mb-4">

@@ -27,7 +27,7 @@ const tools: Tool[] = [
 
 const ToolsPage: React.FC = () => {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-custom-dark-blue to-custom-deep-ocean text-white flex flex-col items-center pt-28 p-8">
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 text-white flex flex-col items-center pt-28 p-8">
       <h1 className="text-5xl font-extrabold mb-12 text-center animate-fade-in-down">
         Explore My Tools
       </h1>

@@ -59,10 +59,10 @@ const ParticleNetwork: React.FC<ParticleNetworkProps> = ({
       velocityFactor: 0.15, // Base speed factor for particle movement
       maxVelocity: 0.1, // Maximum speed of particles
       returnForce: 0.002, // Strength of force pulling particles towards their origin area
-      connectionDistance: 500, // Maximum distance for particles to connect with a line
+      connectionDistance: 250, // Maximum distance for particles to connect with a line
       lineColor: "rgba(0, 150, 255, 0.2)", // Color of standard connection lines
       signalColor: "rgba(255, 255, 255, 1)", // Color of the traveling signal (bright white)
-      signalDuration: 500, // Duration of a signal's travel in milliseconds
+      signalDuration: 2000, // Duration of a signal's travel in milliseconds
       signalRadiusFactor: 0.5, // Factor for signal head size relative to particleRadius
       mouseRepelDistance: 200, // Distance at which particles are repelled by the mouse
       mouseRepelStrength: 0.5, // Strength of mouse repulsion effect
@@ -81,8 +81,8 @@ const ParticleNetwork: React.FC<ParticleNetworkProps> = ({
         const x = Math.random() * width;
         const y = Math.random() * height;
         particles.current.push({
-          x: x,
-          y: y,
+          x, // Shorthand
+          y, // Shorthand
           originX: x, // Store initial position
           originY: y, // Store initial position
           vx: (Math.random() - 0.5) * config.velocityFactor * 2,
@@ -158,10 +158,7 @@ const ParticleNetwork: React.FC<ParticleNetworkProps> = ({
         return; // Stop if transform fails (e.g., canvas too large despite checks)
       }
       // Pass current dimensions from rect, not canvas.width/height which are scaled by DPR
-      initializeParticles(
-        canvas.getBoundingClientRect().width,
-        canvas.getBoundingClientRect().height
-      );
+      initializeParticles(rect.width, rect.height);
     };
 
     setCanvasDimensionsAndInitialize();
@@ -538,13 +535,16 @@ const ParticleNetwork: React.FC<ParticleNetworkProps> = ({
 
           // Subtle glow for the signal head
           ctx.shadowBlur = 7;
-          // Make glow color slightly less opaque than the signal itself for a softer effect
-          const signalGlowColorMatch =
-            config.signalColor.match(/rgba\\(([^)]+)\\)/);
-          if (signalGlowColorMatch) {
-            ctx.shadowColor = `rgba(${signalGlowColorMatch[1]}, 0.7)`;
+          // Correctly parse RGB from signalColor and apply new alpha for glow
+          const signalRgbPartsMatch = config.signalColor.match(
+            /rgba\\((\\d+\\s*,\\s*\\d+\\s*,\\s*\\d+),[^)]*\\)/
+          );
+          if (signalRgbPartsMatch && signalRgbPartsMatch[1]) {
+            ctx.shadowColor = `rgba(${signalRgbPartsMatch[1]}, 0.7)`;
           } else {
-            ctx.shadowColor = config.signalColor; // Fallback
+            // Fallback if signalColor is not in expected rgba format
+            // Attempt to use signalColor directly, or use a default glow
+            ctx.shadowColor = "rgba(255, 255, 255, 0.7)"; // Default white glow
           }
 
           ctx.fill();

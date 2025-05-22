@@ -5,16 +5,78 @@
     <link rel="icon" href="%PUBLIC_URL%/favicon.ico" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="theme-color" content="#000000" />
-    <meta name="description" content="Murat Güven - Personal Website" />
+    <meta
+      name="description"
+      content="Explore the personal website of Murat Güven, showcasing projects, publications, and tools related to software engineering and research."
+    />
     <link rel="apple-touch-icon" href="%PUBLIC_URL%/logo192.png" />
     <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
+
+    <!-- Canonical URL -->
+    <link rel="canonical" href="https://likemaestro.github.io/" />
+
+    <!-- Open Graph Meta Tags -->
+    <meta
+      property="og:title"
+      content="Murat Güven - Personal Website & Portfolio"
+    />
+    <meta
+      property="og:description"
+      content="Explore the personal website of Murat Güven, showcasing projects, publications, and tools related to software engineering and research."
+    />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://likemaestro.github.io/" />
+    <meta property="og:image" content="%PUBLIC_URL%/logo512.png" />
+    <meta property="og:site_name" content="Murat Güven's Portfolio" />
+
+    <!-- Twitter Card Meta Tags -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta
+      name="twitter:title"
+      content="Murat Güven - Personal Website & Portfolio"
+    />
+    <meta
+      name="twitter:description"
+      content="Explore the personal website of Murat Güven, showcasing projects, publications, and tools related to software engineering and research."
+    />
+    <meta name="twitter:image" content="%PUBLIC_URL%/logo512.png" />
+    <!-- If you have a Twitter handle, add it here: -->
+    <!-- <meta name="twitter:site" content="@yourtwitterhandle"> -->
+    <!-- <meta name="twitter:creator" content="@yourtwitterhandle"> -->
+
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
       href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;700;800&display=swap"
       rel="stylesheet"
     />
-    <title>Murat Güven - Personal Website</title>
+    <title>Murat Güven - Personal Website & Portfolio</title>
+
+    <!-- JSON-LD Structured Data -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "Person",
+        "name": "Murat Güven",
+        "url": "https://likemaestro.github.io/",
+        "image": "%PUBLIC_URL%/logo512.png",
+        "sameAs": [
+          // Add links to your social media profiles here, e.g.:
+          // "https://www.linkedin.com/in/yourprofile",
+          // "https://github.com/likemaestro"
+        ],
+        "jobTitle": "Software Engineer", // Update with your actual job title
+        "worksFor": {
+          "@type": "Organization",
+          "name": "Your Company" // Update with your company if applicable
+        },
+        "alumniOf": {
+          "@type": "CollegeOrUniversity",
+          "name": "Your University" // Update with your university if applicable
+        },
+        "description": "Personal portfolio and website of Murat Güven, showcasing software projects, research publications, and developed tools."
+      }
+    </script>
   </head>
   <body>
     <noscript>You need to enable JavaScript to run this app.</noscript>
