@@ -11,11 +11,10 @@ interface Tool {
 
 const tools: Tool[] = [
   {
-    id: "cutt-ia",
-    title: "CUTT-IA",
-    description: "Expert cutting assistant for steel structures.",
-    path: "/tools/cutt-ia",
-    restricted: true,
+    id: "worldmap-generator",
+    title: "Worldmap Generator",
+    description: "Create premium, high-res editorial world maps with custom styling and projections.",
+    path: "/tools/WorldMap",
   },
   {
     id: "gauge-tool",

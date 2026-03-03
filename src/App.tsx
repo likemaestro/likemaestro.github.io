@@ -17,6 +17,8 @@ import CUTTIA from "./components/tools/CUTT-IA/CUTT-IA";
 import BackToTopButton from "./components/common/BackToTopButton";
 import MainContent from "./components/MainContent"; // Added import
 import NavLink, { NavSeparator } from "./components/NavLink"; // Added import
+import WorldMap from "./components/tools/WorldMap/WorldMap";
+
 
 export interface SocialLink {
   // Exporting SocialLink
@@ -124,7 +126,7 @@ const App: React.FC = () => {
     // then conditional preventDefault would be needed.
   };
 
-  const isToolPage = location.pathname.startsWith("/tools/");
+  const isToolPage = location.pathname.includes("/tools");
 
   // Scroll spy effect for main sections
   useEffect(() => {
@@ -208,10 +210,12 @@ const App: React.FC = () => {
 
   return (
     <div className="scroll-snap-container bg-gradient-to-br from-gray-900 to-gray-800 text-white font-manrope min-h-screen relative">
-      {/* ParticleNetwork as a global background */}
-      <div className="fixed top-20 left-0 right-0 bottom-0 z-0 pointer-events-none">
-        <ParticleNetwork className="w-full h-full" interactive={true} />
-      </div>
+      {/* ParticleNetwork as a global background - hidden on tool pages for performance */}
+      {!isToolPage && (
+        <div className="fixed top-20 left-0 right-0 bottom-0 z-0 pointer-events-none">
+          <ParticleNetwork className="w-full h-full" interactive={true} />
+        </div>
+      )}
       {/* Main content container, needs to be above ParticleNetwork */}
       <div className="relative z-10">
         {!isToolPage && <BackToTopButton />}
@@ -237,7 +241,7 @@ const App: React.FC = () => {
                       const isActive =
                         link.type === "mainSection"
                           ? location.pathname === "/" &&
-                            activeSection === link.id
+                          activeSection === link.id
                           : location.pathname === link.path;
                       const onClick = (e: any) =>
                         handleNavLinkClick(e, link.type, link.id);
@@ -257,15 +261,14 @@ const App: React.FC = () => {
                   </div>
                   {/* Mobile nav overlay */}
                   <div
-                    className={`md:hidden fixed top-20 left-0 w-full bg-gray-900 bg-opacity-95 z-50 flex-col transition-all duration-300 ${
-                      mobileNavOpen ? "flex" : "hidden"
-                    }`}
+                    className={`md:hidden fixed top-20 left-0 w-full bg-gray-900 bg-opacity-95 z-50 flex-col transition-all duration-300 ${mobileNavOpen ? "flex" : "hidden"
+                      }`}
                   >
                     {navLinks.map((link, idx) => {
                       const isActive =
                         link.type === "mainSection"
                           ? location.pathname === "/" &&
-                            activeSection === link.id
+                          activeSection === link.id
                           : location.pathname === link.path;
                       const onClick = (e: any) => {
                         handleNavLinkClick(e, link.type, link.id);
@@ -321,6 +324,7 @@ const App: React.FC = () => {
             }
           />
           <Route path="/tools" element={<ToolsPage />} />
+          <Route path="/tools/WorldMap" element={<WorldMap />} />
           <Route path="/tools/gauge-tool" element={<GaugeTool />} />
           <Route path="/tools/cutt-ia" element={<CUTTIA />} />{" "}
           <Route path="/publications" element={<PublicationsPage />} />{" "}
