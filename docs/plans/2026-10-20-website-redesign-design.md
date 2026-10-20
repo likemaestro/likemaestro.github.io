@@ -11,10 +11,15 @@ Date: 2026-10-20 · Owner: Murat Güven · Stack: React 19 + TypeScript + Tailwi
 
 ## 2. Subject matter (what the design is built from)
 
-Real material, not invented:
+Real material from the MSc thesis and the CV (Oct 2026), not invented:
 
-- **PhD (current):** Politecnico di Milano, Dept. of Architecture, Built Environment and Construction Engineering (ABC). Laser cutting applied to construction, with AI, topology optimization and computational mechanics.
-- **MSc (2023):** İzmir Institute of Technology, Civil Engineering. Thesis *Topology optimization of non-linear elastic microstructures*: a Julia framework for 2D periodic unit cells with neo-Hookean response, symmetry-based domain halving, 3D-printed proof-of-concept samples under uniaxial tests. Funded by TÜBİTAK project 122M134. Supervisor: Assoc. Prof. Dr. İzzet Özdemir.
+- **Profile:** computational and AI-based decision support for structural engineering and sustainable construction: optimization methods, BIM-integrated workflows, computational tools for steel fabrication.
+- **PhD (Nov 2024 – present):** Politecnico di Milano, ABC. Thesis: BIM-integrated decision support for laser and plasma cutting process selection in steel construction. PNRR-funded. Advisor: Assoc. Prof. Alper Kanyilmaz.
+- **Research Fellow (Mar – Nov 2024):** Politecnico di Milano, DABC. Structural design and fabrication for steel: laser cutting, metal 3D printing, environmental impact.
+- **MSc (2020 – 2023):** İzmir Institute of Technology, Civil Engineering. Thesis *Topology optimization of nonlinear elastic microstructures*: Julia framework, 2D periodic neo-Hookean unit cells, symmetry-based domain halving, 3D-printed samples under uniaxial tests. TÜBİTAK 1002 project 122M134 (researcher). Advisor: Assoc. Prof. İzzet Özdemir.
+- **BSc (2016 – 2020):** Kocaeli University, Civil Engineering. Thesis on bending of thin plates with variable thickness.
+- **Publications:** see `publications.ts` seed in §6.
+- **Teaching, talks, awards:** AI workshops and trainings for AEC (Politecnico di Milano, Braun Engineering Group executive board), TA for Life-Cycle Driven Structures, MSc co-supervision, talks at PropTech Day 2025 and Festival dell'Ingegneria 2025, Audience Prize at the EWSHM 2026 Young Professionals Challenge, Top 25 at Switch2Product 2024 (concApp).
 - **Visual vocabulary of the field:** optimized unit cells and their tilings, cut paths, sheet steel, kerf, the bright molten edge where a laser cuts.
 
 Unifying idea for the site: **shapes that are computed, then cut.** The hero shows a periodic unit cell tiled into a sheet, traced once by a cut path.
@@ -80,10 +85,12 @@ Single page `/` with anchored sections. Hidden tools stay routable by direct URL
 ```
 Header      Murat Güven ................ Research  Publications  About  Contact  CV
 Hero        statement + one-line role      |  unit-cell tiling, traced once
-Research    PhD project (current)  ── figure | text
-            MSc thesis (2023)      ── figure | text
-Publications  year | title, authors, venue | DOI/PDF       (list, not cards)
-About       short bio  |  timeline (2023 MSc IZTECH → PhD Polimi …)
+Research    PhD: cutting process selection (current)  ── figure | text
+            Topology optimization of microstructures  ── figure | text   (MSc → FEAD 2026 paper)
+Publications  year | title, authors, venue | DOI          (list, not cards)
+Teaching and talks  date | title, venue                   (same list component)
+Recognition  2026 EWSHM Audience Prize, 2024 Switch2Product Top 25
+About       short bio  |  timeline: 2016 BSc Kocaeli → 2020 MSc IZTECH → 2024 Research Fellow Polimi → 2024 PhD Polimi
 Contact     email as text, profile links as text
 Footer      © year Murat Güven
 ```
@@ -105,7 +112,7 @@ Routes after change:
 | `Hero` | `src/components/Hero.tsx` | none | 7 cols text, 5 cols `CutTiling`. Mobile: graphic above text, 60% height |
 | `CutTiling` | `src/components/CutTiling.tsx` | `cell: string` (SVG path d), `cols`, `rows` | Pure inline SVG. Tiles the cell path with `<use>`. One animated overlay path traces the outline (see Motion). Until the real exported cell exists, use a re-entrant honeycomb (negative Poisson's ratio) as a stand-in and mark it with `// TODO: replace with exported cell from thesis` |
 | `ResearchItem` | `src/components/ResearchItem.tsx` | `title, period, summary, figure?, links[]` | Two-column row: figure 5 cols, text 7 cols. Stacks on mobile. No figure → text takes full width (no empty box) |
-| `PublicationList` | `src/components/PublicationList.tsx` | `items: Publication[]` | Rows grouped by year, sorted desc. Row: year (`data`), title (`h3`, link to DOI), authors with own name at weight 560, venue (`data`, `ink-2`) |
+| `DatedList` | `src/components/DatedList.tsx` | `items: {date, title, href?, detail}[]` | One component for publications, teaching and talks, and recognition. Rows sorted by date desc. Row: date (`data`), title (`h3`, linked when `href`), detail line (`data`, `ink-2`). For publications, `detail` holds authors with own name at weight 560, then venue |
 | `Timeline` | `src/components/Timeline.tsx` | `items: {year, place, role}[]` | Real sequence, so year markers are earned |
 | `ContactBlock` | inside `App.tsx` | none | `murat.guven@polimi.it` as visible text link. LinkedIn, GitHub, ResearchGate, ORCID as text links (icons optional, 16 px, `aria-hidden`) |
 
@@ -114,6 +121,18 @@ Content lives in typed data files, not in JSX:
 - `src/content/publications.ts` — `Publication { title; authors: string[]; venue; year; doi?; pdf?; kind: 'journal' | 'conference' | 'thesis' }`
 - `src/content/research.ts` — research items
 - `src/content/timeline.ts`
+- `src/content/activity.ts` — teaching, talks, recognition
+
+Publications seed (from CV, Oct 2026):
+
+| Year | Kind | Entry |
+|---|---|---|
+| 2026 | journal | M. Güven, İ. Özdemir. "Topology Optimization of Nonlinear Elastic Micro-structures by a Domain Reduction Technique." *Finite Elements in Analysis and Design* 260, 104599. doi:10.1016/j.finel.2026.104599 |
+| forthcoming | book | A. Kanyilmaz, M. Güven. *Metals Driving Sustainable Construction.* Wiley. ISBN 9781394351657 |
+| 2025 | conference | A. Kanyilmaz, M. Güven, B. Previtali. "Laser Cutting of Key Metals in the Construction Industry." Extended abstract, ESTAD 2025, Verona |
+| 2023 | thesis | M. Güven. *Topology Optimization of Nonlinear Elastic Microstructures.* MSc thesis, İzmir Institute of Technology (PDF) |
+
+"Forthcoming" sorts above the latest year.
 
 Delete: `ParticleNetwork.tsx`, `AnimatedTextSection.tsx`, `MainContent.tsx` (replaced), `NavLink.tsx`, `BackToTopButton.tsx` (page is short now), `ScrollToTop.tsx` (empty file), `pages/PublicationsPage.tsx`, scroll-spy `IntersectionObserver` logic in `App.tsx`, scroll-snap CSS in `index.css`.
 
@@ -153,9 +172,9 @@ Test at 375, 768, 1280, 1600.
 
 ## 10. Content rules and edge cases
 
-- **Voice:** first person, plain verbs, specific nouns. Hero draft: *"I study how steel for buildings can be designed by optimization and cut by lasers."* Sub-line: *"PhD candidate at Politecnico di Milano. Before that, an MSc at İzmir Institute of Technology on topology optimization of microstructures."* Murat should edit it into his own words.
+- **Voice:** first person, plain verbs, specific nouns. Hero draft: *"I build computational tools that help engineers decide how steel structures are designed and cut."* Sub-line: *"PhD candidate at Politecnico di Milano, working on BIM-integrated decision support for laser and plasma cutting in steel construction."* Murat should edit it into his own words.
 - **Banned copy:** "Welcome", "exploring the frontiers", "passionate", "cutting-edge", "feel free to reach out", and identical one-liners repeated across items.
-- **No publications yet:** the section still renders with the thesis row and one line: "Journal papers in preparation." Never placeholder rows.
+- **Empty list:** `DatedList` with no items renders nothing, heading included. Never placeholder rows.
 - **Long titles:** wrap, never truncate. Author lists over 6 names: first 3, "…", own name, last author.
 - **Missing figure:** text spans full width.
 - **Turkish characters:** must render in Archivo with `latin-ext` (check "Güven", "İzmir", "Özdemir").
@@ -182,14 +201,15 @@ Test at 375, 768, 1280, 1600.
 ## 13. Verification
 
 - `npm run build` passes, and `npm test` keeps the existing `mapLabelUtils` test green.
-- One new test: `PublicationList` groups by year in descending order and shows the "in preparation" line when only the thesis is present.
+- One new test: `DatedList` sorts "forthcoming" first, then by date descending, and renders nothing for an empty list.
 - Keyboard walk-through of the whole page; reduced-motion check; screenshots at 375 and 1280 compared against this spec.
 - Lighthouse: accessibility ≥ 95, performance ≥ 90 (should improve once three.js and the particles are gone).
 
 ## 14. Open items — needed from Murat before launch
 
-1. Publication list (ORCID currently shows no public works): titles, venues, DOIs.
-2. A real CV PDF. The current "CV" link opens the MSc thesis.
-3. Two or three sentences on the PhD project in your own words, plus one figure you're allowed to show.
-4. An exported optimized unit cell from the thesis (SVG, or the Julia density field) to replace the stand-in hero tiling.
-5. Photo in About: yes or no. If yes, a real one, not an avatar.
+1. ~~Publication list~~: done, from the CV. Add the FEAD paper to ORCID too; it currently shows no public works.
+2. CV PDF received. Before it goes in `public/`: decide whether the phone number stays in the public copy.
+3. Google Scholar profile URL (listed on the CV, not linked).
+4. One PhD figure you're allowed to show, and one from the FEAD paper (check Elsevier reuse terms, or use your own thesis figure).
+5. An exported optimized unit cell (SVG, or the Julia density field) to replace the stand-in hero tiling.
+6. Photo in About: yes or no. If yes, a real one, not an avatar.
