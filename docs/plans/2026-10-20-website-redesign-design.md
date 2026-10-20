@@ -194,7 +194,7 @@ Breakpoints: ≥ 1024 px uses 12 columns as specified. 640–1023 px uses a 6/6 
 
 1. ~~Hero statement~~: methods-first line chosen. Sub-line still a draft for Murat to edit.
 2. Current-work row, in Murat's words. Draft until then: *"PhD, Politecnico di Milano (2024 – present). Decision support for choosing between laser, plasma and conventional cutting for steel parts, integrated with BIM models. PNRR-funded; advisor Assoc. Prof. Alper Kanyilmaz."*
-2. Public projects confirmed: **EWSHM anomaly detection** and **concApp** only (others stay off the site). Rows, from the CV:
+3. Public projects confirmed: **EWSHM anomaly detection** and **concApp** only (others stay off the site). Rows, from the CV:
    - *Bridge health indicators from monitoring data* (2026, team). Unsupervised anomaly detection: an attention-based multi-modal autoencoder with a statistical baseline, deriving health indicators from long-term bridge monitoring data. Audience Prize, EWSHM 2026 Students & Young Professionals Challenge, Toulouse.
    - *concApp* (2024, team). Early-stage structural design app for cost and embodied-carbon optimization. Top 25, Switch2Product 2024 ClimateTech & Circular Economy.
    Still needed: whether either has a public link (repo, demo, report), and Murat's role in one phrase each.
