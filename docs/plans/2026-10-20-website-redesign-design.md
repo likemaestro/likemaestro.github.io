@@ -30,9 +30,8 @@ Kept from v1: light theme, Archivo with its width axis, one hot accent used only
 
 Adopted from the external review:
 - Identity first. Name and current focus are the first thing read, on every screen size.
-- PhD leads the research; the MSc is one compact section.
-- Stronger hierarchy and contrast between sections: most of the page on near-white, with **one** full-width graphite section for the PhD.
-- Research presented as question, method, outputs.
+- Stronger hierarchy between sections through type scale and spacing, not color bands.
+- No dedicated PhD section (Murat's call): the PhD lives in the hero sub-line and the timeline.
 - One memorable interactive moment, tied to real computation, with a reduced-motion fallback.
 
 Rejected:
@@ -53,7 +52,6 @@ Add to `tailwind.config.js` under `theme.extend` (replace `custom-dark-blue`, `c
 | `ink-2` | `#4F5D68` | Secondary text (≈ 6:1 on `canvas`) |
 | `steel` | `#819199` | Intermediate densities in the live cell, chart marks. Never text |
 | `rule` | `#CBD2D5` | Row dividers, figure borders |
-| `graphite` | `#26353D` | Background of the one full-width PhD section. Text on it is `canvas` (≈ 12:1) |
 | `laser` | `#F05A24` | Graphics only: the "selected" or "active" mark. Never text, never buttons |
 
 No gradients, no shadows.
@@ -79,12 +77,10 @@ Letter-spacing `-0.02em` on `display` and `h2`. No all caps. No single-word colo
 Single page `/`. Old routes: `/publications` redirects to `/#publications`; `/tools/*` stays reachable by URL but is unlinked (remove from nav, sitemap, README).
 
 ```
-Header      Murat Güven                       Research  Publications  About  Contact  CV (PDF)
+Header      Murat Güven                       Work  Publications  About  Contact  CV (PDF)
 Hero        statement + sub-line (7 cols)  |  live unit cell + 3×3 tiling (5 cols)
             objective buttons + live readout under the cell
-PhD         [graphite, full width] question, method, outputs  |  decision diagram (code-drawn)
-Optimization  MSc → FEAD 2026, compact: two sentences + paper link + the sample photo
-AI for engineering  two projects (rows, not cards) + one line on AI trainings for AEC
+Selected work  three rows, not cards: FEAD 2026 paper (microstructure optimization), EWSHM bridge anomaly detection, concApp
 Publications  date | title, authors, venue | DOI
 Teaching and talks  date | title, venue
 About       short bio | timeline (2016 BSc → 2020 MSc → 2024 Fellow → 2024 PhD)
@@ -139,8 +135,7 @@ Caption under the cell (`small`, `ink-2`): "Topology optimization of a periodic 
 | Component | Notes |
 |---|---|
 | `SiteHeader` | Static, not fixed. Plain anchor links that wrap under 640 px. No hamburger |
-| `PhdSection` | Graphite, full width. Left: question, method, outputs as three short paragraphs with `h3` labels. Right: code-drawn decision diagram, a steel member with features (cope, holes, web opening), each tagged with the process the rules select (laser, plasma, drill); the selected feature is drawn in `laser`. It is labelled "Illustration" and must not imply results |
-| `ResearchRow` | Used for Optimization and AI sections. Text 7 cols, optional figure 5 cols, stacks on mobile. No figure means text spans full width |
+| `WorkRow` | Used for Selected work. Text 7 cols, optional figure 5 cols, stacks on mobile. No figure means text spans full width |
 | `DatedList` | One component for publications, teaching and talks, recognition. Rows sorted by date descending, with "forthcoming" first. Row: date (`data`), title (`h3`, linked when there's a URL), detail line (`data`, `ink-2`). Own name at weight 560 in author lists. An empty list renders nothing |
 | `Timeline` | Real sequence, so year markers are allowed |
 
@@ -164,13 +159,13 @@ Remove these dependencies once nothing imports them (grep first, since tool page
 | Element | State | Behavior |
 |---|---|---|
 | Text links | Hover | Underline from 1 px to 2 px, 120 ms ease-out |
-| Focusable | Focus-visible | 2 px `ink` outline, 3 px offset (on graphite: `canvas` outline) |
+| Focusable | Focus-visible | 2 px `ink` outline, 3 px offset |
 | Objective buttons | Default / active | 1 px `ink` border / `ink` fill. Minimum 44×44 px touch target |
 | Publication row | Hover | Background `#EEF0EE`; the title is the link, not the row |
 
 Motion is limited to the live optimization and link underlines: no section fade-ins, card lifts, parallax or typewriter.
 
-Breakpoints: ≥ 1024 px uses 12 columns as specified. 640–1023 px uses a 6/6 hero and keeps the PhD diagram beside the text. < 640 px is one column, ordered as in §5. Test at 375, 768, 1280 and 1600 px.
+Breakpoints: ≥ 1024 px uses 12 columns as specified. 640–1023 px uses a 6/6 hero. < 640 px is one column, ordered as in §5. Test at 375, 768, 1280 and 1600 px.
 
 ## 9. Content rules and edge cases
 
@@ -186,7 +181,7 @@ Breakpoints: ≥ 1024 px uses 12 columns as specified. 640–1023 px uses a 6/6 
 
 - A skip link to `#main`. Landmarks: `header`, `nav aria-label="Sections"`, `main`, `footer`. One `h1`.
 - Live cell: the canvas is `role="img"` with an `aria-label` that updates on convergence ("Optimized unit cell for maximum stiffness, converged at iteration 74"). The readout is plain text, not `aria-live`, to avoid noise every iteration. Buttons are `aria-pressed`.
-- Contrast: `ink` on `canvas` is about 15:1, `ink-2` about 6:1, and `canvas` on `graphite` about 12:1. `laser` and `steel` are never used for text.
+- Contrast: `ink` on `canvas` is about 15:1, `ink-2` about 6:1. `laser` and `steel` are never used for text.
 - Keyboard: all controls reachable; focus order follows the DOM.
 
 ## 11. Verification
@@ -202,7 +197,6 @@ Breakpoints: ≥ 1024 px uses 12 columns as specified. 640–1023 px uses a 6/6 
    - *Bridge health indicators from monitoring data* (2026, team). Unsupervised anomaly detection: an attention-based multi-modal autoencoder with a statistical baseline, deriving health indicators from long-term bridge monitoring data. Audience Prize, EWSHM 2026 Students & Young Professionals Challenge, Toulouse.
    - *concApp* (2024, team). Early-stage structural design app for cost and embodied-carbon optimization. Top 25, Switch2Product 2024 ClimateTech & Circular Economy.
    Still needed: whether either has a public link (repo, demo, report), and Murat's role in one phrase each.
-3. PhD section wording: the actual research question and methods, in 3 short paragraphs.
 4. Recompiled CV without the phone line (optional).
 5. Photo in About: deferred; the layout works without one.
 6. Phase 2: Auxetic objective (MMA), drag-to-change load cases, and a scroll sequence over real PhD material.
