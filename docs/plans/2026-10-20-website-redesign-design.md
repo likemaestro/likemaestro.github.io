@@ -51,6 +51,7 @@ Add to `tailwind.config.js` under `theme.extend` (replace `custom-dark-blue`, `c
 | `ink` | `#14202B` | Body text, headings, cut lines in drawings, focus ring (blued steel) |
 | `ink-2` | `#4F5D68` | Secondary text: venues, dates, captions (≈5.9:1 on `paper`) |
 | `rule` | `#BFC7CB` | Row dividers, figure borders |
+| `steel` | `#A9B4BA` | Material in the hero tiling only |
 | `spark` | `#E8480A` | **Graphics only**: laser path head, kerf glow in the hero. Never text, never buttons (≈3.3:1 on `paper`, passes the 3:1 bar for non-text graphics only) |
 
 No gradients, no shadows, no tinted overlays.
@@ -110,7 +111,7 @@ Routes after change:
 |---|---|---|---|
 | `SiteHeader` | `src/components/SiteHeader.tsx` | none | Static (not fixed). Name links to `#top`. Nav is plain anchor links; wraps to a second line under 640 px. No hamburger: five links fit |
 | `Hero` | `src/components/Hero.tsx` | none | 7 cols text, 5 cols `CutTiling`. Mobile: graphic above text, 60% height |
-| `CutTiling` | `src/components/CutTiling.tsx` | `voids: string[]` (from `auxeticCellVoids`), `cols`, `rows` | Pure inline SVG. Geometry is the real nonlinear auxetic cell from the MSc thesis (Fig. 8.1b), vectorized by `scripts/vectorize-cell.py` into `src/content/auxeticCell.ts`: 4 closed void outlines per 100×100 period. Voids drawn `fill: sheet`, `stroke: #8A969E` at 0.9 (non-scaling), tiled by translating multiples of 100. One void gets an overlay path with `pathLength="1"` for the trace. Caption: "Auxetic unit cell, nonlinear optimum. MSc thesis, Fig. 8.1" |
+| `CutTiling` | `src/components/CutTiling.tsx` | `outline: string[]`, `voids: string[]` (from `src/content/auxeticCell.ts`) | Pure inline SVG. Geometry is the real nonlinear auxetic cell from the MSc thesis (Fig. 8.1b), vectorized by `scripts/vectorize-cell.py`. Material is a `steel` (`#A9B4BA`) background rect; the 4 voids per 100×100 period are filled `paper` on top and tiled by translating multiples of 100 (seamless, no seams between cells). The centre cell's **solid boundary** (`auxeticCellOutline`: 8 open runs that stop at the arm joints, plus the closed central hole) is drawn on top as 9 paths, each `pathLength="1"`, traced together. Caption: "Auxetic unit cell, nonlinear optimum. MSc thesis, Fig. 8.1" |
 | `ResearchItem` | `src/components/ResearchItem.tsx` | `title, period, summary, figure?, links[]` | Two-column row: figure 5 cols, text 7 cols. Stacks on mobile. No figure → text takes full width (no empty box) |
 | `DatedList` | `src/components/DatedList.tsx` | `items: {date, title, href?, detail}[]` | One component for publications, teaching and talks, and recognition. Rows sorted by date desc. Row: date (`data`), title (`h3`, linked when `href`), detail line (`data`, `ink-2`). For publications, `detail` holds authors with own name at weight 560, then venue |
 | `Timeline` | `src/components/Timeline.tsx` | `items: {year, place, role}[]` | Real sequence, so year markers are earned |
@@ -154,7 +155,7 @@ Remove dependencies once nothing imports them (grep first; tool pages may use so
 
 | Element | Trigger | Animation | Duration | Easing |
 |---|---|---|---|---|
-| `CutTiling` trace path | First paint | `stroke-dashoffset` 1 → 0 on one void outline (`pathLength="1"`, `stroke-dasharray: 1`), stroked `spark` | 2200 ms, 400 ms delay | `cubic-bezier(.65,0,.35,1)` |
+| `CutTiling` trace paths | First paint | `stroke-dashoffset` 1 → 0 on all 9 outline paths of the centre cell at once (`pathLength="1"`, `stroke-dasharray: 1`), stroked `spark`, settling to `ink` | 2200 ms, 400 ms delay | `cubic-bezier(.65,0,.35,1)` |
 | `CutTiling` kerf glow | Trace end | `spark` stroke fades to `ink` | 400 ms | `ease-out` |
 | Links | Hover | Underline thickness | 120 ms | `ease-out` |
 
