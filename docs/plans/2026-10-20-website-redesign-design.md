@@ -31,7 +31,7 @@ Kept from v1: light theme, Archivo with its width axis, one hot accent used only
 Adopted from the external review:
 - Identity first. Name and current focus are the first thing read, on every screen size.
 - Stronger hierarchy between sections through type scale and spacing, not color bands.
-- No dedicated PhD section (Murat's call): the PhD lives in the hero sub-line and the timeline.
+- The PhD is stated, not explained: one short row at the top of Work, in Murat's words. No question/method/outputs breakdown, no diagram, no special band.
 - One memorable interactive moment, tied to real computation, with a reduced-motion fallback.
 
 Rejected:
@@ -80,7 +80,7 @@ Single page `/`. Old routes: `/publications` redirects to `/#publications`; `/to
 Header      Murat Güven                       Work  Publications  About  Contact  CV (PDF)
 Hero        statement + sub-line (7 cols)  |  live unit cell + 3×3 tiling (5 cols)
             objective buttons + live readout under the cell
-Selected work  three rows, not cards: FEAD 2026 paper (microstructure optimization), EWSHM bridge anomaly detection, concApp
+Work        rows, not cards: 1) Current: PhD (1–2 sentences)  2) FEAD 2026 paper (microstructure optimization)  3) EWSHM bridge anomaly detection  4) concApp
 Publications  date | title, authors, venue | DOI
 Teaching and talks  date | title, venue
 About       short bio | timeline (2016 BSc → 2020 MSc → 2024 Fellow → 2024 PhD)
@@ -135,7 +135,7 @@ Caption under the cell (`small`, `ink-2`): "Topology optimization of a periodic 
 | Component | Notes |
 |---|---|
 | `SiteHeader` | Static, not fixed. Plain anchor links that wrap under 640 px. No hamburger |
-| `WorkRow` | Used for Selected work. Text 7 cols, optional figure 5 cols, stacks on mobile. No figure means text spans full width |
+| `WorkRow` | Used for Work. The first row is marked "Current" in `data` type. Text 7 cols, optional figure 5 cols, stacks on mobile. No figure means text spans full width |
 | `DatedList` | One component for publications, teaching and talks, recognition. Rows sorted by date descending, with "forthcoming" first. Row: date (`data`), title (`h3`, linked when there's a URL), detail line (`data`, `ink-2`). Own name at weight 560 in author lists. An empty list renders nothing |
 | `Timeline` | Real sequence, so year markers are allowed |
 
@@ -193,6 +193,7 @@ Breakpoints: ≥ 1024 px uses 12 columns as specified. 640–1023 px uses a 6/6 
 ## 12. Open items
 
 1. ~~Hero statement~~: methods-first line chosen. Sub-line still a draft for Murat to edit.
+2. Current-work row, in Murat's words. Draft until then: *"PhD, Politecnico di Milano (2024 – present). Decision support for choosing between laser, plasma and conventional cutting for steel parts, integrated with BIM models. PNRR-funded; advisor Assoc. Prof. Alper Kanyilmaz."*
 2. Public projects confirmed: **EWSHM anomaly detection** and **concApp** only (others stay off the site). Rows, from the CV:
    - *Bridge health indicators from monitoring data* (2026, team). Unsupervised anomaly detection: an attention-based multi-modal autoencoder with a statistical baseline, deriving health indicators from long-term bridge monitoring data. Audience Prize, EWSHM 2026 Students & Young Professionals Challenge, Toulouse.
    - *concApp* (2024, team). Early-stage structural design app for cost and embodied-carbon optimization. Top 25, Switch2Product 2024 ClimateTech & Circular Economy.
