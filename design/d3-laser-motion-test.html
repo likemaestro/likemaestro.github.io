@@ -1,0 +1,232 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Laser Chapter Motion Test</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&display=swap">
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.176.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.176.0/examples/jsm/"}}</script>
+<style>
+/* Layout: light page -> pinned dark bay (native scroll scrubs the cut) -> light decision section. One deliberate look. */
+:root {
+  --porcelain: #F6F7F5; --ink: #172027; --ink-2: #4F5D68; --mist: #D5DCDF; --bay: #121A1F; --bay-ink: #E9EEF0; --bay-ink-2: #A9B6BD;
+  --cut: #F05A24; --sans: "Archivo", "Helvetica Neue", Arial, sans-serif; color-scheme: light;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--porcelain); color: var(--ink); font-family: var(--sans); font-size: 17px; line-height: 1.6; }
+.wrap { max-width: 1200px; margin: 0 auto; padding-left: max(24px, env(safe-area-inset-left, 0px)); padding-right: max(24px, env(safe-area-inset-right, 0px)); }
+h2 { font-size: clamp(2rem, 5vw, 3.6rem); line-height: 1.02; font-weight: 570; font-variation-settings: "wdth" 118; letter-spacing: -0.02em; margin: 0; text-wrap: balance; }
+p { margin: 0; max-width: 62ch; }
+.intro { padding-block: 96px 56px; display: grid; gap: 18px; }
+.muted { color: var(--ink-2); }
+.skip { color: var(--ink); text-underline-offset: 4px; font-size: 0.95rem; justify-self: start; }
+:focus-visible { outline: 2px solid var(--cut); outline-offset: 3px; }
+
+.film { position: relative; height: 640vh; background: var(--bay); }
+.stage { position: sticky; top: env(safe-area-inset-top, 0px); height: 100vh; height: 100svh; overflow: hidden; }
+canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.prog { position: absolute; left: max(24px, env(safe-area-inset-left, 0px)); right: max(24px, env(safe-area-inset-right, 0px)); top: 22px; height: 2px; background: rgba(233,238,240,0.16); }
+.prog i { position: absolute; left: 0; top: 0; bottom: 0; width: 0; background: var(--cut); }
+.beats { position: absolute; left: max(24px, env(safe-area-inset-left, 0px)); bottom: 28px; right: max(24px, env(safe-area-inset-right, 0px)); pointer-events: none; }
+.beat { position: absolute; left: 0; bottom: 0; max-width: 34rem; color: var(--bay-ink); opacity: 0; transform: translateY(8px); transition: opacity 260ms ease-out, transform 260ms ease-out; }
+.beat.on { opacity: 1; transform: none; }
+.beat h3 { margin: 0 0 6px; font-size: clamp(1.4rem, 3vw, 2.2rem); font-weight: 560; font-variation-settings: "wdth" 114; letter-spacing: -0.015em; line-height: 1.05; }
+.beat p { color: var(--bay-ink-2); font-size: 0.98rem; }
+.label { position: absolute; right: max(24px, env(safe-area-inset-right, 0px)); bottom: 28px; font-size: 0.78rem; color: var(--bay-ink-2); font-variation-settings: "wdth" 85; text-align: right; }
+.meter { position: absolute; right: max(24px, env(safe-area-inset-right, 0px)); top: 34px; font-size: 0.74rem; color: var(--bay-ink-2); font-variant-numeric: tabular-nums; font-variation-settings: "wdth" 80; }
+.lens { position: absolute; right: max(24px, env(safe-area-inset-right, 0px)); top: 64px; width: min(300px, 40vw); aspect-ratio: 1; border-radius: 50%; overflow: hidden; background: var(--porcelain); border: 2px solid var(--cut); opacity: 0; transition: opacity 260ms ease-out; }
+.lens.on { opacity: 1; }
+.lens svg { width: 100%; height: 100%; display: block; }
+.flow { position: absolute; inset: 0; display: grid; place-items: center; padding: 64px 24px; background: rgba(246,247,245,0); opacity: 0; transition: opacity 400ms ease-out, background 400ms ease-out; pointer-events: none; }
+.flow.on { opacity: 1; background: rgba(246,247,245,0.96); }
+.flow svg { width: min(980px, 100%); height: auto; }
+.flow .tall { display: none; width: min(360px, 100%); }
+svg text { font-family: var(--sans); }
+.decision { padding-block: 96px; display: grid; gap: 18px; }
+.static { display: none; padding-block: 24px 64px; gap: 20px; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
+.static figure { margin: 0; display: grid; gap: 8px; }
+.static img { width: 100%; display: block; background: var(--bay); }
+.static figcaption { font-size: 0.85rem; color: var(--ink-2); }
+@media (prefers-reduced-motion: reduce) {
+  .film { display: none; }
+  .static { display: grid; }
+}
+@media (max-width: 640px) {
+  .lens { width: 46vw; top: 84px; } .beat p { font-size: 0.92rem; }
+  .label { top: 34px; bottom: auto; left: max(24px, env(safe-area-inset-left, 0px)); right: auto; text-align: left; }
+  .flow .wide { display: none; } .flow .tall { display: block; }
+}
+</style>
+
+<section class="wrap intro" aria-labelledby="ch-h">
+  <h2 id="ch-h">From geometry to a cut part</h2>
+  <p class="muted">Motion test for the laser chapter (design stage D3). Scroll to scrub the sequence; scrolling back reverses it. Everything below is an illustrative render of a generic beam; no process values are shown.</p>
+  <a class="skip" href="#decision">Skip the cutting sequence</a>
+</section>
+
+<section class="film" id="film" aria-label="Laser cutting sequence, scroll-controlled">
+  <div class="stage">
+    <canvas id="c" role="img" aria-label="Illustrative render of a laser head cutting an opening in the web of a steel I-beam"></canvas>
+    <div class="prog" aria-hidden="true"><i id="bar"></i></div>
+    <div class="meter" id="meter" aria-hidden="true">frame — ms</div>
+    <div class="lens" id="lens" aria-hidden="true">
+      <svg viewBox="0 0 200 200"><rect width="200" height="200" fill="#F6F7F5"/>
+        <rect x="10" y="96" width="82" height="22" fill="#D5DCDF" stroke="#172027"/><rect x="108" y="96" width="82" height="22" fill="#D5DCDF" stroke="#172027"/>
+        <path d="M80 30 H120 V62 L108 84 H92 L80 62 Z" fill="#F6F7F5" stroke="#172027"/>
+        <line x1="92" y1="96" x2="92" y2="118" stroke="#F05A24" stroke-width="2.5"/>
+        <path d="M100 100 V128 M95 122 l5 6 5-6" fill="none" stroke="#4F5D68"/>
+        <circle cx="98" cy="140" r="2" fill="#F05A24"/><circle cx="102" cy="150" r="1.5" fill="#F05A24"/>
+        <text x="100" y="172" text-anchor="middle" font-size="10" fill="#4F5D68">section at the kerf, drawn</text>
+        <text x="148" y="90" text-anchor="middle" font-size="10" fill="#4F5D68">kerf</text>
+      </svg>
+    </div>
+    <div class="beats" id="beats">
+      <div class="beat" data-r="0,0.15"><h3>Laser cutting</h3><p>A focused beam melts steel locally; an assist-gas jet drives the melt out through a narrow kerf as the head follows a planned contour.</p></div>
+      <div class="beat" data-r="0.15,0.25"><h3>Piercing</h3><p>The cut starts inside the material that will be removed, then a short lead-in joins the contour.</p></div>
+      <div class="beat" data-r="0.25,0.6"><h3>Following the contour</h3><p>The head moves along the fixed beam, staying between the flanges.</p></div>
+      <div class="beat" data-r="0.6,0.75"><h3>Kerf</h3><p>Material is removed only along a narrow kerf. The lens is a drawn section, not a measurement.</p></div>
+      <div class="beat" data-r="0.75,0.9"><h3>Finished profile</h3><p>The contour closes and the opening is complete. The removed part is lifted here as an exploded view for clarity.</p></div>
+      <div class="beat" data-r="0.9,1.01" style="color:#172027"><h3 style="color:#172027">&nbsp;</h3></div>
+    </div>
+    <div class="label" id="label">Illustrative render<br>No process parameters shown</div>
+    <div class="flow" id="flow" aria-hidden="true">
+      <svg class="wide" viewBox="0 0 980 380" role="img" aria-label="Conceptual information flow from part features to candidate processes to decision factors">
+        <g font-size="15" fill="#4F5D68"><text x="40" y="40">Features from the model</text><text x="390" y="40">Candidate processes</text><text x="720" y="40">Decision factors</text></g>
+        <g fill="none" stroke="#9FB0B8" stroke-width="1.2">
+          <path d="M260 110 C330 110 330 120 390 120"/><path d="M260 110 C330 110 330 250 390 250"/>
+          <path d="M260 190 C330 190 330 120 390 120"/><path d="M260 190 C330 190 330 250 390 250"/>
+          <path d="M260 270 C330 270 330 120 390 120"/><path d="M260 270 C330 270 330 250 390 250"/>
+          <path d="M600 120 C660 120 660 100 720 100"/><path d="M600 120 C660 120 660 190 720 190"/><path d="M600 120 C660 120 660 280 720 280"/>
+          <path d="M600 250 C660 250 660 100 720 100"/><path d="M600 250 C660 250 660 190 720 190"/><path d="M600 250 C660 250 660 280 720 280"/>
+        </g>
+        <g font-size="17" fill="#172027">
+          <rect x="40" y="88" width="220" height="44" fill="#F6F7F5" stroke="#172027"/><text x="56" y="116">Opening geometry</text>
+          <rect x="40" y="168" width="220" height="44" fill="#F6F7F5" stroke="#172027"/><text x="56" y="196">Holes and edges</text>
+          <rect x="40" y="248" width="220" height="44" fill="#F6F7F5" stroke="#172027"/><text x="56" y="276">Member data (BIM)</text>
+          <rect x="390" y="98" width="210" height="44" fill="#F6F7F5" stroke="#F05A24" stroke-width="1.6"/><text x="406" y="126">Laser cutting</text>
+          <rect x="390" y="228" width="210" height="44" fill="#F6F7F5" stroke="#172027"/><text x="406" y="256">Plasma cutting</text>
+          <rect x="720" y="78" width="210" height="44" fill="#F6F7F5" stroke="#172027"/><text x="736" y="106">Cost</text>
+          <rect x="720" y="168" width="210" height="44" fill="#F6F7F5" stroke="#172027"/><text x="736" y="196">Time</text>
+          <rect x="720" y="258" width="210" height="44" fill="#F6F7F5" stroke="#172027"/><text x="736" y="286">Environmental impact</text>
+        </g>
+        <text x="40" y="350" font-size="14" fill="#4F5D68">Conceptual information flow. No process scores or outcomes are implied. Laser is outlined only because it is the process shown above.</text>
+      </svg>
+      <svg class="tall" viewBox="0 0 340 460" role="img" aria-label="Conceptual information flow from part features to candidate processes to decision factors">
+        <g font-size="13" fill="#4F5D68"><text x="20" y="20">Features from the model</text><text x="20" y="200">Candidate processes</text><text x="20" y="306">Decision factors</text></g>
+        <g fill="none" stroke="#9FB0B8" stroke-width="1.2">
+          <path d="M170 152 V172 C170 186 92 180 92 212"/><path d="M170 172 C170 186 247 180 247 212"/>
+          <path d="M92 248 C92 280 68 286 68 318"/><path d="M92 248 C92 280 170 286 170 318"/><path d="M92 248 C92 280 272 286 272 318"/>
+          <path d="M247 248 C247 280 68 286 68 318"/><path d="M247 248 C247 280 170 286 170 318"/><path d="M247 248 C247 280 272 286 272 318"/>
+        </g>
+        <g font-size="15" fill="#172027">
+          <rect x="20" y="32" width="300" height="36" fill="#F6F7F5" stroke="#172027"/><text x="34" y="55">Opening geometry</text>
+          <rect x="20" y="74" width="300" height="36" fill="#F6F7F5" stroke="#172027"/><text x="34" y="97">Holes and edges</text>
+          <rect x="20" y="116" width="300" height="36" fill="#F6F7F5" stroke="#172027"/><text x="34" y="139">Member data (BIM)</text>
+          <rect x="20" y="212" width="145" height="36" fill="#F6F7F5" stroke="#F05A24" stroke-width="1.6"/><text x="32" y="235">Laser cutting</text>
+          <rect x="175" y="212" width="145" height="36" fill="#F6F7F5" stroke="#172027"/><text x="187" y="235">Plasma cutting</text>
+          <rect x="20" y="318" width="96" height="50" fill="#F6F7F5" stroke="#172027"/><text x="32" y="348">Cost</text>
+          <rect x="122" y="318" width="96" height="50" fill="#F6F7F5" stroke="#172027"/><text x="134" y="348">Time</text>
+          <rect x="224" y="318" width="96" height="50" fill="#F6F7F5" stroke="#172027"/><text x="231" y="339" font-size="13">Environmental</text><text x="231" y="357" font-size="13">impact</text>
+        </g>
+        <g font-size="12" fill="#4F5D68"><text x="20" y="400">Conceptual information flow. No process scores</text><text x="20" y="417">or outcomes are implied. Laser is outlined only</text><text x="20" y="434">because it is the process shown above.</text></g>
+      </svg>
+    </div>
+  </div>
+</section>
+
+<section class="wrap static" aria-label="Laser cutting sequence as still frames">
+  <figure><img alt="Approach: head above the beam web, opening contour drawn" data-frame='{"style":"bay","width":900,"height":600,"progress":0,"camera":{"pos":[0.9,1.2,-0.1],"target":[0,0.03,0.02],"fov":30}}'><figcaption>Plan: the contour is drawn on the web. Illustrative render.</figcaption></figure>
+  <figure><img alt="Contour travel: localized cut front, kerf behind it" data-frame='{"style":"bay","width":900,"height":600,"progress":0.62,"camera":{"relPos":[1.1,1.3,-0.15],"relTarget":[0,0.05,0],"fov":30}}'><figcaption>Cut: the head follows the contour. Illustrative render.</figcaption></figure>
+  <figure><img alt="Finished opening with the removed part shown above it as an exploded view" data-frame='{"style":"bay","width":900,"height":600,"progress":1,"explode":1,"head":false,"camera":{"pos":[1.7,2.0,1.4],"target":[0,0.2,0],"fov":32}}'><figcaption>Finished profile, removed part as an exploded view. Illustrative render.</figcaption></figure>
+</section>
+
+<section class="wrap decision" id="decision" tabindex="-1" aria-labelledby="dec-h">
+  <h2 id="dec-h">Choosing how a part is cut</h2>
+  <p class="muted">My PhD looks at decision support for choosing between laser and plasma cutting in steel construction, using information from BIM models and weighing cost, time and environmental impact. (Draft wording for Murat to replace.)</p>
+</section>
+
+<script type="module">
+import * as THREE from "three";
+import { createRenderer, createScene, renderAll, LEAD_IN_SHARE } from "./lib/beam-scene.js";
+
+const reduce = matchMedia("(prefers-reduced-motion: reduce)");
+if (reduce.matches) renderAll(document.querySelector(".static"));
+else start();
+
+function start() {
+  const canvas = document.getElementById("c"), film = document.getElementById("film");
+  const r = createRenderer(canvas);
+  const S = createScene(r, "bay");
+  const clamp = (v, a = 0, b = 1) => Math.min(b, Math.max(a, v));
+  const seg = (t, a, b) => clamp((t - a) / (b - a));
+  const ease = (u) => (u < 0.5 ? 4 * u * u * u : 1 - Math.pow(-2 * u + 2, 3) / 2);
+
+  // Machined motion: cut progress is linear in scroll (constant feed). Camera motion: eased.
+  const progressAt = (t) =>
+    t < 0.15 ? 0 :
+    t < 0.25 ? LEAD_IN_SHARE * seg(t, 0.15, 0.25) :
+    t < 0.6  ? LEAD_IN_SHARE + (0.85 - LEAD_IN_SHARE) * seg(t, 0.25, 0.6) :
+    t < 0.75 ? 0.85 + 0.12 * seg(t, 0.6, 0.75) :
+    t < 0.78 ? 0.97 + 0.03 * seg(t, 0.75, 0.78) : 1;
+  const explodeAt = (t) => ease(seg(t, 0.8, 0.9));
+
+  const V = (x, y, z) => new THREE.Vector3(x, y, z);
+  const F = () => V(S.state.front.x, 0.02, S.state.front.y);
+  // Offsets from the cut front; z is clamped so the camera never sits inside or behind a flange.
+  const R = (x, y, z, fov, tx = 0, ty = 0.02, tz = 0) => () => {
+    const pos = F().add(V(x, y, z)); pos.z = clamp(pos.z, -0.4, 0.4);
+    return { pos, tgt: F().add(V(tx, ty, tz)), fov };
+  };
+  const keys = [
+    { t: 0.0,  get: () => ({ pos: V(3.0, 3.4, 2.4), tgt: V(0, 0, 0), fov: 30 }) },
+    { t: 0.15, get: R(1.3, 1.1, 0.05, 30, -0.15) },
+    { t: 0.24, get: R(1.0, 0.45, 0.06, 30, -0.05) },
+    { t: 0.32, get: R(1.3, 0.6, 0.06, 32, -0.1) },
+    { t: 0.6,  get: R(1.3, 0.6, 0.06, 32, -0.1) },
+    { t: 0.66, get: R(-0.6, 0.28, 0.1, 32, 0.05) },
+    { t: 0.75, get: R(-0.6, 0.28, 0.1, 32, 0.05) },
+    { t: 0.86, get: () => ({ pos: V(2.2, 2.5, 1.9), tgt: V(0, 0.25, 0), fov: 30 }) },
+    { t: 1.0,  get: () => ({ pos: V(2.4, 2.8, 2.1), tgt: V(0, 0.25, 0), fov: 30 }) },
+  ];
+  function cameraAt(t) {
+    let i = 0; while (i < keys.length - 2 && t > keys[i + 1].t) i++;
+    const a = keys[i].get(), b = keys[i + 1].get(), u = ease(seg(t, keys[i].t, keys[i + 1].t));
+    return { pos: a.pos.lerp(b.pos, u), tgt: a.tgt.lerp(b.tgt, u), fov: a.fov + (b.fov - a.fov) * u };
+  }
+
+  const beats = [...document.querySelectorAll(".beat")], bar = document.getElementById("bar");
+  const lens = document.getElementById("lens"), flow = document.getElementById("flow"), meter = document.getElementById("meter");
+  const times = [];
+  let lastT = -1, queued = false, w = 0, h = 0;
+
+  function resize() {
+    const box = canvas.getBoundingClientRect();
+    if (box.width !== w || box.height !== h) { w = box.width; h = box.height; r.setSize(w, h, false); lastT = -1; }
+  }
+  function frame() {
+    queued = false; resize();
+    const box = film.getBoundingClientRect();
+    const t = clamp(-box.top / (box.height - innerHeight));
+    if (Math.abs(t - lastT) < 1e-4) return;
+    lastT = t;
+    const t0 = performance.now();
+    S.update({ progress: progressAt(t), explode: explodeAt(t), head: t < 0.8 });
+    const c = cameraAt(t);
+    // Portrait screens keep most of the landscape horizontal view instead of cropping in.
+    const k = w / h < 1.5 ? Math.pow(1.5 / (w / h), 0.75) : 1;
+    S.camera.fov = 2 * Math.atan(Math.tan((c.fov * Math.PI) / 360) * k) * (180 / Math.PI); S.camera.aspect = w / h; S.camera.updateProjectionMatrix();
+    S.camera.position.copy(c.pos); S.camera.lookAt(c.tgt);
+    r.render(S.scene, S.camera);
+    times.push(performance.now() - t0); if (times.length > 90) times.shift();
+    const med = [...times].sort((x, y) => x - y)[times.length >> 1];
+    meter.textContent = `frame ${med.toFixed(1)} ms median (${times.length})`;
+    bar.style.width = `${(progressAt(t) * 100).toFixed(1)}%`;
+    for (const b of beats) { const [a, z] = b.dataset.r.split(",").map(Number); b.classList.toggle("on", t >= a && t < z); }
+    lens.classList.toggle("on", t >= 0.62 && t < 0.75);
+    flow.classList.toggle("on", t >= 0.9);
+  }
+  const request = () => { if (!queued) { queued = true; requestAnimationFrame(frame); } };
+  addEventListener("scroll", request, { passive: true });
+  addEventListener("resize", request);
+  reduce.addEventListener?.("change", () => location.reload());
+  request();
+}
+</script>
