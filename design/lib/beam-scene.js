@@ -42,6 +42,8 @@ function toolpath(cx) {
   return { pierce, pts: [...lead, ...loop.slice(1)], leadN: lead.length };
 }
 export const LEAD_IN_SHARE = 13 / 173;           // fraction of the toolpath that is pierce + lead-in
+const CUT_PATH = toolpath(OPENINGS[1]);
+export const frontAt = (p) => pointAt(CUT_PATH, p);   // cut-front position (x, z) at toolpath progress p
 
 function brushedTexture() {
   const c = document.createElement("canvas"); c.width = 512; c.height = 64;
@@ -141,7 +143,9 @@ export function createScene(r, style, opts = {}) {
   const glowHalo = glowTexture("rgba(255,170,90,0.9)", "rgba(240,90,36,0.35)");
   const meltTex = glowTexture("#FFE2C2", "rgba(255,120,50,0.8)");
   const onWeb = (pts, y = WEB_TOP + 0.002) => pts.map((p) => new THREE.Vector3(p.x, y, p.y));
-  const path = toolpath(OPENINGS[1]);
+  const path = CUT_PATH;
+  // One persistent light: adding/removing lights forces shader recompiles mid-scroll.
+  const spot = new THREE.PointLight("#FF8A4C", 0, 0.45, 2); scene.add(spot);
   let dyn = null, lastDone = null, webGroup = null;
 
   function buildWeb(doneCount) {
@@ -153,7 +157,7 @@ export function createScene(r, style, opts = {}) {
     for (const cx of OPENINGS.slice(0, doneCount)) shape.holes.push(new THREE.Path(stadium(cx, 0, OPEN_W, OPEN_H, 64)));
     const web = new THREE.ExtrudeGeometry(shape, { depth: WEB_T, bevelEnabled: false, curveSegments: 24 });
     web.rotateX(Math.PI / 2); web.translate(0, WEB_TOP, 0); addMesh(webGroup, web);
-    const cadMat = new THREE.LineDashedMaterial({ color: S.bg === "#FFFFFF" || style === "studio" ? "#172027" : "#5E6D75", dashSize: 0.03, gapSize: 0.02 });
+    const cadMat = new THREE.LineDashedMaterial({ color: S.bg === "#FFFFFF" || style === "studio" ? "#172027" : "#9FB0B8", dashSize: 0.03, gapSize: 0.02 });
     for (const cx of OPENINGS.slice(doneCount)) {
       const l = new THREE.Line(new THREE.BufferGeometry().setFromPoints(onWeb(stadium(cx, 0, OPEN_W, OPEN_H))), cadMat);
       l.computeLineDistances(); webGroup.add(l);
@@ -171,6 +175,7 @@ export function createScene(r, style, opts = {}) {
     const front = pointAt(path, p); state.front.copy(front);
     head.visible = showHead; head.position.set(front.x, 0, front.y);
 
+    spot.intensity = 0;
     if (p > 0 && p < 1) {
       const n = Math.max(2, Math.round(p * (path.pts.length - 1)));
       const cut = [...path.pts.slice(0, n), front];
@@ -185,7 +190,7 @@ export function createScene(r, style, opts = {}) {
           const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true, opacity: op, fog: false }));
           sp.position.copy(f3); sp.scale.setScalar(size); dyn.add(sp);
         }
-        const pl = new THREE.PointLight("#FF8A4C", 0.12 * S.glow, 0.45, 2); pl.position.copy(f3).add(new THREE.Vector3(0, 0.03, 0)); dyn.add(pl);
+        spot.intensity = 0.12 * S.glow; spot.position.copy(f3).add(new THREE.Vector3(0, 0.03, 0));
         // Restrained melt ejection below the web; deterministic so scrolling doesn't flicker.
         for (let i = 0; i < 9; i++) {
           const j = Math.sin((i + 1) * 91.7 + p * 400) * 0.5;
@@ -199,11 +204,13 @@ export function createScene(r, style, opts = {}) {
     // Removed part, shown only as a labelled exploded view above the finished opening.
     if (p >= 1 && explode > 0) {
       const slug = new THREE.ExtrudeGeometry(new THREE.Shape(stadium(OPENINGS[1], 0, OPEN_W - 0.006, OPEN_H - 0.006, 64)), { depth: WEB_T, bevelEnabled: false });
-      slug.rotateX(Math.PI / 2); slug.translate(0, WEB_TOP + 0.55 * explode, 0);
-      addMesh(dyn, slug);
-      const lead = new THREE.LineDashedMaterial({ color: S.lines || style === "studio" ? "#4F5D68" : "#8C9AA1", dashSize: 0.025, gapSize: 0.02 });
+      slug.rotateX(Math.PI / 2); slug.translate(0, WEB_TOP + 0.55, 0);
+      const ghost = steelMat.clone(); ghost.transparent = true; ghost.opacity = explode; ghost.depthWrite = explode > 0.99;
+      const sm = new THREE.Mesh(slug, ghost); sm.castShadow = S.shadow && explode > 0.99; dyn.add(sm);
+      if (lines) { const lm = lineMat.clone(); lm.transparent = true; lm.opacity = explode; dyn.add(new THREE.LineSegments(new THREE.EdgesGeometry(slug, 25), lm)); }
+      const lead = new THREE.LineDashedMaterial({ color: S.lines || style === "studio" ? "#4F5D68" : "#8C9AA1", dashSize: 0.025, gapSize: 0.02, transparent: true, opacity: explode });
       for (const [x, z] of [[-OPEN_W / 2, 0], [OPEN_W / 2, 0]]) {
-        const l = new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(x, WEB_TOP, z), new THREE.Vector3(x, WEB_TOP + 0.55 * explode, z)]), lead);
+        const l = new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(x, WEB_TOP, z), new THREE.Vector3(x, WEB_TOP + 0.55, z)]), lead);
         l.computeLineDistances(); dyn.add(l);
       }
     }
