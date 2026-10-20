@@ -91,7 +91,7 @@ Publications  year | title, authors, venue | DOI          (list, not cards)
 Teaching and talks  date | title, venue                   (same list component)
 Recognition  2026 EWSHM Audience Prize, 2024 Switch2Product Top 25
 About       short bio  |  timeline: 2016 BSc Kocaeli → 2020 MSc IZTECH → 2024 Research Fellow Polimi → 2024 PhD Polimi
-Contact     email as text, profile links as text
+Contact     email as text; LinkedIn, GitHub, Google Scholar, ResearchGate, ORCID as text links
 Footer      © year Murat Güven
 ```
 
@@ -110,7 +110,7 @@ Routes after change:
 |---|---|---|---|
 | `SiteHeader` | `src/components/SiteHeader.tsx` | none | Static (not fixed). Name links to `#top`. Nav is plain anchor links; wraps to a second line under 640 px. No hamburger: five links fit |
 | `Hero` | `src/components/Hero.tsx` | none | 7 cols text, 5 cols `CutTiling`. Mobile: graphic above text, 60% height |
-| `CutTiling` | `src/components/CutTiling.tsx` | `cell: string` (SVG path d), `cols`, `rows` | Pure inline SVG. Tiles the cell path with `<use>`. One animated overlay path traces the outline (see Motion). Until the real exported cell exists, use a re-entrant honeycomb (negative Poisson's ratio) as a stand-in and mark it with `// TODO: replace with exported cell from thesis` |
+| `CutTiling` | `src/components/CutTiling.tsx` | `voids: string[]` (from `auxeticCellVoids`), `cols`, `rows` | Pure inline SVG. Geometry is the real nonlinear auxetic cell from the MSc thesis (Fig. 8.1b), vectorized by `scripts/vectorize-cell.py` into `src/content/auxeticCell.ts`: 4 closed void outlines per 100×100 period. Voids drawn `fill: sheet`, `stroke: #8A969E` at 0.9 (non-scaling), tiled by translating multiples of 100. One void gets an overlay path with `pathLength="1"` for the trace. Caption: "Auxetic unit cell, nonlinear optimum. MSc thesis, Fig. 8.1" |
 | `ResearchItem` | `src/components/ResearchItem.tsx` | `title, period, summary, figure?, links[]` | Two-column row: figure 5 cols, text 7 cols. Stacks on mobile. No figure → text takes full width (no empty box) |
 | `DatedList` | `src/components/DatedList.tsx` | `items: {date, title, href?, detail}[]` | One component for publications, teaching and talks, and recognition. Rows sorted by date desc. Row: date (`data`), title (`h3`, linked when `href`), detail line (`data`, `ink-2`). For publications, `detail` holds authors with own name at weight 560, then venue |
 | `Timeline` | `src/components/Timeline.tsx` | `items: {year, place, role}[]` | Real sequence, so year markers are earned |
@@ -154,7 +154,7 @@ Remove dependencies once nothing imports them (grep first; tool pages may use so
 
 | Element | Trigger | Animation | Duration | Easing |
 |---|---|---|---|---|
-| `CutTiling` trace path | First paint | `stroke-dashoffset` from path length to 0 along one cell's outline; a 4 px `spark` dot rides the head (`offset-path` or SVG `animateMotion`) | 1600 ms, 300 ms delay | `cubic-bezier(.65,0,.35,1)` |
+| `CutTiling` trace path | First paint | `stroke-dashoffset` 1 → 0 on one void outline (`pathLength="1"`, `stroke-dasharray: 1`), stroked `spark` | 2200 ms, 400 ms delay | `cubic-bezier(.65,0,.35,1)` |
 | `CutTiling` kerf glow | Trace end | `spark` stroke fades to `ink` | 400 ms | `ease-out` |
 | Links | Hover | Underline thickness | 120 ms | `ease-out` |
 
@@ -209,7 +209,7 @@ Test at 375, 768, 1280, 1600.
 
 1. ~~Publication list~~: done, from the CV. Add the FEAD paper to ORCID too; it currently shows no public works.
 2. CV PDF received. Before it goes in `public/`: decide whether the phone number stays in the public copy.
-3. Google Scholar profile URL (listed on the CV, not linked).
+3. ~~Google Scholar~~: https://scholar.google.com/citations?user=Jt-dDrcAAAAJ
 4. One PhD figure you're allowed to show, and one from the FEAD paper (check Elsevier reuse terms, or use your own thesis figure).
-5. An exported optimized unit cell (SVG, or the Julia density field) to replace the stand-in hero tiling.
-6. Photo in About: yes or no. If yes, a real one, not an avatar.
+5. ~~Unit cell~~: vectorized from thesis Fig. 8.1(b). If the original AutoCAD DXF still exists, rerun from it for exact geometry.
+6. Photo in About: deferred. Layout must work without one; add later as a 4:5 image left of the bio, no rounded crop.
