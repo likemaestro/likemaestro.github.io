@@ -34,8 +34,14 @@ Plan: `C:\Users\murat\.claude\plans\ui-ux-pro-max-create-best-plan-gentle-bubble
 
 Serve locally with the `design-boards` entry in `.claude/launch.json` (port 8765, rooted at `design/`).
 
+## Change 2026-10-20: PhD method and laser part
+From the Milestone C speaker script, Murat decided:
+- The site shows the PhD **method only**: Tekla API, process models, NSGA-II, AHP and SMAA-2. No case, partner or machine names, and no numbers. Scene 3 is now a four-step method diagram with an illustrative plan cloud, and no plan is highlighted.
+- The laser part is a generic HEA-like profile: six bolt holes, each pierced, led in and contoured, then an angled end cut. The end cut is drawn as a trace (the head's path around the flanges is not modelled), and the offcut appears in a fading exploded view.
+- `d1-directions.html` now renders the new part through the shared renderer; its published artifact keeps the old frames.
+
 ## Open items for Murat (block D4 content, not D2/D3 review)
-1. PhD sentence for the decision chapter. Also: is "Member data (BIM)" the right input label? It is drawn dashed as a draft.
+1. Confirm the drafted PhD sentence (in the motion test's decision section).
 2. Hero sub-line wording.
 3. EWSHM: team consent for images, role sentence, and a source for the Audience Prize.
 4. concApp: which version's numbers are right (they differ by about 9×), authorship, and a source for the Top 25 claim.
