@@ -1,6 +1,6 @@
 # Website redesign — design + handoff spec (v2)
 
-Date: 2026-10-20. Owner: Murat Güven. Stack: React 19 + TypeScript + Tailwind 3 (CRA), GitHub Pages.
+Date: 2026-10-20. Owner: Murat Güven. Stack: React 19 + TypeScript + Tailwind 3 (CRA), GitHub Pages. CRA is deprecated upstream but works; no migration in this redesign.
 
 v2 replaces the cut-path / auxetic-tiling hero. Reasons: it leaned on the MSc while the PhD is the current work, it implied the MSc cell was laser-cut, and its figure caption read like a citation for something that isn't a publication.
 
@@ -39,7 +39,7 @@ Rejected:
 - Scroll-driven sequences over invented schematics.
 - ui-ux-pro-max's generic output (motion-heavy, parallax, masonry, blue CTA). Its accessibility checklist is kept.
 
-**The memorable thing:** a live, plain linear-elastic unit-cell topology optimization running in the visitor's browser (§6). It is real computation, shows optimization at a glance, and is the kind of tool he builds. Everything else on the page stays quiet.
+**The memorable thing:** an interactive, simplified unit-cell topology optimization (§6). It shows a precomputed result by default and runs live in the browser on request. It is real computation, labelled as a teaching example, not his PhD model or published method. Everything else on the page stays quiet.
 
 ## 4. Design tokens
 
@@ -74,7 +74,9 @@ Letter-spacing `-0.02em` on `display` and `h2`. No all caps. No single-word colo
 
 ## 5. Page structure
 
-Single page `/`. Old routes: `/publications` redirects to `/#publications`; `/tools/*` stays reachable by URL but is unlinked (remove from nav, sitemap, README).
+Single page `/`. Old routes: `/publications` becomes `<Navigate to="/#publications" replace />`. `/tools/*` stays reachable by URL but is unlinked (remove from nav, sitemap, README).
+
+**GitHub Pages deep links.** The app uses `BrowserRouter` and Pages has no SPA fallback, so a direct load or refresh of `/tools/WorldMap` returns 404 today. Fix: add `"postbuild": "node -e \"require('fs').copyFileSync('build/index.html','build/404.html')\""` to `package.json` scripts. Pages serves `404.html` for unknown paths, and React Router then renders the route. The HTTP status stays 404, which is acceptable for unlisted tools.
 
 ```
 Header      Murat Güven                       Work  Publications  About  Contact  CV (PDF)
@@ -90,45 +92,72 @@ Footer      © year Murat Güven
 
 Mobile (< 640 px): header, then hero text, **then** the live cell (smaller, 3×3 tiling only), then the sections. Identity is always read before the visualization.
 
-## 6. Hero: live unit-cell optimization
+## 6. Hero: interactive unit-cell example
 
-### What it computes (plain, standard, nothing from unpublished work)
+### Framing
 
-- 2D periodic unit cell, square, linear elastic, plane stress, E = 1, ν = 0.3, E_min = 1e-9.
-- Q4 elements, fixed square mesh: 40×40 on desktop, 28×28 on mobile or when `navigator.hardwareConcurrency <= 4`.
-- Periodic boundary conditions by node-index aliasing (opposite edges share DOFs), with one node pinned to remove rigid-body motion.
-- Energy-based homogenization with 3 unit-strain cases (11, 22, 12), in the style of Xia & Breitkopf (2015). The stiffness matrix is factored once per iteration and reused for all 3 right-hand sides.
-- SIMP (p = 3), density filter with radius 1.5 elements, OC update (move 0.2), volume fraction 0.35. Up to 120 iterations, or stop when the change is below 0.01.
-- Objectives (buttons): **Stiff** (maximize E₁₁ + E₂₂), **Shear** (maximize E₃₃), **Bulk** (maximize Σ Eᵢⱼ for i, j ∈ {1, 2}). **Auxetic** (negative Poisson's ratio) needs MMA and is phase 2.
-- Initial design: uniform density plus a small centered void, so the result is deterministic and doesn't depend on a random seed.
+This is a **simplified teaching example** from the computational-mechanics side of Murat's work. It is not his PhD model, and it does not reproduce the FEAD paper, which uses nonlinear elasticity, plane strain, MMA and domain reduction. The demo is linear elastic, plane stress and OC-based. The caption says so. The hero sub-line and the "Current" Work row keep the PhD visible on their own.
+
+Caption under the cell (`small`, `ink-2`): "A simplified example of unit-cell topology optimization (linear elastic, plane stress). It is not the model from my publications." No figure numbers and no thesis references.
+
+### Formulation (plain, standard, nothing from unpublished work)
+
+- **Domain.** Square periodic unit cell Y. Q4 bilinear elements, 2×2 Gauss. Plane stress, E = 1, ν = 0.3, E_min = 1e-9. SIMP: E(ρ̃) = E_min + ρ̃³(1 − E_min).
+- **Voigt convention.** Order [11, 22, 12], engineering shear γ₁₂ = 2ε₁₂. The homogenized stiffness Cᴴ is 3×3 and symmetric: σ̄ = Cᴴ ε̄.
+- **Periodicity.** u = ε̄·x + ũ, where only the **fluctuation** ũ is periodic. Opposite boundary nodes share their ũ DOFs (index aliasing), and one node has ũ = 0 to remove rigid-body translation. The macroscopic strain ε̄ is imposed through the element load vectors, not through boundary values.
+- **Homogenization.** Energy-based (Andreassen & Andreasen 2014; Xia & Breitkopf 2015). Three test strains: ε̄⁽¹⁾ = [1,0,0], ε̄⁽²⁾ = [0,1,0], ε̄⁽³⁾ = [0,0,1] (γ = 1). Cᴴᵢⱼ = (1/|Y|) Σₑ (χ⁰ⁱ − χⁱ)ₑᵀ kₑ(ρ̃) (χ⁰ʲ − χʲ)ₑ. One factorization (or one preconditioner) per iteration serves all three right-hand sides.
+- **Objectives** (all maximized):
+
+  | Button | Objective | Meaning |
+  |---|---|---|
+  | Axial | C₁₁ᴴ + C₂₂ᴴ | Sum of the two axial stiffness entries |
+  | Shear | C₃₃ᴴ | Shear stiffness entry under the convention above |
+  | Bulk | C₁₁ᴴ + C₂₂ᴴ + 2C₁₂ᴴ | Equibiaxial stiffness, the energy under ε̄ = [1,1,0]. For square-symmetric cells it equals 4κ, where κ is the 2D bulk modulus. The readout labels it "equibiaxial stiffness", not κ |
+
+  Each objective is a non-negative energy, so every sensitivity has the same sign and OC is valid. NPR/auxetic objectives have mixed-sign sensitivities, need MMA, and are phase 2.
+- **Symmetry.** All three objectives are invariant under the square's symmetry group D4, so D4 symmetry is **enforced** rather than hoped for: after filtering, each element's sensitivity is averaged over its 8 group images. Initial design: uniform ρ equal to the volume fraction, plus a centered circular void of radius 0.15·L. That makes runs deterministic, D4-symmetric and seed-free.
+- **Update.** Density filter r = 1.5 elements. OC with move 0.2. Volume fraction 0.4 as an equality, found by bisection on the multiplier. Stop at 120 iterations or when max |Δρ| < 0.01.
+- **Effective properties in the readout.** The Cᴴ entries, plus E₁ = 1/S₁₁ and ν₁₂ = −S₁₂/S₁₁, where S = (Cᴴ)⁻¹. These hold for general in-plane anisotropy; with D4 symmetry, E₁ = E₂ and ν₁₂ = ν₂₁.
+
+### Behavior: precomputed by default, live on request
+
+| State | What shows | Controls |
+|---|---|---|
+| Initial (every visitor, any motion setting) | Precomputed final result for **Axial**. Status: "Precomputed result" | Objective buttons, **Run live** |
+| Objective selected while idle | That objective's precomputed result, instantly | Same |
+| Running | Density updates each iteration. Status: "Computing in your browser, iteration N" | **Pause**, **Reset**, objective buttons |
+| Paused | Frozen at iteration N | **Resume**, **Reset** |
+| Objective selected while running | The run is cancelled and that objective's precomputed result shows | Run live |
+| Converged | Final layout. Status: "Converged at iteration N, computed live" | Run live, objective buttons |
+| Hero out of view or tab hidden while running | The worker pauses itself and resumes when the hero is visible again | — |
+| Worker unsupported or error | Precomputed result; **Run live** is hidden | Objective buttons |
+
+Nothing moves until the visitor presses Run live, and Pause is available during every run (WCAG 2.2.2). The precomputed results come from the same TypeScript solver run once in Node (`scripts/precompute-cells.mjs`): 3 × n×n `Uint8Array`, about 5 KB, in `src/lab/precomputed.ts`.
 
 ### Implementation
 
 | Piece | File | Notes |
 |---|---|---|
-| Solver | `src/lab/unitcell.ts` | Pure functions, no DOM. Precomputed element stiffness, banded or skyline Cholesky, filter weights built once. ~400 lines |
-| Worker | `src/lab/unitcell.worker.ts` | Runs the solver, posts `{iter, rho: Float32Array, C: [c11, c12, c22, c33], volume}` every iteration. Accepts `start(objective)` and `stop` |
-| View | `src/components/LiveCell.tsx` | Canvas 2D. Draws the cell large and a 3×3 tiling. Density maps `canvas` → `steel` → `ink`. Readout in `data` type: iteration, E₁₁, E₂₂, ν₁₂, G₁₂ |
+| Solver | `src/lab/unitcell.ts` | Pure functions, no DOM. Precomputes kₑ, filter weights and D4 index maps. Linear solver chosen by benchmark (below) |
+| Worker | `src/lab/unitcell.worker.ts` | Messages in: `run(objective, n)`, `pause`, `resume`, `cancel`. Out, each iteration: `{iter, rho: Float32Array, CH: [c11, c12, c22, c33], objective, volume, ms}` |
+| View | `src/components/LiveCell.tsx` | Canvas 2D: the cell plus a 3×3 tiling. Density maps `canvas` → `steel` → `ink`. Readout in `data` type |
 
-CRA 5 supports `new Worker(new URL('./unitcell.worker.ts', import.meta.url))`; check this on the first build.
+**Solver and mesh size are decided by measurement, not assumed.** Periodic aliasing couples opposite edges, so plain banded storage does not stay narrow. Two candidates:
+- (a) sparse Cholesky with RCM ordering, refactored each iteration;
+- (b) Jacobi-preconditioned CG, warm-started from the previous iteration's χ.
 
-### Behavior
+Benchmark both at n = 24, 32 and 40, on Murat's laptop and on one mid-range phone, and record the median ms per iteration here. Choose the largest n for which a full run takes ≤ 6 s on desktop, and a separate n for phones. 40 is a target, not a promise.
 
-| Trigger | Result |
-|---|---|
-| Page load, motion allowed, hero visible | Starts **Stiff** automatically after 600 ms |
-| Objective button | Restarts from the initial design with that objective. Active button: `ink` fill, `canvas` text |
-| Hero scrolled out of view, or tab hidden | Worker pauses (IntersectionObserver plus `visibilitychange`) |
-| Converged | Shows the final layout; readout says "converged at iteration N" |
-| `prefers-reduced-motion` | No autostart. Shows a precomputed final Stiff layout (shipped as a 40×40 `Uint8Array`) with a "Run optimization" button |
-| Worker unsupported or failure | Static precomputed layout, no buttons, no error text |
+CRA 5 supports `new Worker(new URL('./unitcell.worker.ts', import.meta.url))`; confirm this on the first build.
 
-Caption under the cell (`small`, `ink-2`): "Topology optimization of a periodic unit cell, running live in your browser." No figure numbers and no thesis references.
+### Validation (`src/lab/unitcell.test.ts` unless noted)
 
-### Verification
-
-- `unitcell.test.ts` checks two things. A solid cell (ρ = 1) gives the analytic plane-stress values: C₁₁ = E/(1−ν²), C₁₂ = νC₁₁, C₃₃ = E/(2(1+ν)), within 1e-6. The Bulk result after 120 iterations is symmetric under 90° rotation (max density difference < 1e-3).
-- Performance budget: under 40 ms per iteration at 40×40 on a mid-range laptop. Measure in the worker and log it in development builds.
+1. **Analytic.** For a solid cell, Cᴴ equals the plane-stress tensor: C₁₁ = C₂₂ = E/(1−ν²), C₁₂ = νC₁₁, C₃₃ = E/(2(1+ν)), within 1e-9.
+2. **Reference implementation.** `scripts/reference_homogenize.py` is an independent NumPy implementation following Andreassen & Andreasen (2014). On two fixed density fields (a centered square void, and a cross), the TypeScript and Python Cᴴ agree within 1e-8. The fields and the Python output are committed as a JSON fixture.
+3. **Sensitivities.** For each objective, the analytic gradient matches central finite differences (h = 1e-6) on 6 elements of a random field, with relative error < 1e-5.
+4. **Periodicity and volume.** Paired boundary nodes carry equal ũ. After each OC update, the volume is within 1e-6 of the target.
+5. **Symmetry and determinism.** For each objective, the result is D4-symmetric to 1e-12, and two runs give bit-identical densities.
+6. **Performance** (manual, recorded in this spec): the benchmark above.
 
 ## 7. Other sections and components
 
@@ -146,7 +175,7 @@ Publications seed:
 | Year | Kind | Entry |
 |---|---|---|
 | 2026 | journal | M. Güven, İ. Özdemir. "Topology Optimization of Nonlinear Elastic Micro-structures by a Domain Reduction Technique." *Finite Elements in Analysis and Design* 260, 104599. doi:10.1016/j.finel.2026.104599 |
-| forthcoming | book | A. Kanyilmaz, M. Güven. *Metals Driving Sustainable Construction.* Wiley. ISBN 9781394351657 |
+| forthcoming (2027) | book | A. Kanyilmaz, M. Güven. *Metals Driving Sustainable Construction.* Wiley, hardcover, listed for 2027-07-07. ISBN 9781394351657, linked to https://isbnsearch.org/isbn/9781394351657 |
 | 2025 | conference | A. Kanyilmaz, M. Güven, B. Previtali. "Laser Cutting of Key Metals in the Construction Industry." Extended abstract, ESTAD 2025, Verona |
 | 2023 | thesis | M. Güven. *Topology Optimization of Nonlinear Elastic Microstructures.* MSc thesis, İzmir Institute of Technology (PDF) |
 
@@ -192,13 +221,14 @@ Breakpoints: ≥ 1024 px uses 12 columns as specified. 640–1023 px uses a 6/6 
 ## 10. Accessibility
 
 - A skip link to `#main`. Landmarks: `header`, `nav aria-label="Sections"`, `main`, `footer`. One `h1`.
-- Live cell: the canvas is `role="img"` with an `aria-label` that updates on convergence ("Optimized unit cell for maximum stiffness, converged at iteration 74"). The readout is plain text, not `aria-live`, to avoid noise every iteration. Buttons are `aria-pressed`.
+- Live cell: the canvas is `role="img"` with an `aria-label` describing what is shown ("Precomputed unit cell optimized for axial stiffness", or "…converged at iteration 74"). The per-iteration readout is not `aria-live`. Only status changes (started, paused, converged) are announced, through a polite live region. Objective buttons use `aria-pressed`. Nothing animates without a user action, and Pause is available during runs (WCAG 2.2.2).
 - Contrast: `ink` on `canvas` is about 15:1, `ink-2` about 6:1. `laser` and `steel` are never used for text.
 - Keyboard: all controls reachable; focus order follows the DOM.
 
 ## 11. Verification
 
-- `npm run build` passes; existing `mapLabelUtils` test stays green; `unitcell.test.ts` (§6) and a `DatedList` ordering test pass.
+- `npm run build` passes; the existing `mapLabelUtils` test stays green; the §6 validation suite and a `DatedList` ordering test pass.
+- On the deployed site, `/tools/WorldMap` and `/publications` load after a hard refresh.
 - Keyboard walk-through, reduced-motion check, screenshots at 375 and 1280.
 - Lighthouse: accessibility ≥ 95, performance ≥ 90.
 
@@ -211,5 +241,6 @@ Breakpoints: ≥ 1024 px uses 12 columns as specified. 640–1023 px uses a 6/6 
    - *concApp* (2024, team). Early-stage structural design app for cost and embodied-carbon optimization. Top 25, Switch2Product 2024 ClimateTech & Circular Economy.
    Still needed: whether either has a public link (repo, demo, report), and Murat's role in one phrase each.
 4. Recompiled CV without the phone line (optional).
-5. Photo in About: deferred; the layout works without one.
-6. Phase 2: Auxetic objective (MMA) and drag-to-change load cases.
+5. Benchmark numbers (§6), recorded here before the mesh size is fixed.
+6. Photo in About: deferred; the layout works without one.
+7. Phase 2: Auxetic objective (MMA) and drag-to-change load cases.
