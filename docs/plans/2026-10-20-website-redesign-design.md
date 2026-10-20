@@ -127,7 +127,7 @@ Caption under the cell (`small`, `ink-2`): "Topology optimization of a periodic 
 
 ### Verification
 
-- `unitcell.test.ts` checks two things. A solid cell (ρ = 1) gives the analytic plane-stress values: C₁₁ = E/(1−ν²), C₁₂ = νC₁₁, C₃₃ = E/(2(1+ν)), within 1e-6. A 50% checkerboard-free result after 120 iterations is symmetric under 90° rotation for the Bulk objective.
+- `unitcell.test.ts` checks two things. A solid cell (ρ = 1) gives the analytic plane-stress values: C₁₁ = E/(1−ν²), C₁₂ = νC₁₁, C₃₃ = E/(2(1+ν)), within 1e-6. The Bulk result after 120 iterations is symmetric under 90° rotation (max density difference < 1e-3).
 - Performance budget: under 40 ms per iteration at 40×40 on a mid-range laptop. Measure in the worker and log it in development builds.
 
 ## 7. Other sections and components
@@ -136,10 +136,10 @@ Caption under the cell (`small`, `ink-2`): "Topology optimization of a periodic 
 |---|---|
 | `SiteHeader` | Static, not fixed. Plain anchor links that wrap under 640 px. No hamburger |
 | `WorkRow` | Used for Work. The first row is marked "Current" in `data` type. Text 7 cols, optional figure 5 cols, stacks on mobile. No figure means text spans full width |
-| `DatedList` | One component for publications, teaching and talks, recognition. Rows sorted by date descending, with "forthcoming" first. Row: date (`data`), title (`h3`, linked when there's a URL), detail line (`data`, `ink-2`). Own name at weight 560 in author lists. An empty list renders nothing |
+| `DatedList` | One component for Publications and Teaching and talks (awards sit in the Work rows). Rows sorted by date descending, with "forthcoming" first. Row: date (`data`), title (`h3`, linked when there's a URL), detail line (`data`, `ink-2`). Own name at weight 560 in author lists. An empty list renders nothing |
 | `Timeline` | Real sequence, so year markers are allowed |
 
-Content lives in typed data files under `src/content/`: `publications.ts`, `activity.ts`, `research.ts`, `timeline.ts`.
+Content lives in typed data files under `src/content/`: `publications.ts`, `activity.ts`, `work.ts`, `timeline.ts`.
 
 Publications seed:
 
@@ -149,6 +149,18 @@ Publications seed:
 | forthcoming | book | A. Kanyilmaz, M. Güven. *Metals Driving Sustainable Construction.* Wiley. ISBN 9781394351657 |
 | 2025 | conference | A. Kanyilmaz, M. Güven, B. Previtali. "Laser Cutting of Key Metals in the Construction Industry." Extended abstract, ESTAD 2025, Verona |
 | 2023 | thesis | M. Güven. *Topology Optimization of Nonlinear Elastic Microstructures.* MSc thesis, İzmir Institute of Technology (PDF) |
+
+Teaching and talks seed (`activity.ts`, from the CV; organizational-support entries left out):
+
+| Date | Entry |
+|---|---|
+| 2025-11-26 | Speaker. "Digital Innovation of Construction: How can digital innovation make construction processes more efficient?" PropTech Day 2025, Politecnico di Milano |
+| 2025-11-12 | Guest lecturer. "AI Workshop", Life Cycle Driven Design, Sustainable Architecture and Landscape Design, Politecnico di Milano (Piacenza) |
+| 2025-10-13 | Co-instructor. "AI for Architecture", MaBa.DESIGN, Politecnico di Milano |
+| 2025-09-21 | Speaker. "ChatGPT as an Engineering Assistant", Festival Internazionale dell'Ingegneria, Politecnico di Milano |
+| 2024-11 – 2025-01 | Teaching assistant. "Life-Cycle Driven Structures: from Concept to Construction", Politecnico di Milano |
+| 2024-08-08 | Co-instructor. Executive AI strategy training, Braun Engineering Group, Munich |
+| A.Y. 2024–25 | MSc thesis co-supervision. "Sensitivity Analysis in Steel Cutting Method Selection for the Construction Industry", Politecnico di Milano (two more ongoing) |
 
 Delete: `ParticleNetwork.tsx`, `AnimatedTextSection.tsx`, `MainContent.tsx`, `NavLink.tsx`, `BackToTopButton.tsx`, `ScrollToTop.tsx` (empty), `pages/PublicationsPage.tsx`, the scroll-spy logic in `App.tsx`, the scroll-snap CSS, and v1's `scripts/vectorize-cell.py` and `src/content/auxeticCell.ts`.
 
