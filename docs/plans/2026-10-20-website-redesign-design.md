@@ -1,130 +1,152 @@
-# Website redesign — design + handoff spec
+# Website redesign — design + handoff spec (v2)
 
-Date: 2026-10-20 · Owner: Murat Güven · Stack: React 19 + TypeScript + Tailwind 3 (CRA), GitHub Pages
+Date: 2026-10-20. Owner: Murat Güven. Stack: React 19 + TypeScript + Tailwind 3 (CRA), GitHub Pages.
+
+v2 replaces the cut-path / auxetic-tiling hero. Reasons: it leaned on the MSc while the PhD is the current work, it implied the MSc cell was laser-cut, and its figure caption read like a citation for something that isn't a publication.
 
 ## 1. Brief
 
-- **Who it's for:** academic hiring committees and collaborators *and* industry R&D, equally. Both need the same three answers fast: what does he work on, what has he produced, how do I reach him.
-- **Goal:** a professional, specific, quiet site that reads as made by an engineer about his own work, not as a template.
-- **Constraints:** light theme (no dark style). Hide CUTT-IA, WorldMap and Gauge from the public site. Static hosting on GitHub Pages.
-- **Success:** a stranger can say in two sentences what Murat researches after 10 seconds on the page; zero placeholder content ships; Lighthouse accessibility ≥ 95; works at 375 px.
+- **Who it's for:** academic hiring committees and collaborators *and* industry R&D, equally. Both need: what does he work on, what has he produced, how do I reach him.
+- **Focus of the site:** AI, optimization and construction. Laser/plasma cutting is one application inside that, not the identity.
+- **Goal:** a small, curated research exhibition that also works as a professional profile. Specific to him, not a template.
+- **Constraints:** light theme. CUTT-IA, WorldMap and Gauge hidden from the public site. Static hosting on GitHub Pages.
+- **Success:** a stranger can say what Murat works on after 10 seconds; zero placeholder content ships; Lighthouse accessibility ≥ 95; works at 375 px.
 
-## 2. Subject matter (what the design is built from)
+## 2. Content sources
 
-Real material from the MSc thesis and the CV (Oct 2026), not invented:
+Real material only, from the CV (Oct 2026) and his repos:
 
-- **Profile:** computational and AI-based decision support for structural engineering and sustainable construction: optimization methods, BIM-integrated workflows, computational tools for steel fabrication.
-- **PhD (Nov 2024 – present):** Politecnico di Milano, ABC. Thesis: BIM-integrated decision support for laser and plasma cutting process selection in steel construction. PNRR-funded. Advisor: Assoc. Prof. Alper Kanyilmaz.
+- **Profile:** computational and AI-based decision support for structural engineering and sustainable construction.
+- **PhD (Nov 2024 – present):** Politecnico di Milano, ABC. BIM-integrated decision support for laser and plasma cutting process selection in steel construction. PNRR-funded. Advisor: Assoc. Prof. Alper Kanyilmaz.
 - **Research Fellow (Mar – Nov 2024):** Politecnico di Milano, DABC. Structural design and fabrication for steel: laser cutting, metal 3D printing, environmental impact.
-- **MSc (2020 – 2023):** İzmir Institute of Technology, Civil Engineering. Thesis *Topology optimization of nonlinear elastic microstructures*: Julia framework, 2D periodic neo-Hookean unit cells, symmetry-based domain halving, 3D-printed samples under uniaxial tests. TÜBİTAK 1002 project 122M134 (researcher). Advisor: Assoc. Prof. İzzet Özdemir.
-- **BSc (2016 – 2020):** Kocaeli University, Civil Engineering. Thesis on bending of thin plates with variable thickness.
-- **Publications:** see `publications.ts` seed in §6.
-- **Teaching, talks, awards:** AI workshops and trainings for AEC (Politecnico di Milano, Braun Engineering Group executive board), TA for Life-Cycle Driven Structures, MSc co-supervision, talks at PropTech Day 2025 and Festival dell'Ingegneria 2025, Audience Prize at the EWSHM 2026 Young Professionals Challenge, Top 25 at Switch2Product 2024 (concApp).
-- **Visual vocabulary of the field:** optimized unit cells and their tilings, cut paths, sheet steel, kerf, the bright molten edge where a laser cuts.
+- **MSc (2020 – 2023):** İzmir Institute of Technology. Topology optimization of nonlinear elastic microstructures; led to the 2026 *FEAD* paper.
+- **BSc (2016 – 2020):** Kocaeli University, Civil Engineering.
+- **AI work:** EWSHM 2026 challenge (unsupervised anomaly detection on bridge monitoring data, Audience Prize), concApp (cost and embodied-carbon optimization app, Switch2Product 2024 Top 25), AI trainings and talks for AEC.
+- **Publications, teaching, talks:** §7 seed tables.
 
-Unifying idea for the site: **shapes that are computed, then cut.** The hero shows a periodic unit cell tiled into a sheet, traced once by a cut path.
+## 3. Direction
 
-## 3. Direction review (why not mockup C)
+Kept from v1: light theme, Archivo with its width axis, one hot accent used only for "active" geometry, no template chrome (no all-caps eyebrows, no `01/02` numbering unless the content is a sequence, no `·` meta strings, no mono labels).
 
-Mockup C (cream paper, serif display, warm-red accent, hairline rules, mono labels, `A · B` meta strings) matches the most common generated-site look almost point for point. Revised:
+Adopted from the external review:
+- Identity first. Name and current focus are the first thing read, on every screen size.
+- PhD leads the research; the MSc is one compact section.
+- Stronger hierarchy and contrast between sections: most of the page on near-white, with **one** full-width graphite section for the PhD.
+- Research presented as question, method, outputs.
+- One memorable interactive moment, tied to real computation, with a reduced-motion fallback.
 
-| C had | Changed to | Why |
-|---|---|---|
-| Warm cream `#F6F4EE` | Cool zinc grey `paper #E9ECEA` | Cream is the default AI paper; zinc/galvanized steel is this subject's material |
-| Serif display + mono labels | One family, Archivo, using its **width axis** | Expanded for headlines, condensed for data. The type does the engineering voice without a costume mono |
-| Hairline-ruled broadsheet chrome everywhere | Rules only where they separate data rows (publication list, timeline) | Structure must encode information |
-| Uppercase tracked labels, `01 / 02` numbering, `·` joins | Sentence case; numbers only on the timeline, which is a real sequence | Removes template chrome |
-| Decorative profile drawing | The hero graphic is his own thesis output (unit cell tiling) | Specific to him, can't belong to anyone else |
+Rejected:
+- Name-as-giant-wordmark hero and Awwwards-style motion (trend defaults, not specific to him).
+- Scroll-driven sequences over invented schematics. A scroll sequence is phase 2, and only over real PhD material.
+- ui-ux-pro-max's generic output (motion-heavy, parallax, masonry, blue CTA). Its accessibility checklist is kept.
 
-Boldness is spent in **one** place: the hero cut-path trace. Everything else is quiet.
+**The memorable thing:** a live, plain linear-elastic unit-cell topology optimization running in the visitor's browser (§6). It is real computation, shows optimization at a glance, and is the kind of tool he builds. Everything else on the page stays quiet.
 
 ## 4. Design tokens
 
 Add to `tailwind.config.js` under `theme.extend` (replace `custom-dark-blue`, `custom-deep-ocean`).
 
-### Color
-
 | Token | Value | Usage |
 |---|---|---|
-| `paper` | `#E9ECEA` | Page background |
-| `sheet` | `#F5F6F4` | Raised areas: figure backgrounds, hover row tint |
-| `ink` | `#14202B` | Body text, headings, cut lines in drawings, focus ring (blued steel) |
-| `ink-2` | `#4F5D68` | Secondary text: venues, dates, captions (≈5.9:1 on `paper`) |
-| `rule` | `#BFC7CB` | Row dividers, figure borders |
-| `steel` | `#A9B4BA` | Material in the hero tiling only |
-| `spark` | `#E8480A` | **Graphics only**: laser path head, kerf glow in the hero. Never text, never buttons (≈3.3:1 on `paper`, passes the 3:1 bar for non-text graphics only) |
+| `canvas` | `#F6F7F5` | Page background |
+| `ink` | `#172027` | Text, headings, solid material in the live cell, focus ring |
+| `ink-2` | `#4F5D68` | Secondary text (≈ 6:1 on `canvas`) |
+| `steel` | `#819199` | Intermediate densities in the live cell, chart marks. Never text |
+| `rule` | `#CBD2D5` | Row dividers, figure borders |
+| `graphite` | `#26353D` | Background of the one full-width PhD section. Text on it is `canvas` (≈ 12:1) |
+| `laser` | `#F05A24` | Graphics only: the "selected" or "active" mark. Never text, never buttons |
 
-No gradients, no shadows, no tinted overlays.
+No gradients, no shadows.
 
-### Type
-
-Family: **Archivo** variable (axes `wght` 100–900, `wdth` 62–125), self-hosted via `@fontsource-variable/archivo` (import the width-axis CSS; check the package's export name, e.g. `wdth.css`, at install). Subsets: `latin`, `latin-ext` (needed for ü, ğ, İ, ş). Drop `@fontsource/manrope` and `@fontsource/frank-ruhl-libre` if no tool page still imports them.
+**Type:** Archivo variable (`wght` 100–900, `wdth` 62–125), self-hosted via `@fontsource-variable/archivo` (width-axis CSS; check the export name at install), subsets `latin` and `latin-ext`.
 
 | Token | Size / line-height | Weight | Width | Usage |
 |---|---|---|---|---|
-| `display` | `clamp(2.5rem, 6vw, 4.5rem)` / 1.02 | 560 | 118 | Hero statement only |
-| `h2` | 2.125rem / 1.15 | 540 | 112 | Section titles |
+| `display` | `clamp(2.25rem, 5.5vw, 4.25rem)` / 1.03 | 560 | 118 | Hero statement |
+| `name` | 1.125rem / 1.2 | 600 | 112 | Name in header |
+| `h2` | `clamp(1.75rem, 3vw, 2.5rem)` / 1.12 | 540 | 112 | Section titles |
 | `h3` | 1.3125rem / 1.3 | 520 | 100 | Project and paper titles |
-| `body` | 1.0625rem (17px) / 1.6 | 400 | 100 | Paragraphs, max 68ch |
+| `body` | 1.0625rem / 1.6 | 400 | 100 | Paragraphs, max 68ch |
 | `small` | 0.875rem / 1.45 | 400 | 100 | Captions, footer |
-| `data` | 0.9375rem / 1.4 | 450 | 75 | Years, venues, DOIs, figure numbers. `font-variant-numeric: tabular-nums` |
+| `data` | 0.9375rem / 1.4 | 450 | 75 | Dates, venues, solver readouts. `tabular-nums` |
 
-Letter-spacing: `-0.02em` on `display` and `h2`, `0` elsewhere. No all-caps anywhere. No italic or color accent on single headline words.
+Letter-spacing `-0.02em` on `display` and `h2`. No all caps. No single-word color or italic accents in headlines.
 
-### Space and layout
+**Space:** 4 px base (`2`=8, `3`=12, `4`=16, `6`=24, `8`=32, `12`=48, `16`=64, `24`=96, `32`=128). Container 1200 px, gutters 24 (16 on mobile). 12-column grid, left-aligned ragged-right text. Sections are content-height (no `min-h-screen`, no scroll-snap). Section spacing 128 desktop, 64 mobile. Radius 0, except 2 px on the CV link and the objective buttons.
 
-- Base unit 4 px. Tokens: `space-2` 8, `space-3` 12, `space-4` 16, `space-6` 24, `space-8` 32, `space-12` 48, `space-16` 64, `space-24` 96.
-- Container: `max-width: 1200px`, side padding `space-6` (mobile `space-4`).
-- Grid: 12 columns, gap `space-6`. All text **left-aligned, ragged right**. No justified text (the current About uses `text-justify`; remove it).
-- Section spacing: `space-24` desktop, `space-16` mobile. Sections are as tall as their content: no `min-h-screen`, no scroll-snap.
-- Radius: `0` on figures and rows, `2px` on the one button-like element (CV link). Not a card system.
+## 5. Page structure
 
-## 5. Information architecture
-
-Single page `/` with anchored sections. Hidden tools stay routable by direct URL so old links keep working, but nothing links to them.
+Single page `/`. Old routes: `/publications` redirects to `/#publications`; `/tools/*` stays reachable by URL but is unlinked (remove from nav, sitemap, README).
 
 ```
-Header      Murat Güven ................ Research  Publications  About  Contact  CV
-Hero        statement + one-line role      |  unit-cell tiling, traced once
-Research    PhD: cutting process selection (current)  ── figure | text
-            Topology optimization of microstructures  ── figure | text   (MSc → FEAD 2026 paper)
-Publications  year | title, authors, venue | DOI          (list, not cards)
-Teaching and talks  date | title, venue                   (same list component)
-Recognition  2026 EWSHM Audience Prize, 2024 Switch2Product Top 25
-About       short bio  |  timeline: 2016 BSc Kocaeli → 2020 MSc IZTECH → 2024 Research Fellow Polimi → 2024 PhD Polimi
+Header      Murat Güven                       Research  Publications  About  Contact  CV (PDF)
+Hero        statement + sub-line (7 cols)  |  live unit cell + 3×3 tiling (5 cols)
+            objective buttons + live readout under the cell
+PhD         [graphite, full width] question, method, outputs  |  decision diagram (code-drawn)
+Optimization  MSc → FEAD 2026, compact: two sentences + paper link + the sample photo
+AI for engineering  EWSHM anomaly detection, concApp, trainings (rows, not cards)
+Publications  date | title, authors, venue | DOI
+Teaching and talks  date | title, venue
+About       short bio | timeline (2016 BSc → 2020 MSc → 2024 Fellow → 2024 PhD)
 Contact     email as text; LinkedIn, GitHub, Google Scholar, ResearchGate, ORCID as text links
 Footer      © year Murat Güven
 ```
 
-Routes after change:
+Mobile (< 640 px): header, then hero text, **then** the live cell (smaller, 3×3 tiling only), then the sections. Identity is always read before the visualization.
 
-| Route | Status |
+## 6. Hero: live unit-cell optimization
+
+### What it computes (plain, standard, nothing from unpublished work)
+
+- 2D periodic unit cell, square, linear elastic, plane stress, E = 1, ν = 0.3, E_min = 1e-9.
+- Q4 elements, fixed square mesh: 40×40 on desktop, 28×28 on mobile or when `navigator.hardwareConcurrency <= 4`.
+- Periodic boundary conditions by node-index aliasing (opposite edges share DOFs), with one node pinned to remove rigid-body motion.
+- Energy-based homogenization with 3 unit-strain cases (11, 22, 12), in the style of Xia & Breitkopf (2015). The stiffness matrix is factored once per iteration and reused for all 3 right-hand sides.
+- SIMP (p = 3), density filter with radius 1.5 elements, OC update (move 0.2), volume fraction 0.35. Up to 120 iterations, or stop when the change is below 0.01.
+- Objectives (buttons): **Stiff** (maximize E₁₁ + E₂₂), **Shear** (maximize E₃₃), **Bulk** (maximize Σ Eᵢⱼ for i, j ∈ {1, 2}). **Auxetic** (negative Poisson's ratio) needs MMA and is phase 2.
+- Initial design: uniform density plus a small centered void, so the result is deterministic and doesn't depend on a random seed.
+
+### Implementation
+
+| Piece | File | Notes |
+|---|---|---|
+| Solver | `src/lab/unitcell.ts` | Pure functions, no DOM. Precomputed element stiffness, banded or skyline Cholesky, filter weights built once. ~400 lines |
+| Worker | `src/lab/unitcell.worker.ts` | Runs the solver, posts `{iter, rho: Float32Array, C: [c11, c12, c22, c33], volume}` every iteration. Accepts `start(objective)` and `stop` |
+| View | `src/components/LiveCell.tsx` | Canvas 2D. Draws the cell large and a 3×3 tiling. Density maps `canvas` → `steel` → `ink`. Readout in `data` type: iteration, E₁₁, E₂₂, ν₁₂, G₁₂ |
+
+CRA 5 supports `new Worker(new URL('./unitcell.worker.ts', import.meta.url))`; check this on the first build.
+
+### Behavior
+
+| Trigger | Result |
 |---|---|
-| `/` | Redesigned single page |
-| `/publications` | Remove (content moves into `/`), add redirect to `/#publications` |
-| `/tools`, `/tools/*` | Keep, unlinked. Remove from nav, sitemap, README feature list |
-| `/GUVEN_THESIS.pdf` | Keep as "MSc thesis (PDF)". **Not** the CV link |
+| Page load, motion allowed, hero visible | Starts **Stiff** automatically after 600 ms |
+| Objective button | Restarts from the initial design with that objective. Active button: `ink` fill, `canvas` text |
+| Hero scrolled out of view, or tab hidden | Worker pauses (IntersectionObserver plus `visibilitychange`) |
+| Converged | Shows the final layout; readout says "converged at iteration N" |
+| `prefers-reduced-motion` | No autostart. Shows a precomputed final Stiff layout (shipped as a 40×40 `Uint8Array`) with a "Run optimization" button |
+| Worker unsupported or failure | Static precomputed layout, no buttons, no error text |
 
-## 6. Components
+Caption under the cell (`small`, `ink-2`): "Topology optimization of a periodic unit cell, running live in your browser." No figure numbers and no thesis references.
 
-| Component | File | Props | Notes |
-|---|---|---|---|
-| `SiteHeader` | `src/components/SiteHeader.tsx` | none | Static (not fixed). Name links to `#top`. Nav is plain anchor links; wraps to a second line under 640 px. No hamburger: five links fit |
-| `Hero` | `src/components/Hero.tsx` | none | 7 cols text, 5 cols `CutTiling`. Mobile: graphic above text, 60% height |
-| `CutTiling` | `src/components/CutTiling.tsx` | `outline: string[]`, `voids: string[]` (from `src/content/auxeticCell.ts`) | Pure inline SVG. Geometry is the real nonlinear auxetic cell from the MSc thesis (Fig. 8.1b), vectorized by `scripts/vectorize-cell.py`. Material is a `steel` (`#A9B4BA`) background rect; the 4 voids per 100×100 period are filled `paper` on top and tiled by translating multiples of 100 (seamless, no seams between cells). The centre cell's **solid boundary** (`auxeticCellOutline`: 8 open runs that stop at the arm joints, plus the closed central hole) is drawn on top as 9 paths, each `pathLength="1"`, traced together. Caption: "Auxetic unit cell, nonlinear optimum. MSc thesis, Fig. 8.1" |
-| `ResearchItem` | `src/components/ResearchItem.tsx` | `title, period, summary, figure?, links[]` | Two-column row: figure 5 cols, text 7 cols. Stacks on mobile. No figure → text takes full width (no empty box) |
-| `DatedList` | `src/components/DatedList.tsx` | `items: {date, title, href?, detail}[]` | One component for publications, teaching and talks, and recognition. Rows sorted by date desc. Row: date (`data`), title (`h3`, linked when `href`), detail line (`data`, `ink-2`). For publications, `detail` holds authors with own name at weight 560, then venue |
-| `Timeline` | `src/components/Timeline.tsx` | `items: {year, place, role}[]` | Real sequence, so year markers are earned |
-| `ContactBlock` | inside `App.tsx` | none | `murat.guven@polimi.it` as visible text link. LinkedIn, GitHub, ResearchGate, ORCID as text links (icons optional, 16 px, `aria-hidden`) |
+### Verification
 
-Content lives in typed data files, not in JSX:
+- `unitcell.test.ts` checks two things. A solid cell (ρ = 1) gives the analytic plane-stress values: C₁₁ = E/(1−ν²), C₁₂ = νC₁₁, C₃₃ = E/(2(1+ν)), within 1e-6. A 50% checkerboard-free result after 120 iterations is symmetric under 90° rotation for the Bulk objective.
+- Performance budget: under 40 ms per iteration at 40×40 on a mid-range laptop. Measure in the worker and log it in development builds.
 
-- `src/content/publications.ts` — `Publication { title; authors: string[]; venue; year; doi?; pdf?; kind: 'journal' | 'conference' | 'thesis' }`
-- `src/content/research.ts` — research items
-- `src/content/timeline.ts`
-- `src/content/activity.ts` — teaching, talks, recognition
+## 7. Other sections and components
 
-Publications seed (from CV, Oct 2026):
+| Component | Notes |
+|---|---|
+| `SiteHeader` | Static, not fixed. Plain anchor links that wrap under 640 px. No hamburger |
+| `PhdSection` | Graphite, full width. Left: question, method, outputs as three short paragraphs with `h3` labels. Right: code-drawn decision diagram, a steel member with features (cope, holes, web opening), each tagged with the process the rules select (laser, plasma, drill); the selected feature is drawn in `laser`. It is labelled "Illustration" and must not imply results |
+| `ResearchRow` | Used for Optimization and AI sections. Text 7 cols, optional figure 5 cols, stacks on mobile. No figure means text spans full width |
+| `DatedList` | One component for publications, teaching and talks, recognition. Rows sorted by date descending, with "forthcoming" first. Row: date (`data`), title (`h3`, linked when there's a URL), detail line (`data`, `ink-2`). Own name at weight 560 in author lists. An empty list renders nothing |
+| `Timeline` | Real sequence, so year markers are allowed |
+
+Content lives in typed data files under `src/content/`: `publications.ts`, `activity.ts`, `research.ts`, `timeline.ts`.
+
+Publications seed:
 
 | Year | Kind | Entry |
 |---|---|---|
@@ -133,84 +155,51 @@ Publications seed (from CV, Oct 2026):
 | 2025 | conference | A. Kanyilmaz, M. Güven, B. Previtali. "Laser Cutting of Key Metals in the Construction Industry." Extended abstract, ESTAD 2025, Verona |
 | 2023 | thesis | M. Güven. *Topology Optimization of Nonlinear Elastic Microstructures.* MSc thesis, İzmir Institute of Technology (PDF) |
 
-"Forthcoming" sorts above the latest year.
+Delete: `ParticleNetwork.tsx`, `AnimatedTextSection.tsx`, `MainContent.tsx`, `NavLink.tsx`, `BackToTopButton.tsx`, `ScrollToTop.tsx` (empty), `pages/PublicationsPage.tsx`, the scroll-spy logic in `App.tsx`, the scroll-snap CSS, and v1's `scripts/vectorize-cell.py` and `src/content/auxeticCell.ts`.
 
-Delete: `ParticleNetwork.tsx`, `AnimatedTextSection.tsx`, `MainContent.tsx` (replaced), `NavLink.tsx`, `BackToTopButton.tsx` (page is short now), `ScrollToTop.tsx` (empty file), `pages/PublicationsPage.tsx`, scroll-spy `IntersectionObserver` logic in `App.tsx`, scroll-snap CSS in `index.css`.
+Remove these dependencies once nothing imports them (grep first, since tool pages may use some): `three`, `@react-three/fiber`, `@react-three/drei`, `react-type-animation`, `react-scroll-parallax`, `react-intersection-observer`, `@fontsource/manrope`, `@fontsource/frank-ruhl-libre`.
 
-Remove dependencies once nothing imports them (grep first; tool pages may use some): `three`, `@react-three/fiber`, `@react-three/drei`, `react-type-animation`, `react-scroll-parallax`, `react-intersection-observer`, `@fontsource/manrope`, `@fontsource/frank-ruhl-libre`.
-
-## 7. States and interactions
+## 8. States, motion, responsive
 
 | Element | State | Behavior |
 |---|---|---|
-| Text links | Default | `ink`, underline 1px, offset 3px |
-| Text links | Hover | Underline 2px. 120 ms, `ease-out`. No color change, no scale |
-| Text links | Focus-visible | 2px `ink` outline, 3px offset, radius 2px |
-| Nav link | Current section | None. No scroll spy; the page is short |
-| Publication row | Hover | Background `sheet`. Whole row is not clickable; the title link is |
-| CV link | Default | 1px `ink` border, 2px radius, padding 6×12. Opens the PDF in a new tab, label says "(PDF)" |
-| External links | Any | `target="_blank" rel="noopener noreferrer"`, with "opens in new tab" in an `sr-only` span |
+| Text links | Hover | Underline from 1 px to 2 px, 120 ms ease-out |
+| Focusable | Focus-visible | 2 px `ink` outline, 3 px offset (on graphite: `canvas` outline) |
+| Objective buttons | Default / active | 1 px `ink` border / `ink` fill. Minimum 44×44 px touch target |
+| Publication row | Hover | Background `#EEF0EE`; the title is the link, not the row |
 
-## 8. Motion
+Motion is limited to the live optimization and link underlines: no section fade-ins, card lifts, parallax or typewriter.
 
-| Element | Trigger | Animation | Duration | Easing |
-|---|---|---|---|---|
-| `CutTiling` trace paths | First paint | `stroke-dashoffset` 1 → 0 on all 9 outline paths of the centre cell at once (`pathLength="1"`, `stroke-dasharray: 1`), stroked `spark`, settling to `ink` | 2200 ms, 400 ms delay | `cubic-bezier(.65,0,.35,1)` |
-| `CutTiling` kerf glow | Trace end | `spark` stroke fades to `ink` | 400 ms | `ease-out` |
-| Links | Hover | Underline thickness | 120 ms | `ease-out` |
+Breakpoints: ≥ 1024 px uses 12 columns as specified. 640–1023 px uses a 6/6 hero and keeps the PhD diagram beside the text. < 640 px is one column, ordered as in §5. Test at 375, 768, 1280 and 1600 px.
 
-That's all. No section fade-ins, no card lifts, no typewriter, no particles. `prefers-reduced-motion: reduce` renders the finished state with no animation.
+## 9. Content rules and edge cases
 
-## 9. Responsive
+- **Voice:** first person, plain verbs, specific nouns. Hero draft: *"I develop AI and optimization methods for structural engineering and steel construction."* Sub-line: *"PhD candidate at Politecnico di Milano. My current work is decision support for choosing how steel parts are cut, built on BIM models."* Murat should rewrite both in his own words.
+- **Banned:** "Welcome", "exploring the frontiers", "passionate", "cutting-edge", "feel free to reach out", and repeated one-liners.
+- **References:** cite only real publications. Figures get plain descriptive captions, never "Fig. X" pointers into a thesis.
+- **Long titles:** wrap, never truncate. For author lists over 6 names: first 3, "…", own name, last author.
+- **Turkish characters:** check that Archivo with `latin-ext` renders Güven, İzmir and Özdemir.
+- **Footer:** remove "Last updated: {today}".
+- **CV:** `public/Murat_Guven_CV.pdf` has the phone number redacted, so the gap stays in the layout. Replace it with a recompiled PDF that has no phone line when available.
 
-| Breakpoint | Changes |
-|---|---|
-| ≥ 1024 px | Layout as specified, 12 columns |
-| 640–1023 px | Hero 6/6 split; research rows keep figure left, 5/7 |
-| < 640 px | One column. Graphic above hero text. Nav wraps under the name. Publication year sits above the title instead of in a left column |
+## 10. Accessibility
 
-Test at 375, 768, 1280, 1600.
+- A skip link to `#main`. Landmarks: `header`, `nav aria-label="Sections"`, `main`, `footer`. One `h1`.
+- Live cell: the canvas is `role="img"` with an `aria-label` that updates on convergence ("Optimized unit cell for maximum stiffness, converged at iteration 74"). The readout is plain text, not `aria-live`, to avoid noise every iteration. Buttons are `aria-pressed`.
+- Contrast: `ink` on `canvas` is about 15:1, `ink-2` about 6:1, and `canvas` on `graphite` about 12:1. `laser` and `steel` are never used for text.
+- Keyboard: all controls reachable; focus order follows the DOM.
 
-## 10. Content rules and edge cases
+## 11. Verification
 
-- **Voice:** first person, plain verbs, specific nouns. Hero draft: *"I build computational tools that help engineers decide how steel structures are designed and cut."* Sub-line: *"PhD candidate at Politecnico di Milano, working on BIM-integrated decision support for laser and plasma cutting in steel construction."* Murat should edit it into his own words.
-- **Banned copy:** "Welcome", "exploring the frontiers", "passionate", "cutting-edge", "feel free to reach out", and identical one-liners repeated across items.
-- **Empty list:** `DatedList` with no items renders nothing, heading included. Never placeholder rows.
-- **Long titles:** wrap, never truncate. Author lists over 6 names: first 3, "…", own name, last author.
-- **Missing figure:** text spans full width.
-- **Turkish characters:** must render in Archivo with `latin-ext` (check "Güven", "İzmir", "Özdemir").
-- **Slow connection:** fonts use `font-display: swap`. Hero SVG is inline, so no layout shift. Thesis figures are WebP with explicit `width`/`height`, `loading="lazy"` below the fold.
-- **Footer:** remove "Last updated: {today}" (it always shows today's date, which is wrong).
+- `npm run build` passes; existing `mapLabelUtils` test stays green; `unitcell.test.ts` (§6) and a `DatedList` ordering test pass.
+- Keyboard walk-through, reduced-motion check, screenshots at 375 and 1280.
+- Lighthouse: accessibility ≥ 95, performance ≥ 90.
 
-## 11. Accessibility
+## 12. Open items
 
-- Focus order: skip link → name → nav → CV → hero → sections in DOM order.
-- First focusable element is a skip link: "Skip to content" → `#main`.
-- Landmarks: `header`, `nav aria-label="Sections"`, `main#main`, `footer`. One `h1` (hero statement), `h2` per section.
-- `CutTiling`: `role="img"` with `<title>` "Optimized unit cell tiled across a sheet, traced by a laser cut path".
-- Figures: `<figure>` + `<figcaption>` with figure source, e.g. "Optimized unit cell, MSc thesis, Fig. 4.2".
-- Contrast: body `ink` on `paper` ≥ 12:1; `ink-2` ≥ 5.9:1. `spark` is never used for text.
-- `<html lang="en">`. Proper names keep their Turkish spelling.
-
-## 12. Implementation notes
-
-- Tailwind tokens in `tailwind.config.js`; font width via utility classes such as `.wdth-118 { font-variation-settings: "wdth" 118; }` in `index.css` (3–4 classes, no plugin).
-- Keep CRA; no framework migration in this pass.
-- Update `public/index.html`: title "Murat Güven — laser cutting and optimization for steel construction", meta description, OG image (a static render of the hero tiling). Update `sitemap.xml` to only `/`.
-- Update README to drop the tool feature list.
-
-## 13. Verification
-
-- `npm run build` passes, and `npm test` keeps the existing `mapLabelUtils` test green.
-- One new test: `DatedList` sorts "forthcoming" first, then by date descending, and renders nothing for an empty list.
-- Keyboard walk-through of the whole page; reduced-motion check; screenshots at 375 and 1280 compared against this spec.
-- Lighthouse: accessibility ≥ 95, performance ≥ 90 (should improve once three.js and the particles are gone).
-
-## 14. Open items — needed from Murat before launch
-
-1. ~~Publication list~~: done, from the CV. Add the FEAD paper to ORCID too; it currently shows no public works.
-2. CV PDF received. Before it goes in `public/`: decide whether the phone number stays in the public copy.
-3. ~~Google Scholar~~: https://scholar.google.com/citations?user=Jt-dDrcAAAAJ
-4. One PhD figure you're allowed to show, and one from the FEAD paper (check Elsevier reuse terms, or use your own thesis figure).
-5. ~~Unit cell~~: vectorized from thesis Fig. 8.1(b). If the original AutoCAD DXF still exists, rerun from it for exact geometry.
-6. Photo in About: deferred. Layout must work without one; add later as a 4:5 image left of the bio, no rounded crop.
+1. Hero statement and sub-line in Murat's own words.
+2. Which projects can be public, and with what links: concApp, EWSHM_Competition, TEKLA_MOO_AWS, tis-isolator-decision-support, others.
+3. PhD section wording: the actual research question and methods, in 3 short paragraphs.
+4. Recompiled CV without the phone line (optional).
+5. Photo in About: deferred; the layout works without one.
+6. Phase 2: Auxetic objective (MMA), drag-to-change load cases, and a scroll sequence over real PhD material.
