@@ -174,7 +174,7 @@ Breakpoints: ≥ 1024 px uses 12 columns as specified. 640–1023 px uses a 6/6 
 
 ## 9. Content rules and edge cases
 
-- **Voice:** first person, plain verbs, specific nouns. Hero draft: *"I develop AI and optimization methods for structural engineering and steel construction."* Sub-line: *"PhD candidate at Politecnico di Milano. My current work is decision support for choosing how steel parts are cut, built on BIM models."* Murat should rewrite both in his own words.
+- **Voice:** first person, plain verbs, specific nouns. Hero (chosen, methods-first): *"I develop AI and optimization methods for structural engineering and steel construction."* Sub-line draft: *"PhD candidate at Politecnico di Milano. My current work is decision support for choosing how steel parts are cut, built on BIM models."*
 - **Banned:** "Welcome", "exploring the frontiers", "passionate", "cutting-edge", "feel free to reach out", and repeated one-liners.
 - **References:** cite only real publications. Figures get plain descriptive captions, never "Fig. X" pointers into a thesis.
 - **Long titles:** wrap, never truncate. For author lists over 6 names: first 3, "…", own name, last author.
@@ -197,7 +197,7 @@ Breakpoints: ≥ 1024 px uses 12 columns as specified. 640–1023 px uses a 6/6 
 
 ## 12. Open items
 
-1. Hero statement and sub-line in Murat's own words.
+1. ~~Hero statement~~: methods-first line chosen. Sub-line still a draft for Murat to edit.
 2. Public projects confirmed: **EWSHM anomaly detection** and **concApp** only (others stay off the site). Rows, from the CV:
    - *Bridge health indicators from monitoring data* (2026, team). Unsupervised anomaly detection: an attention-based multi-modal autoencoder with a statistical baseline, deriving health indicators from long-term bridge monitoring data. Audience Prize, EWSHM 2026 Students & Young Professionals Challenge, Toulouse.
    - *concApp* (2024, team). Early-stage structural design app for cost and embodied-carbon optimization. Top 25, Switch2Product 2024 ClimateTech & Circular Economy.
