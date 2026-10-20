@@ -84,7 +84,7 @@ Hero        statement + sub-line (7 cols)  |  live unit cell + 3×3 tiling (5 co
             objective buttons + live readout under the cell
 PhD         [graphite, full width] question, method, outputs  |  decision diagram (code-drawn)
 Optimization  MSc → FEAD 2026, compact: two sentences + paper link + the sample photo
-AI for engineering  EWSHM anomaly detection, concApp, trainings (rows, not cards)
+AI for engineering  two projects (rows, not cards) + one line on AI trainings for AEC
 Publications  date | title, authors, venue | DOI
 Teaching and talks  date | title, venue
 About       short bio | timeline (2016 BSc → 2020 MSc → 2024 Fellow → 2024 PhD)
@@ -198,7 +198,10 @@ Breakpoints: ≥ 1024 px uses 12 columns as specified. 640–1023 px uses a 6/6 
 ## 12. Open items
 
 1. Hero statement and sub-line in Murat's own words.
-2. Which projects can be public, and with what links: concApp, EWSHM_Competition, TEKLA_MOO_AWS, tis-isolator-decision-support, others.
+2. Public projects confirmed: **EWSHM anomaly detection** and **concApp** only (others stay off the site). Rows, from the CV:
+   - *Bridge health indicators from monitoring data* (2026, team). Unsupervised anomaly detection: an attention-based multi-modal autoencoder with a statistical baseline, deriving health indicators from long-term bridge monitoring data. Audience Prize, EWSHM 2026 Students & Young Professionals Challenge, Toulouse.
+   - *concApp* (2024, team). Early-stage structural design app for cost and embodied-carbon optimization. Top 25, Switch2Product 2024 ClimateTech & Circular Economy.
+   Still needed: whether either has a public link (repo, demo, report), and Murat's role in one phrase each.
 3. PhD section wording: the actual research question and methods, in 3 short paragraphs.
 4. Recompiled CV without the phone line (optional).
 5. Photo in About: deferred; the layout works without one.
