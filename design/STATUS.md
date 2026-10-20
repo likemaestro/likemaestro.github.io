@@ -7,7 +7,7 @@ Plan: `C:\Users\murat\.claude\plans\ui-ux-pro-max-create-best-plan-gentle-bubble
 - D1: `d1-directions.html` (https://claude.ai/artifact/VAA3Z8Ry8FwPsnyAk9nXiW). Murat picked the hybrid: A's Steel / Light identity, C's atlas plates for science and AI, B's macro camera only inside the dark laser bay.
 - Renderer: `lib/beam-scene.js` exposes `createRenderer`, `createScene(...).update/setCamera`, `renderFrame`, `renderAll` and `frontAt`. It uses one persistent point light, so no shader recompiles happen mid-scroll. The exploded slug fades in at its exploded height; it never rises out of the hole.
 - Timeline: `lib/laser-sequence.js` (`progressAt`, `explodeAt`, `cameraAt`, `KEYFRAMES`, `frameAt`). The motion test and the D3 boards both use it, so they cannot drift.
-- D2: `d2-artboard.html`. It covers:
+- D2: `d2-artboard.html` (https://claude.ai/artifact/VAUU9HgwJNc4MHCidyG3Jv). It covers:
   - colour, with contrast ratios;
   - the Archivo-only type scale, plus the second-face test;
   - grid and spacing;
@@ -17,14 +17,14 @@ Plan: `C:\Users\murat\.claude\plans\ui-ux-pro-max-create-best-plan-gentle-bubble
   - publications beside the bay;
   - the four motion families, with demos;
   - the three signature families.
-- D3: `d3-storyboard.html`. It covers:
+- D3: `d3-storyboard.html` (https://claude.ai/artifact/54Dz7eHwiybFQCT56EQZgg). It covers:
   - navigation rules;
   - scenes 0–8, using the brief's numbering and names;
   - the six laser keyframes, with the kerf lens;
   - continuity match cuts;
   - reduced-motion and no-WebGL fallbacks;
   - the mobile poster and three states, plus checks at 390×844 and 390×600.
-- D3 motion test: `d3-laser-motion-test.html`. Sticky stage, native scroll, rendering on demand.
+- D3 motion test: `d3-laser-motion-test.html` (https://claude.ai/artifact/Tm1iZqCZxwoDeutiJKxFYC). Sticky stage, native scroll, rendering on demand.
   - The static frames, beat text, kerf section and decision diagram are canonical DOM. The film shows aria-hidden copies of them.
   - Measured in the browser pane on the laptop:
     - CPU time per render call is 6–12 ms median;
