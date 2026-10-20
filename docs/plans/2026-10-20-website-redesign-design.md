@@ -36,7 +36,7 @@ Adopted from the external review:
 
 Rejected:
 - Name-as-giant-wordmark hero and Awwwards-style motion (trend defaults, not specific to him).
-- Scroll-driven sequences over invented schematics. A scroll sequence is phase 2, and only over real PhD material.
+- Scroll-driven sequences over invented schematics.
 - ui-ux-pro-max's generic output (motion-heavy, parallax, masonry, blue CTA). Its accessibility checklist is kept.
 
 **The memorable thing:** a live, plain linear-elastic unit-cell topology optimization running in the visitor's browser (§6). It is real computation, shows optimization at a glance, and is the kind of tool he builds. Everything else on the page stays quiet.
@@ -199,4 +199,4 @@ Breakpoints: ≥ 1024 px uses 12 columns as specified. 640–1023 px uses a 6/6 
    Still needed: whether either has a public link (repo, demo, report), and Murat's role in one phrase each.
 4. Recompiled CV without the phone line (optional).
 5. Photo in About: deferred; the layout works without one.
-6. Phase 2: Auxetic objective (MMA), drag-to-change load cases, and a scroll sequence over real PhD material.
+6. Phase 2: Auxetic objective (MMA) and drag-to-change load cases.
