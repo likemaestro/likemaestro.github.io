@@ -1,3 +1,7 @@
+> **Superseded 2026-10-21.** Murat chose the "live lab" direction: no storyboard, no laser lesson. This folder is an
+> archive and is not part of the build. The laser renderer lives on in `src/lab/laser/` as a silent scroll visual.
+> Current spec: `docs/plans/2026-10-20-website-redesign-design.md` (v3).
+
 # Design phase status (2026-10-20)
 
 Plan: `C:\Users\murat\.claude\plans\ui-ux-pro-max-create-best-plan-gentle-bubble.md` (v3 stages D0–D3, revised per review).

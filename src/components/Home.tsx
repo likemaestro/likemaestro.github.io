@@ -19,10 +19,10 @@ const Section: React.FC<{ id: string; title: string; children: React.ReactNode }
 );
 
 const FEAD_STATES = [
-  { src: "/img/fead/initial.png", label: "Initial", w: 499 },
+  { src: "/img/fead/initial.png", label: "Initial", w: 260 },
   { src: "/img/fead/iter010.png", label: "Iteration 10", w: 90 },
   { src: "/img/fead/iter050.png", label: "Iteration 50", w: 90 },
-  { src: "/img/fead/final.png", label: "Final, iteration 250", w: 499 },
+  { src: "/img/fead/final.png", label: "Final, iteration 250", w: 260 },
 ];
 
 const WorkRow: React.FC<{ title: string; meta: string; children: React.ReactNode; figure?: React.ReactNode }> = ({ title, meta, children, figure }) => (
@@ -39,7 +39,8 @@ const WorkRow: React.FC<{ title: string; meta: string; children: React.ReactNode
 const Home: React.FC = () => {
   const { hash } = useLocation();
   useEffect(() => {
-    if (hash) document.getElementById(hash.slice(1))?.scrollIntoView();
+    // Jump, not smooth-scroll: this runs on deep links such as /publications -> /#publications.
+    if (hash) document.getElementById(hash.slice(1))?.scrollIntoView({ behavior: "instant" as ScrollBehavior });
   }, [hash]);
 
   return (

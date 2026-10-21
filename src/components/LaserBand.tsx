@@ -49,7 +49,7 @@ const LaserBand: React.FC = () => {
         }, () => !dead && setGl(false));
       }
       queue();
-    }, { rootMargin: "100% 0px" });
+    }, { rootMargin: "40% 0px" });
     io.observe(section);
     if (!still) window.addEventListener("scroll", queue, { passive: true });
     window.addEventListener("resize", onResize);
