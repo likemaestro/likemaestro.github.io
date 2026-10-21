@@ -10,30 +10,60 @@ const hasWebGL = () => {
     return false;
   }
 };
-const FINAL_T = 0.9;   // finished part with the exploded offcut: the frame shown without scroll motion
+const seg = (t: number, a: number, b: number) => Math.min(1, Math.max(0, (t - a) / (b - a)));
+const STILL = { t: 0.66, time: 0.37 };   // mid plasma cope: the frame shown without scroll motion
+const TEXT = [0.86, 0.93];               // the paragraph fades in as the finished beam settles into the frame
 
-// Silent scroll visual: a laser head cuts bolt holes and an end cut as the band scrolls past.
+// Screenshot hook: ?band=<scroll share>&bt=<spark seconds> renders exactly that frame, with no smoothing or loop.
+const forced = () => {
+  const q = new URLSearchParams(window.location.search), b = q.get("band");
+  return b === null ? null : { t: Number(b), time: Number(q.get("bt") ?? 0.3) };
+};
+
+interface View { render(t: number, time?: number): void; resize(): void; busy(t: number): boolean; dispose(): void }
+
+// Silent scroll film, "model to metal": the camera dives from a BIM-style steel frame into one beam, which is cut
+// (laser bolt holes, plasma end cope) and settles back into the frame; then the PhD paragraph lands.
 // The band's height is fixed from the first render, so anchors below it land where they should.
 const LaserBand: React.FC = () => {
   const [still] = useState(() => media("(prefers-reduced-motion: reduce)"));
   const [gl, setGl] = useState(true);
   const sectionRef = useRef<HTMLElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const textRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!hasWebGL()) { setGl(false); return; }
     const section = sectionRef.current!, canvas = canvasRef.current!;
-    let view: { render(t: number): void; resize(): void; dispose(): void } | null = null;
-    let near = false, frame = 0, dead = false;
+    const fixed = still ? STILL : forced();
+    let view: View | null = null, near = false, raf = 0, dead = false, shown = -1;
+    const t0 = performance.now();
 
-    const shareAt = () => {
-      if (still) return FINAL_T;
+    const goal = () => {
       const r = section.getBoundingClientRect(), span = r.height - window.innerHeight;
       return span > 0 ? Math.min(1, Math.max(0, -r.top / span)) : 0;
     };
-    const draw = () => { frame = 0; if (view && near) view.render(Math.round(shareAt() * 2000) / 2000); };
-    const queue = () => { if (!frame) frame = requestAnimationFrame(draw); };
-    const onResize = () => { view?.resize(); queue(); };
+    const paint = (t: number, time: number) => {
+      view!.render(t, time);
+      if (!still && textRef.current) textRef.current.style.opacity = String(seg(t, TEXT[0], TEXT[1]));
+    };
+    const tick = () => {
+      raf = 0;
+      if (!view || !near) return;
+      if (fixed) { paint(fixed.t, fixed.time); return; }
+      const g = goal();
+      shown = shown < 0 ? g : shown + (g - shown) * 0.14;   // eased scroll, so the camera glides
+      if (Math.abs(g - shown) < 2e-4) shown = g;
+      paint(shown, (performance.now() - t0) / 1000);
+      if (shown !== g || view.busy(shown)) raf = requestAnimationFrame(tick);
+    };
+    const kick = () => { if (!raf) raf = requestAnimationFrame(tick); };
+    const fail = () => {
+      if (dead) return;
+      if (textRef.current) textRef.current.style.opacity = "";
+      setGl(false);
+    };
+    const onResize = () => { view?.resize(); kick(); };
 
     const io = new IntersectionObserver(([e]) => {
       near = e.isIntersecting;
@@ -41,44 +71,44 @@ const LaserBand: React.FC = () => {
         import("../lab/laser/mount").then(({ mount }) => {
           if (dead) return;
           try {
-            view = mount(canvas, { small: !media("(min-width: 1024px)") });
-            queue();
+            view = mount(canvas, { small: !media("(min-width: 1024px)") }) as View;
+            kick();
           } catch {
-            setGl(false);
+            fail();
           }
-        }, () => !dead && setGl(false));
+        }, fail);
       }
-      queue();
+      kick();
     }, { rootMargin: "40% 0px" });
     io.observe(section);
-    if (!still) window.addEventListener("scroll", queue, { passive: true });
+    if (!fixed) window.addEventListener("scroll", kick, { passive: true });
     window.addEventListener("resize", onResize);
     return () => {
       dead = true;
       io.disconnect();
-      window.removeEventListener("scroll", queue);
+      window.removeEventListener("scroll", kick);
       window.removeEventListener("resize", onResize);
-      if (frame) cancelAnimationFrame(frame);
+      if (raf) cancelAnimationFrame(raf);
       view?.dispose();
     };
   }, [still]);
 
   const scroll = gl && !still;
   return (
-    <section ref={sectionRef} aria-labelledby="phd-h" className={`relative bg-bay text-[#D5DCDF] ${scroll ? "h-[240vh]" : ""}`}>
-      <div className={scroll ? "sticky top-0 h-screen" : ""}>
-        <div className="mx-auto flex h-full max-w-page flex-col justify-center gap-6 px-4 py-10 sm:px-6 lg:grid lg:grid-cols-12 lg:items-center lg:gap-8 lg:py-16">
-          <div className="lg:col-span-4">
+    <section ref={sectionRef} aria-labelledby="phd-h" className={`relative bg-bay text-[#D5DCDF] ${scroll ? "h-[340vh]" : ""}`}>
+      <div className={scroll ? "sticky top-0 h-screen overflow-hidden" : gl ? "relative h-[85vh] min-h-[30rem] overflow-hidden" : ""}>
+        {gl && <canvas ref={canvasRef} aria-hidden="true" className="absolute inset-0 h-full w-full" />}
+        <div className={`${gl ? "absolute inset-0" : "py-20"} mx-auto flex max-w-page items-end px-4 pb-10 sm:px-6 lg:items-center lg:pb-0`}>
+          <div
+            ref={textRef}
+            style={scroll ? { opacity: 0 } : undefined}
+            className="relative max-w-[38ch] max-lg:-mx-4 max-lg:bg-bay/80 max-lg:px-4 max-lg:py-5 lg:max-w-[34ch]"
+          >
             <h2 id="phd-h" className="sr-only">Current work</h2>
-            <p className="max-w-[40ch] lg:text-[1.25rem] lg:leading-[1.55]">{phdParagraph}</p>
+            <p className="lg:text-[1.25rem] lg:leading-[1.55]">{phdParagraph}</p>
           </div>
-          {gl && (
-            <figure className={`relative min-w-0 lg:col-span-8 lg:h-[72vh] lg:flex-none ${scroll ? "min-h-[12rem] flex-1" : "h-[52vh]"}`}>
-              <canvas ref={canvasRef} aria-hidden="true" className="absolute inset-0 h-full w-full [mask-image:radial-gradient(ellipse_closest-side,#000_62%,transparent)]" />
-              <figcaption className="t-small absolute bottom-0 right-0 text-[#8C9AA1]">Illustrative render</figcaption>
-            </figure>
-          )}
         </div>
+        {gl && <p className="t-small absolute bottom-3 right-4 text-[#8C9AA1] sm:right-6">Illustrative render</p>}
       </div>
     </section>
   );
