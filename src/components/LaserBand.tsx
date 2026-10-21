@@ -14,7 +14,8 @@ const seg = (t: number, a: number, b: number) => Math.min(1, Math.max(0, (t - a)
 const STILL = { t: 0.66, time: 0.37 };   // mid plasma cope: the frame shown without scroll motion
 const TEXT = [0.86, 0.93];               // the paragraph fades in as the finished beam settles into the frame
 
-// Screenshot hook: ?band=<scroll share>&bt=<spark seconds> renders exactly that frame, with no smoothing or loop.
+// Screenshot hook: ?band=<scroll share>&bt=<spark seconds> renders exactly that frame, with no smoothing or loop;
+// window.__bandPaint(t, seconds) then renders any other frame (used to record a video frame by frame).
 const forced = () => {
   const q = new URLSearchParams(window.location.search), b = q.get("band");
   return b === null ? null : { t: Number(b), time: Number(q.get("bt") ?? 0.3) };
@@ -66,6 +67,7 @@ const LaserBand: React.FC = () => {
       setGl(false);
     };
     const onResize = () => { view?.resize(); kick(); };
+    if (fixed && !still) (window as unknown as { __bandPaint: typeof paint }).__bandPaint = (t, time) => view && paint(t, time);
 
     const io = new IntersectionObserver(([e]) => {
       near = e.isIntersecting;
