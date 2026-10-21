@@ -15,7 +15,7 @@ module.exports = {
       fontFamily: {
         sans: ['"Archivo Variable"', "Archivo", "system-ui", "sans-serif"],
       },
-      maxWidth: { page: "1200px" },
+      maxWidth: { page: "1360px" },
       animation: {
         "fade-in-down": "fade-in-down 0.5s ease-out",
       },

@@ -7,12 +7,11 @@ import { createWorker } from "../lab/createWorker";
 type Mode = "precomputed" | "running" | "paused" | "converged";
 type Key = "E1" | "G12" | "nu12" | "K";
 
-type Shown = Key | "KHS";
-const TARGETS: { id: Objective; label: string; track: Key; aria: string; active: number[]; also: Shown[] }[] = [
-  { id: "axial", label: "Axial", track: "E1", aria: "axial stiffness", active: [0, 4], also: ["nu12", "G12"] },
-  { id: "shear", label: "Shear", track: "G12", aria: "shear stiffness", active: [8], also: ["nu12", "E1"] },
-  { id: "bulk", label: "Bulk", track: "K", aria: "bulk modulus", active: [0, 1, 3, 4], also: ["KHS", "nu12"] },
-  { id: "auxetic", label: "Auxetic", track: "nu12", aria: "a negative Poisson's ratio", active: [0, 1, 3, 4], also: ["E1", "G12"] },
+const TARGETS: { id: Objective; label: string; track: Key; aria: string; active: number[] }[] = [
+  { id: "axial", label: "Axial", track: "E1", aria: "axial stiffness", active: [0, 4] },
+  { id: "shear", label: "Shear", track: "G12", aria: "shear stiffness", active: [8] },
+  { id: "bulk", label: "Bulk", track: "K", aria: "bulk modulus", active: [0, 1, 3, 4] },
+  { id: "auxetic", label: "Auxetic", track: "nu12", aria: "a negative Poisson's ratio", active: [0, 1, 3, 4] },
 ];
 
 // Objective and homogenized stiffness, typeset as MathML (native in current browsers, no math library).
@@ -50,19 +49,19 @@ for (let i = 0; i < 256; i++) {
 const kappa = (C: ArrayLike<number>) => (C[0] + C[4] + 2 * C[1]) / 4;
 const KS = 1 / 1.4, GS = 1 / 2.6;
 const kappaHS = (f: number) => (f * KS * GS) / ((1 - f) * KS + GS);
-const SYM: Record<Shown, string> = {
+const SYM: Record<Key, string> = {
   E1: "<msub><mi>E</mi><mn>1</mn></msub>",
   G12: "<msub><mi>G</mi><mn>12</mn></msub>",
   nu12: "<msub><mi>ν</mi><mn>12</mn></msub>",
   K: "<mi>κ</mi>",
-  KHS: "<mi>κ</mi>",
 };
-// One result typeset as "symbol = value": stiffnesses in units of E, bulk also as a fraction of its HS bound.
-const quantity = (k: Shown, r: { E1: number; G12: number; nu12: number; K: number; vol: number }) => {
-  const v = k === "KHS" ? r.K / kappaHS(r.vol) : r[k];
-  const n = !Number.isFinite(v) ? "·" : (v < 0 ? "−" : "") + Math.abs(v).toFixed(k === "nu12" || k === "KHS" ? 2 : 3);
-  const unit = k === "nu12" ? "" : k === "KHS" ? '<mspace width="0.2em"></mspace><msub><mi>κ</mi><mtext>HS</mtext></msub>' : '<mspace width="0.2em"></mspace><mi>E</mi>';
-  return `<math>${SYM[k]}<mo>=</mo><mn>${n}</mn>${unit}</math>`;
+const num = (v: number, d: number) => (!Number.isFinite(v) ? "·" : (v < 0 ? "−" : "") + Math.abs(v).toFixed(d));
+// The tracked result typeset as "symbol = value" in units of E; bulk also as a fraction of its HS bound (the dashed line).
+const quantity = (k: Key, r: { E1: number; G12: number; nu12: number; K: number; vol: number }) => {
+  const sp = '<mspace width="0.2em"></mspace>';
+  const unit = k === "nu12" ? "" : `${sp}<mi>E</mi>`;
+  const hs = k === "K" ? `<mo>=</mo><mn>${num(r.K / kappaHS(r.vol), 2)}</mn>${sp}<msub><mi>κ</mi><mtext>HS</mtext></msub>` : "";
+  return `<math>${SYM[k]}<mo>=</mo><mn>${num(r[k], k === "nu12" ? 2 : 3)}</mn>${unit}${hs}</math>`;
 };
 const media = (q: string) => typeof window !== "undefined" && !!window.matchMedia && window.matchMedia(q).matches;
 
@@ -99,7 +98,7 @@ const Trace: React.FC<{ data: number[]; reference?: number; live: boolean }> = (
 
 const LiveCell: React.FC = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const boxRef = useRef<HTMLDivElement>(null);
+  const boxRef = useRef<HTMLElement>(null);
   const workerRef = useRef<Worker | null>(null);
   const rhoRef = useRef<Uint8Array | Float32Array>(FINAL.auxetic);
   const visibleRef = useRef(true);
@@ -257,60 +256,50 @@ const LiveCell: React.FC = () => {
   const reference = target === "auxetic" ? 0 : target === "bulk" ? kappaHS(r.vol) : undefined;
 
   return (
-    <figure ref={boxRef}>
-      <div className="grid gap-x-8 gap-y-6 md:grid-cols-[minmax(0,1fr)_17.5rem]">
-        <canvas ref={canvasRef} role="img" aria-label={label} className="block aspect-square w-full [image-rendering:pixelated]" />
-
-        <div className="min-w-0">
-          <div className="flex items-center gap-5">
-            <Trace data={r.hist} reference={reference} live={live} />
-            <div className="math shrink-0" dangerouslySetInnerHTML={{ __html: quantity(T.track, r) }} />
-          </div>
-          <div className="mt-2 flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
-            <p className="t-data text-ink-2" aria-hidden="true">
-              {progress}
-              {r.seed !== undefined && <span className="ml-4">Seed {r.seed}</span>}
-            </p>
-            <p className="sr-only" role="status" aria-live="polite">{mode === "running" ? "Computing in your browser" : status}</p>
-            {supported && (
-              <button type="button" onClick={toggle} className="t-data min-h-[44px] rounded-[2px] border border-ink px-4 hover:bg-[#EEF0EE]">
-                {mode === "running" ? "Pause" : mode === "paused" ? "Resume" : mode === "converged" ? "Run again" : "Run live"}
-              </button>
-            )}
-          </div>
+    <figure ref={boxRef} className="grid gap-x-10 gap-y-6 md:grid-cols-[minmax(0,24rem)_17.5rem]">
+      <div className="flex flex-wrap items-center justify-between gap-x-6">
+        <div className="flex gap-5" role="group" aria-label="Optimization target">
+          {TARGETS.map((x) => (
+            <button
+              key={x.id}
+              type="button"
+              aria-pressed={target === x.id}
+              onClick={() => select(x.id)}
+              className={`t-data relative min-h-[44px] transition-colors duration-150 ${
+                target === x.id ? "font-[640] text-ink after:absolute after:inset-x-0 after:bottom-2 after:h-[2px] after:bg-laser" : "text-ink-2 hover:text-ink"
+              }`}
+            >
+              {x.label}
+            </button>
+          ))}
         </div>
-
-        <div className="flex min-w-0 flex-col gap-6 md:col-start-2 md:row-span-2 md:row-start-1">
-          <div className="flex gap-5" role="group" aria-label="Optimization target">
-            {TARGETS.map((x) => (
-              <button
-                key={x.id}
-                type="button"
-                aria-pressed={target === x.id}
-                onClick={() => select(x.id)}
-                className={`t-data relative min-h-[44px] transition-colors duration-150 ${
-                  target === x.id ? "font-[640] text-ink after:absolute after:inset-x-0 after:bottom-2 after:h-[2px] after:bg-laser" : "text-ink-2 hover:text-ink"
-                }`}
-              >
-                {x.label}
-              </button>
-            ))}
-          </div>
-          <div className="math flex flex-col gap-1 overflow-x-auto overflow-y-hidden">
-            <div dangerouslySetInnerHTML={{ __html: goalMath(target) }} />
-            <div dangerouslySetInnerHTML={{ __html: SUBJECT }} />
-          </div>
-          <div className="math overflow-x-auto overflow-y-hidden py-1" dangerouslySetInnerHTML={{ __html: tensorMath(r.C, T.active) }} />
-          <div className="math flex flex-wrap gap-x-6 gap-y-1">
-            {T.also.map((k) => <div key={k} dangerouslySetInnerHTML={{ __html: quantity(k, r) }} />)}
-          </div>
-        </div>
+        {supported && (
+          <button type="button" onClick={toggle} className="t-data min-h-[44px] rounded-[2px] border border-ink px-4 transition-colors duration-150 hover:bg-[#EEF0EE]">
+            {mode === "running" ? "Pause" : mode === "paused" ? "Resume" : mode === "converged" ? "Run again" : "Run live"}
+          </button>
+        )}
       </div>
 
-      <figcaption className="t-small mt-6 max-w-[64ch] text-ink-2">
-        Simplified linear-elastic topology optimization, running in your browser. Not the model from my publications.
-        Periodic homogenization, {N} × {N} elements, SIMP with projection, MMA, square symmetry.
-      </figcaption>
+      <canvas ref={canvasRef} role="img" aria-label={label} className="block aspect-square w-full [image-rendering:pixelated] md:row-start-2" />
+
+      <div className="flex min-w-0 flex-col justify-between gap-8 md:col-start-2 md:row-start-2">
+        <div className="math flex flex-col gap-1 overflow-x-auto overflow-y-hidden">
+          <div dangerouslySetInnerHTML={{ __html: goalMath(target) }} />
+          <div dangerouslySetInnerHTML={{ __html: SUBJECT }} />
+        </div>
+        <div className="math overflow-x-auto overflow-y-hidden py-1" dangerouslySetInnerHTML={{ __html: tensorMath(r.C, T.active) }} />
+        <div>
+          <div className="flex flex-wrap items-baseline justify-between gap-x-4">
+            <div className="math" dangerouslySetInnerHTML={{ __html: quantity(T.track, r) }} />
+            <p className="t-data text-ink-2" aria-hidden="true">
+              {progress}
+              {r.seed !== undefined && <span className="ml-3">Seed {r.seed}</span>}
+            </p>
+          </div>
+          <div className="mt-3 flex"><Trace data={r.hist} reference={reference} live={live} /></div>
+          <p className="sr-only" role="status" aria-live="polite">{mode === "running" ? "Computing in your browser" : status}</p>
+        </div>
+      </div>
     </figure>
   );
 };

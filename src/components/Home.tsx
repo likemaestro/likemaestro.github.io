@@ -63,16 +63,14 @@ const Home: React.FC = () => {
       </header>
 
       <main id="main">
-        <Wrap className="grid gap-x-8 gap-y-12 pb-20 pt-10 md:pt-16 lg:grid-cols-12 lg:pb-28">
-          <div className="lg:col-span-5">
-            <h1 className="t-display">I develop AI and optimization methods for structural engineering and steel construction.</h1>
+        <Wrap className="grid gap-y-14 pb-20 pt-10 md:pt-16 lg:pb-28 xl:grid-cols-[minmax(0,1fr)_auto] xl:gap-x-20">
+          <div className="min-w-0">
+            <h1 className="t-display max-w-[22ch]">I work on computational and <span className="whitespace-nowrap">AI-based</span> decision support for structural engineering and sustainable construction.</h1>
             <p className="mt-6 max-w-[46ch] text-ink-2">
-              PhD candidate at Politecnico di Milano. My current work is decision support for choosing how steel parts are cut, built on BIM models.
+              PhD candidate at Politecnico di Milano. I develop optimization methods, BIM-integrated workflows and computational tools for steel fabrication.
             </p>
           </div>
-          <div className="min-w-0 lg:col-span-7">
-            <LiveCell />
-          </div>
+          <LiveCell />
         </Wrap>
 
         <LaserBand />
@@ -126,7 +124,7 @@ const Home: React.FC = () => {
             <div className="max-w-[64ch] space-y-4 md:col-span-6">
               <p>
                 I am a PhD candidate in the Department of Architecture, Built Environment and Construction Engineering at Politecnico di Milano.
-                I work on computational and AI-based decision support for structural engineering and sustainable construction.
+                I work on computational and <span className="whitespace-nowrap">AI-based</span> decision support for structural engineering and sustainable construction.
               </p>
               <p>
                 Before the PhD I was a research fellow at Politecnico di Milano, working on structural design and fabrication for steel.

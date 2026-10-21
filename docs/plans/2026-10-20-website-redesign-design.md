@@ -43,7 +43,7 @@ The remaining copy is in `src/components/Home.tsx`. Titles keep their published 
 
 ## 3. Direction
 
-- One memorable thing: the live unit cell in the hero. It is real computation and labelled honestly.
+- One memorable thing: the live unit cell in the hero. It is real computation, shown without a caption (Murat's call, 2026-10-21).
 - One cinematic thing: the dark PhD band. It is silent, driven by scroll, and captioned "Illustrative render".
 - Everything else is quiet. Rows are not cards, and type and spacing carry the hierarchy.
 - Avoid template chrome:
@@ -76,7 +76,7 @@ The remaining copy is in `src/components/Home.tsx`. Titles keep their published 
 
   - Body text is 1.0625rem with line-height 1.6.
   - Headings use `text-wrap: balance`.
-- **Layout:** 1200 px container, 24 px gutters (16 px on mobile), 12 columns.
+- **Layout:** 1360 px container, 24 px gutters (16 px on mobile), 12 columns.
   - Sections are as tall as their content, with 64–112 px of vertical padding.
   - Radius is 0, except 2 px on buttons.
   - No gradients and no shadows on the page.
@@ -85,11 +85,13 @@ The remaining copy is in `src/components/Home.tsx`. Titles keep their published 
 
 ```
 Header     Murat Güven                        Research  Publications  About  CV (PDF)
-Hero       statement + sub-line (5 cols) | lab (7 cols):
-             3×3 lattice                  | text tabs Axial Shear Bulk Auxetic (active: laser underline)
-             convergence line + target    | objective, "subject to V ≤ 0.40"
-             value; status, seed, Run     | Cᴴ/E matrix; two secondary results
-           Everything mathematical is typeset (MathML); the interface speaks Archivo.
+Hero       statement + sub-line (fluid) | 80 px gutter | lab (fixed 44rem), side by side from 1280 px, stacked below:
+             tabs Axial Shear Bulk Auxetic + Run   |
+             3×3 lattice (≤ 24rem)                 | objective, "subject to V ≤ 0.40"
+                                                   | Cᴴ/E matrix
+                                                   | target value, status, seed; convergence line
+           Everything mathematical is typeset (MathML); the interface speaks Archivo. No caption.
+           Statement and sub-line use the CV profile wording.
 PhD band   dark, 240vh with a sticky stage: PhD paragraph (4 cols) | scroll render (8 cols)
 Research   FEAD paper (recorded thesis states) · EWSHM (team) · concApp (team)
 Publications · Teaching and talks · About (bio | timeline) · Contact · Footer
@@ -106,7 +108,7 @@ Publications · Teaching and talks · About (bio | timeline) · Contact · Foote
 
 ### Framing
 
-The caption reads: "Simplified linear-elastic topology optimization, running in your browser. Not the model from my publications." The FEAD paper uses nonlinear elasticity and domain reduction; this demo does not.
+No caption: Murat removed it (2026-10-21). For the record, the demo is simplified linear elasticity; the FEAD paper uses nonlinear elasticity and domain reduction.
 
 ### Formulation (`src/lab/unitcell.ts`, `src/lab/mma.ts`)
 
@@ -135,7 +137,7 @@ The caption reads: "Simplified linear-elastic topology optimization, running in 
   | Bulk | maximize C₁₁ + C₂₂ + 2C₁₂ (= 4κ under equibiaxial strain) | rounded holes in a continuous matrix; κ ≈ 96 % of the Hashin–Shtrikman bound |
   | Auxetic | minimize C₁₂ − w (C₁₁ + C₂₂), with w = max(0.8^k, 0.02) | re-entrant cell; 127 iterations; ν₁₂ = −0.37 |
 
-- **Bulk target:** v3.0 left it out because, from the default start, it looked like a duplicate of the axial grid. With random starts it gives the classic bulk-modulus designs instead: rounded holes in a continuous matrix, distinct from the axial grid, reaching 94–96 % of the 2D Hashin–Shtrikman upper bound κ_HS = f κ_s μ_s / ((1 − f) κ_s + μ_s). From the default start at n = 24 it stalls on a symmetric grey saddle; at the site's n = 32 it converges cleanly, and the tests check bulk at n = 32.
+- **Bulk target:** v3.0 left it out because, from the default start, it looked like a duplicate of the axial grid. With random starts it gives the classic bulk-modulus designs instead: rounded holes in a continuous matrix, distinct from the axial grid, reaching 88–97 % (16-seed pool, measured 2026-10-21; median 95 %) of the 2D Hashin–Shtrikman upper bound κ_HS = f κ_s μ_s / ((1 − f) κ_s + μ_s). From the default start at n = 24 it stalls on a symmetric grey saddle; at the site's n = 32 it converges cleanly, and the tests check bulk at n = 32.
 - **Random starts:** each live run draws a seed from a vetted pool (`seeds` in `src/lab/precomputed.ts`: 14 axial, 16 shear and 16 auxetic). The seed sets a D4-symmetrized sum of six random periodic modes on top of the central void, so every run grows a different design. A seed joins the pool only if its run:
   - converges before the iteration cap;
   - has a grey fraction under 5 %;
@@ -258,7 +260,7 @@ Still to do: a browser and phone benchmark on real hardware. The preview pane th
 ## 11. Open items for Murat
 
 1. PhD paragraph wording (draft in `site.ts`).
-2. Hero sub-line wording.
+2. Hero statement and sub-line now follow the CV profile; confirm the first-person wording.
 3. EWSHM and concApp: his role in one phrase each, any public link, and a source for the awards (EWSHM Audience Prize, Switch2Product Top 25) before they are shown.
 4. A recompiled CV without the phone line (optional; the current redacted copy is clean).
 5. A browser and phone benchmark of the live cell on his own hardware.

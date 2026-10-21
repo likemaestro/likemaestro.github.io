@@ -27,7 +27,7 @@
 
 @layer components {
   .t-display {
-    font-size: clamp(2.25rem, 4.3vw, 3.75rem);
+    font-size: clamp(2rem, 3.3vw, 3.125rem);
     line-height: 1.04;
     font-weight: 560;
     font-stretch: 112%;
