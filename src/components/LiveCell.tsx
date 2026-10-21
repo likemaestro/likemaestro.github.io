@@ -7,11 +7,12 @@ import { createWorker } from "../lab/createWorker";
 type Mode = "precomputed" | "running" | "paused" | "converged";
 type Key = "E1" | "G12" | "nu12" | "K";
 
-const TARGETS: { id: Objective; label: string; track: Key; name: string; aria: string; active: number[] }[] = [
-  { id: "axial", label: "Axial", track: "E1", name: "E₁", aria: "axial stiffness", active: [0, 4] },
-  { id: "shear", label: "Shear", track: "G12", name: "G₁₂", aria: "shear stiffness", active: [8] },
-  { id: "bulk", label: "Bulk", track: "K", name: "κ", aria: "bulk modulus", active: [0, 1, 3, 4] },
-  { id: "auxetic", label: "Auxetic", track: "nu12", name: "ν₁₂", aria: "a negative Poisson's ratio", active: [0, 1, 3, 4] },
+type Shown = Key | "KHS";
+const TARGETS: { id: Objective; label: string; track: Key; aria: string; active: number[]; also: Shown[] }[] = [
+  { id: "axial", label: "Axial", track: "E1", aria: "axial stiffness", active: [0, 4], also: ["nu12", "G12"] },
+  { id: "shear", label: "Shear", track: "G12", aria: "shear stiffness", active: [8], also: ["nu12", "E1"] },
+  { id: "bulk", label: "Bulk", track: "K", aria: "bulk modulus", active: [0, 1, 3, 4], also: ["KHS", "nu12"] },
+  { id: "auxetic", label: "Auxetic", track: "nu12", aria: "a negative Poisson's ratio", active: [0, 1, 3, 4], also: ["E1", "G12"] },
 ];
 
 // Objective and homogenized stiffness, typeset as MathML (native in current browsers, no math library).
@@ -23,8 +24,8 @@ const GOAL: Record<Objective, string> = {
   bulk: `${op("max")}${Ch("11")}<mo>+</mo>${Ch("22")}<mo>+</mo><mn>2</mn>${Ch("12")}`,
   auxetic: `${op("min")}${Ch("12")}<mo>−</mo><mi>w</mi><mo stretchy="false">(</mo>${Ch("11")}<mo>+</mo>${Ch("22")}<mo stretchy="false">)</mo>`,
 };
-const goalMath = (t: Objective) =>
-  `<math displaystyle="true"><mrow>${GOAL[t]}<mspace width="1em"></mspace><mtext>subject to</mtext><mspace width="0.5em"></mspace><mi>V</mi><mo>≤</mo><mn>0.40</mn></mrow></math>`;
+const goalMath = (t: Objective) => `<math displaystyle="true"><mrow>${GOAL[t]}</mrow></math>`;
+const SUBJECT = `<math><mtext>subject to</mtext><mspace width="0.5em"></mspace><mi>V</mi><mo>≤</mo><mn>0.40</mn></math>`;
 const entry = (v: number) => (!Number.isFinite(v) ? "·" : Math.abs(v) < 5e-4 ? "0.000" : (v < 0 ? "−" : "") + Math.abs(v).toFixed(3));
 const tensorMath = (C: number[], active: number[]) =>
   `<math displaystyle="true"><mrow><mfrac><msup><mi>C</mi><mi mathvariant="normal">H</mi></msup><mi>E</mi></mfrac><mo>=</mo><mrow><mo>[</mo><mtable>${[0, 1, 2]
@@ -49,7 +50,20 @@ for (let i = 0; i < 256; i++) {
 const kappa = (C: ArrayLike<number>) => (C[0] + C[4] + 2 * C[1]) / 4;
 const KS = 1 / 1.4, GS = 1 / 2.6;
 const kappaHS = (f: number) => (f * KS * GS) / ((1 - f) * KS + GS);
-const fmt = (v: number, d = 3) => (v < 0 ? "−" : "") + Math.abs(v).toFixed(d);
+const SYM: Record<Shown, string> = {
+  E1: "<msub><mi>E</mi><mn>1</mn></msub>",
+  G12: "<msub><mi>G</mi><mn>12</mn></msub>",
+  nu12: "<msub><mi>ν</mi><mn>12</mn></msub>",
+  K: "<mi>κ</mi>",
+  KHS: "<mi>κ</mi>",
+};
+// One result typeset as "symbol = value": stiffnesses in units of E, bulk also as a fraction of its HS bound.
+const quantity = (k: Shown, r: { E1: number; G12: number; nu12: number; K: number; vol: number }) => {
+  const v = k === "KHS" ? r.K / kappaHS(r.vol) : r[k];
+  const n = !Number.isFinite(v) ? "·" : (v < 0 ? "−" : "") + Math.abs(v).toFixed(k === "nu12" || k === "KHS" ? 2 : 3);
+  const unit = k === "nu12" ? "" : k === "KHS" ? '<mspace width="0.2em"></mspace><msub><mi>κ</mi><mtext>HS</mtext></msub>' : '<mspace width="0.2em"></mspace><mi>E</mi>';
+  return `<math>${SYM[k]}<mo>=</mo><mn>${n}</mn>${unit}</math>`;
+};
 const media = (q: string) => typeof window !== "undefined" && !!window.matchMedia && window.matchMedia(q).matches;
 
 interface Readout { iter: number; vol: number; E1: number; G12: number; nu12: number; K: number; C: number[]; seed?: number; hist: number[] }
@@ -59,23 +73,25 @@ function finalReadout(t: Objective): Readout {
   return { iter: c.iter, vol: c.vol, E1: c.E1, G12: c.G12, nu12: c.nu12, K: c.K, C: [...c.C], hist: [...c.hist[track]] };
 }
 
-const Sparkline: React.FC<{ data: number[]; live: boolean }> = ({ data, live }) => {
-  const W = 600, H = 44;
-  if (data.length < 2) return <div className="h-11" aria-hidden="true" />;
-  let lo = Math.min(...data), hi = Math.max(...data);
+// Convergence of the target quantity: a slim line with a dashed physical reference and the live end point, no axes.
+const Trace: React.FC<{ data: number[]; reference?: number; live: boolean }> = ({ data, reference, live }) => {
+  const W = 600, H = 36;
+  if (data.length < 2) return <div className="h-9 min-w-0 flex-1" aria-hidden="true" />;
+  const ref = reference !== undefined && Number.isFinite(reference) ? reference : undefined;
+  let lo = Math.min(...data, ref ?? Infinity), hi = Math.max(...data, ref ?? -Infinity);
   if (hi - lo < 1e-9) { lo -= 1; hi += 1; }
   const x = (i: number) => (i / (data.length - 1)) * W;
   const y = (v: number) => H - 3 - ((v - lo) / (hi - lo)) * (H - 6);
   const last = data.length - 1;
   return (
-    <div className="relative h-11" aria-hidden="true">
+    <div className="relative h-9 min-w-0 flex-1" aria-hidden="true">
       <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" className="absolute inset-0 h-full w-full overflow-visible">
-        {lo < 0 && hi > 0 && <line x1={0} x2={W} y1={y(0)} y2={y(0)} stroke="#CBD2D5" strokeDasharray="3 3" vectorEffect="non-scaling-stroke" />}
+        {ref !== undefined && <line x1={0} x2={W} y1={y(ref)} y2={y(ref)} stroke="#819199" strokeDasharray="4 4" vectorEffect="non-scaling-stroke" />}
         <polyline points={data.map((v, i) => `${x(i).toFixed(1)},${y(v).toFixed(1)}`).join(" ")} fill="none" stroke="#172027" strokeWidth="1.25" vectorEffect="non-scaling-stroke" />
       </svg>
       <span
         className={`absolute h-[7px] w-[7px] -translate-x-1/2 -translate-y-1/2 rounded-full ${live ? "bg-laser" : "bg-ink"}`}
-        style={{ left: `${(x(last) / W) * 100}%`, top: `${(y(data[last]) / H) * 100}%` }}
+        style={{ left: "100%", top: `${(y(data[last]) / H) * 100}%` }}
       />
     </div>
   );
@@ -232,72 +248,66 @@ const LiveCell: React.FC = () => {
         : mode === "converged" ? `Converged at iteration ${r.iter}, computed in your browser`
           : `Precomputed result, converged at iteration ${r.iter}`;
   const label = `3 by 3 tiling of a unit cell optimized for ${T.aria}. ${mode === "running" ? `Iteration ${r.iter}.` : status + "."}`;
-  const num = (v: number, d = 3) => (Number.isFinite(v) ? fmt(v, d) : "–");
 
-  const stat = (k: React.ReactNode, v: React.ReactNode) => (
-    <div className="min-w-0">
-      <dt className="t-data text-ink-2">{k}</dt>
-      <dd className="t-data mt-0.5 text-[1.0625rem] text-ink">{v}</dd>
-    </div>
-  );
+  const progress =
+    mode === "running" ? `Iteration ${r.iter}`
+      : mode === "paused" ? `Paused at iteration ${r.iter}`
+        : mode === "converged" ? `Converged at iteration ${r.iter}`
+          : `Precomputed, iteration ${r.iter}`;
+  const reference = target === "auxetic" ? 0 : target === "bulk" ? kappaHS(r.vol) : undefined;
 
   return (
     <figure ref={boxRef}>
-      <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-3">
-        <div className="flex flex-wrap gap-2" role="group" aria-label="Optimization target">
-          {TARGETS.map((x) => (
-            <button
-              key={x.id}
-              type="button"
-              aria-pressed={target === x.id}
-              onClick={() => select(x.id)}
-              className={`t-data min-h-[44px] rounded-[2px] border border-ink px-3 transition-colors duration-150 ${target === x.id ? "bg-ink text-canvas" : "hover:bg-[#EEF0EE]"}`}
-            >
-              {x.label}
-            </button>
-          ))}
-        </div>
-        <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
-          <p className="t-data text-ink-2" role="status" aria-live="polite">{mode === "running" ? "Computing in your browser" : status}</p>
-          {mode === "paused" && (
-            <button type="button" onClick={() => start(target)} className="t-data link min-h-[44px] px-1">Restart</button>
-          )}
-          {supported && (
-            <button type="button" onClick={toggle} className="t-data min-h-[44px] rounded-[2px] border border-ink px-4 hover:bg-[#EEF0EE]">
-              {mode === "running" ? "Pause" : mode === "paused" ? "Resume" : mode === "converged" ? "Run again" : "Run live"}
-            </button>
-          )}
-        </div>
-      </div>
-
-      <div className="mt-6 grid gap-x-12 gap-y-8 md:grid-cols-[minmax(0,26rem)_minmax(0,1fr)] lg:grid-cols-[minmax(0,30rem)_minmax(0,1fr)]">
+      <div className="grid gap-x-8 gap-y-6 md:grid-cols-[minmax(0,1fr)_17.5rem]">
         <canvas ref={canvasRef} role="img" aria-label={label} className="block aspect-square w-full [image-rendering:pixelated]" />
 
-        <div className="flex min-w-0 flex-col gap-6">
-          <div className="math flex flex-col gap-5 overflow-x-auto overflow-y-hidden py-1">
-            <div dangerouslySetInnerHTML={{ __html: goalMath(target) }} />
-            <div dangerouslySetInnerHTML={{ __html: tensorMath(r.C, T.active) }} />
+        <div className="min-w-0">
+          <div className="flex items-center gap-5">
+            <Trace data={r.hist} reference={reference} live={live} />
+            <div className="math shrink-0" dangerouslySetInnerHTML={{ __html: quantity(T.track, r) }} />
           </div>
+          <div className="mt-2 flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
+            <p className="t-data text-ink-2" aria-hidden="true">
+              {progress}
+              {r.seed !== undefined && <span className="ml-4">Seed {r.seed}</span>}
+            </p>
+            <p className="sr-only" role="status" aria-live="polite">{mode === "running" ? "Computing in your browser" : status}</p>
+            {supported && (
+              <button type="button" onClick={toggle} className="t-data min-h-[44px] rounded-[2px] border border-ink px-4 hover:bg-[#EEF0EE]">
+                {mode === "running" ? "Pause" : mode === "paused" ? "Resume" : mode === "converged" ? "Run again" : "Run live"}
+              </button>
+            )}
+          </div>
+        </div>
 
-          <dl className="grid grid-cols-4 gap-x-4 gap-y-4 border-t border-rule pt-5">
-            {stat("Iteration", r.iter || "–")}
-            {stat("Volume", Number.isFinite(r.E1) ? fmt(r.vol, 2) : "–")}
-            {stat("Seed", r.seed ?? "–")}
-            {stat("ν₁₂", num(r.nu12, 2))}
-            {stat("E₁ / E", num(r.E1))}
-            {stat("G₁₂ / E", num(r.G12))}
-            {stat("κ / E", num(r.K))}
-            {stat(<>κ / κ<sub>HS</sub></>, num(r.K / kappaHS(r.vol), 2))}
-          </dl>
-
-          <div className="border-t border-rule pt-4">
-            <Sparkline data={r.hist} live={live} />
-            <p className="t-data mt-2 text-ink-2">{T.name} by iteration</p>
+        <div className="flex min-w-0 flex-col gap-6 md:col-start-2 md:row-span-2 md:row-start-1">
+          <div className="flex gap-5" role="group" aria-label="Optimization target">
+            {TARGETS.map((x) => (
+              <button
+                key={x.id}
+                type="button"
+                aria-pressed={target === x.id}
+                onClick={() => select(x.id)}
+                className={`t-data relative min-h-[44px] transition-colors duration-150 ${
+                  target === x.id ? "font-[640] text-ink after:absolute after:inset-x-0 after:bottom-2 after:h-[2px] after:bg-laser" : "text-ink-2 hover:text-ink"
+                }`}
+              >
+                {x.label}
+              </button>
+            ))}
+          </div>
+          <div className="math flex flex-col gap-1 overflow-x-auto overflow-y-hidden">
+            <div dangerouslySetInnerHTML={{ __html: goalMath(target) }} />
+            <div dangerouslySetInnerHTML={{ __html: SUBJECT }} />
+          </div>
+          <div className="math overflow-x-auto overflow-y-hidden py-1" dangerouslySetInnerHTML={{ __html: tensorMath(r.C, T.active) }} />
+          <div className="math flex flex-wrap gap-x-6 gap-y-1">
+            {T.also.map((k) => <div key={k} dangerouslySetInnerHTML={{ __html: quantity(k, r) }} />)}
           </div>
         </div>
       </div>
 
-      <figcaption className="t-small mt-6 max-w-[70ch] text-ink-2">
+      <figcaption className="t-small mt-6 max-w-[64ch] text-ink-2">
         Simplified linear-elastic topology optimization, running in your browser. Not the model from my publications.
         Periodic homogenization, {N} × {N} elements, SIMP with projection, MMA, square symmetry.
       </figcaption>

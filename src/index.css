@@ -27,7 +27,7 @@
 
 @layer components {
   .t-display {
-    font-size: clamp(2.25rem, 3.8vw, 3.25rem);
+    font-size: clamp(2.25rem, 4.3vw, 3.75rem);
     line-height: 1.04;
     font-weight: 560;
     font-stretch: 112%;
@@ -62,7 +62,7 @@
 }
 
 /* Typeset math in the live cell (MathML). Entries outside the current objective are dimmed. */
-.math math { font-family: "Latin Modern Math", "STIX Two Math", "Cambria Math", math; font-size: 1.125rem; color: theme("colors.ink"); }
-.math mtd { padding: 0.32em 0.55em; text-align: right; }
+.math math { font-family: "Latin Modern Math", "STIX Two Math", "Cambria Math", math; font-size: 1.0625rem; color: theme("colors.ink"); }
+.math mtd { padding: 0.32em 0.45em; text-align: right; min-width: 3.3em; }
 .math mn { font-variant-numeric: tabular-nums; }
 .math .dim { color: theme("colors.ink-2"); }

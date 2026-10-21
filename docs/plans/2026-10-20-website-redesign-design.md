@@ -85,9 +85,11 @@ The remaining copy is in `src/components/Home.tsx`. Titles keep their published 
 
 ```
 Header     Murat Güven                        Research  Publications  About  CV (PDF)
-Hero       statement (8 cols) + sub-line (4 cols), then a rule and the lab panel:
-           target buttons | status, Run/Pause
-           3×3 lattice | objective, Cᴴ/E matrix, diagnostics (4 × 2), wide short convergence graph
+Hero       statement + sub-line (5 cols) | lab (7 cols):
+             3×3 lattice                  | text tabs Axial Shear Bulk Auxetic (active: laser underline)
+             convergence line + target    | objective, "subject to V ≤ 0.40"
+             value; status, seed, Run     | Cᴴ/E matrix; two secondary results
+           Everything mathematical is typeset (MathML); the interface speaks Archivo.
 PhD band   dark, 240vh with a sticky stage: PhD paragraph (4 cols) | scroll render (8 cols)
 Research   FEAD paper (recorded thesis states) · EWSHM (team) · concApp (team)
 Publications · Teaching and talks · About (bio | timeline) · Contact · Footer
