@@ -212,7 +212,7 @@ Rebuilt 2026-10-21: Murat liked the idea but not the first render (soft grey CG,
   | 72.5–92 % | finished part, then pull back; the beam settles into its slot (82–92 %) |
   | 86–100 % | the PhD paragraph fades in over the dark side (frame shifted right on wide screens, up on tall ones) |
 
-- **The only visible text:** the PhD paragraph (`phdParagraph`, **draft for Murat to confirm**) and the caption "Illustrative render" (always on, bottom right). The section has a visually hidden h2.
+- **The only visible text:** the PhD paragraph (`phdParagraph`, plain language, chosen by Murat 2026-10-21) and the caption "Illustrative render" (always on, bottom right). The section has a visually hidden h2.
 - **Rendering:**
   - three.js loads through `import()` when the band is within 40 % of a viewport.
   - Bloom: UnrealBloomPass, threshold 1.0, so only hot elements bloom. The page background stays exact because there is no tone mapping.
@@ -271,7 +271,7 @@ Rebuilt 2026-10-21: Murat liked the idea but not the first render (soft grey CG,
 
 ## 11. Open items for Murat
 
-1. PhD paragraph wording (draft in `site.ts`).
+1. ~~PhD paragraph wording~~: done, plain-language version chosen 2026-10-21.
 2. Hero statement and sub-line now follow the CV profile; confirm the first-person wording.
 3. EWSHM and concApp: his role in one phrase each, any public link, and a source for the awards (EWSHM Audience Prize, Switch2Product Top 25) before they are shown.
 4. A recompiled CV without the phone line (optional; the current redacted copy is clean).

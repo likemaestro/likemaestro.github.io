@@ -100,9 +100,9 @@ export const timeline = [
   { year: "2016–20", title: "BSc, Civil Engineering", place: "Kocaeli University", note: "" },
 ];
 
-// DRAFT: Murat to confirm wording. Method only: no case, partner or machine names, no numbers.
+// Plain language, chosen by Murat (2026-10-21). Method only: no case, partner or machine names, no numbers.
 export const phdParagraph =
-  "My PhD develops a BIM-integrated method for choosing how steel parts are cut. It reads parts and their features from the design model through the Tekla API, estimates cost, time and environmental impact for each cutting option with process models, searches project-level plans with NSGA-II, and ranks them by the decision maker's priorities with AHP and SMAA-2.";
+  "My PhD helps steel fabricators decide how to cut every part of a building: laser or plasma. It starts from the design model, compares cost, time and carbon for each choice, and finds the plans that balance them best for the people deciding.";
 
 export const email = "murat.guven@polimi.it";
 
