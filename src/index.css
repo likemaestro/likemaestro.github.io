@@ -1,228 +1,62 @@
-/* Purge unused styles in production */
+@import "@fontsource-variable/archivo/wdth.css";
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* Removed @fontsource/frank-ruhl-libre/latin.css as it's not used */
-@import "@fontsource/manrope/latin.css";
-
-/* Add a shared gradient background for the entire page */
-html {
-  scroll-behavior: smooth;
-}
-
-body {
-  /* Gradient using default Tailwind colors */
-  @apply bg-gradient-to-br from-gray-900 to-gray-800 text-white font-sans;
-  scroll-behavior: smooth;
-
-  /* Prevent text selection */
-  -webkit-user-select: none; /* Safari */
-  -ms-user-select: none; /* IE 10 and IE 11 */
-  user-select: none; /* Standard syntax */
-}
-
-/* Prevent horizontal scroll on mobile */
-html,
-body {
-  max-width: 100vw;
-  overflow-x: hidden;
-}
-
-.scroll-snap-container {
-  scroll-snap-type: y mandatory;
-  overflow-y: scroll;
-  height: 100vh;
-}
-
-.scroll-snap-section {
-  scroll-snap-align: start;
-  padding-top: 5rem; /* Added padding to account for fixed navbar */
-  padding-bottom: 2rem;
-}
-
-/* Ensure sections still occupy significant viewport height for snapping */
-#home,
-#about,
-#research,
-#contact {
-  min-height: 100vh;
-}
-
-/* Apply a subtle focus indicator for accessibility */
-*:focus-visible {
-  outline: 2px solid #a5b4fc; /* Tailwind indigo-300 */
-  outline-offset: 2px;
-  box-shadow: 0 0 0 4px rgba(165, 180, 252, 0.3); /* Subtle glow */
-}
-
-/* Remove default focus outline for elements that have a custom focus style or where it's not desired */
-.nav-link-interactive:focus,
-.nav-link-interactive:focus-visible {
-  outline: none !important; /* Consistent with component's focus:outline-none, allows custom ring */
-}
-
-/* For other specific elements, if they truly need outline and box-shadow suppressed (use with caution) */
-.research-card-interactive:focus,
-.research-card-interactive:focus-visible,
-.email-button-enhanced:focus,
-.email-button-enhanced:focus-visible {
-  outline: none !important;
-  box-shadow: none !important; /* This will suppress *:focus-visible box-shadow for these elements */
-}
-
-/* Ensure active nav section has extended bar */
-.nav-link-interactive.active::after,
-.nav-link-interactive[aria-current="page"]::after {
-  width: 100%;
-}
-
-/* Kinetic Typography Base Style */
-.kinetic-title span {
-  display: inline-block; /* Ensures spans flow like words but can be transformed */
-  opacity: 0;
-  transform: translateY(30px) rotateX(-90deg); /* Start slightly down and rotated back */
-  transform-origin: bottom center; /* Rotate around the bottom center */
-  transition: opacity 0.7s cubic-bezier(0.215, 0.61, 0.355, 1),
-    transform 0.7s cubic-bezier(0.215, 0.61, 0.355, 1);
-  will-change: opacity, transform;
-}
-
-/* Kinetic Typography Animation Triggered State (when parent has .is-visible) */
-.kinetic-title.is-visible span {
-  opacity: 1;
-  transform: translateY(0) rotateX(0deg); /* End in normal position */
-}
-
-/* Staggered delay for individual letters/words within a .kinetic-title.is-visible container */
-/* These will apply if the parent .kinetic-title also has .is-visible */
-.kinetic-title.is-visible span:nth-child(1) {
-  transition-delay: 0.1s;
-}
-.kinetic-title.is-visible span:nth-child(2) {
-  transition-delay: 0.18s;
-}
-.kinetic-title.is-visible span:nth-child(3) {
-  transition-delay: 0.26s;
-}
-.kinetic-title.is-visible span:nth-child(4) {
-  transition-delay: 0.34s;
-} /* For titles like "About Me" or "Get In Touch" */
-.kinetic-title.is-visible span:nth-child(5) {
-  transition-delay: 0.42s;
-}
-
-/* --- Interactive Nav Link Hover --- */
-.nav-link-interactive {
-  position: relative;
-  padding-bottom: 8px; /* Add some padding for the underline */
-}
-
-.nav-link-interactive::after {
-  content: "";
-  position: absolute;
-  left: 50%;
-  bottom: 0;
-  width: 0%;
-  height: 2px;
-  background-color: #a5b4fc; /* Tailwind indigo-300 */
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  transform: translateX(-50%);
-}
-
-.nav-link-interactive:hover::after {
-  width: 100%;
-}
-
-.nav-link-interactive:focus,
-.nav-link-interactive:focus-visible {
-  outline: none !important; /* Consistent with component's focus:outline-none */
-  /* Removed 'box-shadow: none !important;' to allow Tailwind ring to be visible */
-  border: none !important; /* Keep if no border is desired on focus */
-}
-
-/* --- Interactive Card Tilt --- */
-.research-card-interactive {
-  will-change: transform, box-shadow;
-  transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275),
-    box-shadow 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-}
-
-.research-card-interactive:hover {
-  transform: perspective(1000px) rotateX(5deg) rotateY(-3deg) scale(1.05);
-  box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.3); /* Enhanced shadow */
-}
-
-/* --- Enhanced Button Hover --- */
-.email-button-enhanced {
-  transition: transform 0.3s ease, box-shadow 0.3s ease,
-    background-color 0.3s ease !important;
-  /* important to override potential specificity issues with Tailwind hover */
-}
-
-.email-button-enhanced:hover {
-  transform: scale(1.08) translateY(-2px) !important;
-  box-shadow: 0 10px 20px -5px rgba(99, 102, 241, 0.5) !important; /* Shadow color related to indigo-500 */
-  /* background-color: #4f46e5 !important; */ /* Tailwind indigo-600, if you want a darker shade */
-}
-
-/* Animation delay utilities - if you need more, extend in tailwind.config.js */
-.animation-delay-300 {
-  animation-delay: 0.3s;
-}
-.animation-delay-500 {
-  animation-delay: 0.5s;
-}
-.animation-delay-700 {
-  animation-delay: 0.7s;
-}
-.animation-delay-900 {
-  animation-delay: 0.9s;
-}
-
-/* Ensure images and iframes are responsive */
-img,
-iframe {
-  max-width: 100%;
-  height: auto;
-  display: block;
-}
-
-/* Touch-friendly tap targets */
-.tap-target {
-  min-height: 44px;
-  min-width: 44px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-}
-
-/* Section spacing tweaks for mobile */
-@media (max-width: 640px) {
-  .scroll-snap-section {
-    padding-top: 4rem;
-    padding-bottom: 1rem;
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    -webkit-text-size-adjust: 100%;
   }
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+  }
+  body {
+    @apply bg-canvas text-ink font-sans antialiased;
+    font-size: 1.0625rem;
+    line-height: 1.6;
+  }
+  [id] { scroll-margin-top: 1.5rem; }
+  :focus-visible {
+    outline: 2px solid theme("colors.ink");
+    outline-offset: 3px;
+  }
+  ::selection { background: #d9dfe1; }
 }
 
-/* Custom Scrollbar Styles */
-/* For Webkit-based browsers (Chrome, Safari, Edge) */
-::-webkit-scrollbar {
-  width: 12px; /* Width of the entire scrollbar */
-}
-
-::-webkit-scrollbar-track {
-  background: #030B1A; /* Corresponds to custom-deep-ocean */
-}
-
-::-webkit-scrollbar-thumb {
-  background-color: #102c53; /* Corresponds to custom-dark-blue */
-  border-radius: 6px; /* Rounded corners for the thumb */
-  border: 3px solid #030B1A; /* Creates padding around thumb, using track color */
-}
-
-/* For Firefox */
-html {
-  scrollbar-width: thin; /* "auto" or "thin" */
-  scrollbar-color: #102c53 #030B1A; /* thumb and track color */
+@layer components {
+  .t-display {
+    font-size: clamp(2.25rem, 4.3vw, 3.75rem);
+    line-height: 1.04;
+    font-weight: 560;
+    font-stretch: 112%;
+    letter-spacing: -0.02em;
+    text-wrap: balance;
+  }
+  .t-name { font-size: 1.125rem; line-height: 1.2; font-weight: 600; font-stretch: 112%; }
+  .t-h2 {
+    font-size: clamp(1.75rem, 3vw, 2.5rem);
+    line-height: 1.12;
+    font-weight: 540;
+    font-stretch: 112%;
+    letter-spacing: -0.02em;
+    text-wrap: balance;
+  }
+  .t-h3 { font-size: 1.3125rem; line-height: 1.3; font-weight: 520; text-wrap: balance; }
+  .t-small { font-size: 0.875rem; line-height: 1.45; }
+  .t-data {
+    font-size: 0.9375rem;
+    line-height: 1.4;
+    font-weight: 450;
+    font-stretch: 75%;
+    font-variant-numeric: tabular-nums;
+  }
+  .link {
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0.2em;
+    transition: text-decoration-thickness 120ms ease-out;
+  }
+  .link:hover { text-decoration-thickness: 2px; }
 }

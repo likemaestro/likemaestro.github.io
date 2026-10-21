@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { select } from 'd3-selection';
 import { zoom, zoomIdentity } from 'd3-zoom';
+import 'd3-transition';
 import { geoPath, geoGraticule10 } from 'd3-geo';
 import * as geoProjections from 'd3-geo-projection';
 import * as topojson from 'topojson-client';
@@ -227,7 +228,8 @@ export default function MapCanvas({ settings, highlightedCountries, onToggleCoun
     const pathGenerator = useMemo(() => geoPath().projection(projection), [projection]);
 
     useEffect(() => {
-        const svg = select(svgRef.current);
+        if (!svgRef.current) return;
+        const svg = select<SVGSVGElement, unknown>(svgRef.current);
         const g = svg.select('.map-content');
         const zoomBehavior = zoom<SVGSVGElement, unknown>()
             .scaleExtent([1, 12])
