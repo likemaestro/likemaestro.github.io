@@ -193,7 +193,7 @@ export function homogenize(P: Problem, E: Float64Array): Homog {
 
 /** Engineering constants from C: E1 = 1/S11, nu12 = -S12/S11 with S = C^-1. */
 export function properties(C: Float64Array) {
-  const [a, b, c, d, e, f, g, h, i] = C;
+  const [a, b, c, d, e, f, g, h, i] = Array.from(C);
   const det = a * (e * i - f * h) - b * (d * i - f * g) + c * (d * h - e * g);
   const S11 = (e * i - f * h) / det, S12 = (c * h - b * i) / det;
   return { E1: 1 / S11, nu12: -S12 / S11 };
