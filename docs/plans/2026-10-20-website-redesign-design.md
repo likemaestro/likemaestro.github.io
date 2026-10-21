@@ -131,6 +131,15 @@ The caption reads: "Simplified linear-elastic topology optimization, running in 
   | Auxetic | minimize C₁₂ − w (C₁₁ + C₂₂), with w = max(0.8^k, 0.02) | re-entrant cell; 127 iterations; ν₁₂ = −0.37 |
 
 - **Why there is no bulk target:** at this volume fraction, both the grid and the diamond reach the 2D bulk bound. A bulk target therefore always reproduces the axial or the shear design. A weighted mix collapses to one of them in the same way.
+- **Random starts:** each live run draws a seed from a vetted pool (`seeds` in `src/lab/precomputed.ts`: 14 axial, 16 shear and 16 auxetic). The seed sets a D4-symmetrized sum of six random periodic modes on top of the central void, so every run grows a different design. A seed joins the pool only if its run:
+  - converges before the iteration cap;
+  - has a grey fraction under 5 %;
+  - has a solid phase that is one connected piece on the periodic cell;
+  - is distinct from the others;
+  - for auxetic, reaches ν₁₂ < −0.2.
+
+  Without a seed, the default symmetric start is used: the precomputed fallback and the tests.
+- **Typeset math under the lattice (MathML, native, no library):** the objective (for example min over ρ of C₁₂ᴴ − w (C₁₁ᴴ + C₂₂ᴴ), subject to V ≤ 0.40), and the live homogenized tensor Cᴴ/E as a 3 × 3 matrix. Entries the objective uses are in `ink`; the rest are dimmed to `ink-2`.
 - **Readouts:**
   - E₁ = 1/S₁₁, G₁₂ = C₃₃ and ν₁₂ = −S₁₂/S₁₁, relative to the solid material;
   - a sparkline of the target's quantity by iteration. Its live point is `laser`.
@@ -157,7 +166,7 @@ The caption reads: "Simplified linear-elastic topology optimization, running in 
 
 Still to do: a browser and phone benchmark on real hardware. The preview pane throttles timers, so it gives no usable numbers.
 
-### Validation (`src/lab/unitcell.test.ts`, 17 tests)
+### Validation (`src/lab/unitcell.test.ts`, 18 tests)
 
 1. A solid cell gives the plane-stress tensor to 1e-9.
 2. Results agree with the independent NumPy reference (`scripts/reference_homogenize.py`) to 1e-8 on three fields, one of them anisotropic.
@@ -171,6 +180,7 @@ Still to do: a browser and phone benchmark on real hardware. The preview pane th
    - are bit-deterministic.
 
    The auxetic run reaches −1 < ν₁₂ < 0.
+6. The same seed reproduces its design bit for bit, and a different seed gives a different design.
 
 ## 7. PhD band (`src/components/LaserBand.tsx`, `src/lab/laser/`)
 
@@ -218,7 +228,7 @@ Still to do: a browser and phone benchmark on real hardware. The preview pane th
 
 ## 10. Verification (2026-10-21)
 
-- **Tests:** `npm test` passes 18/18 (17 solver tests plus 1 list test).
+- **Tests:** `npm test` passes 19/19 (18 solver tests plus 1 list test).
   - The WorldMap test was removed: it imported functions that no longer exist.
 - **Build:** `npm run build` passes and writes `404.html`.
   - The build needed the missing d3 `@types` packages, a null guard and the `d3-transition` import in WorldMap.

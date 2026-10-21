@@ -21,7 +21,8 @@ export interface Options {
   voidRadius?: number;  // initial central void, fraction of the cell side
   betaMax?: number;     // final Heaviside projection sharpness
   betaEvery?: number;   // iterations between doublings of beta
-  perturb?: number;     // amplitude of the initial cosine perturbation
+  perturb?: number;     // amplitude of the initial perturbation
+  seed?: number;        // when set, a random smooth initial perturbation (same seed, same design)
 }
 
 const DEFAULTS = { vf: 0.4, nu: 0.3, penal: 3, rmin: 2, Emin: 1e-9, move: 0.2, maxIter: 160, tol: 0.01, voidRadius: 0.15, betaMax: 16, betaEvery: 20, perturb: 0.25 };
@@ -231,12 +232,42 @@ export function symmetrize(P: Problem, v: Float64Array) {
   return v;
 }
 
-/** Uniform volume fraction with a small D4-symmetric cosine perturbation and a central void (deterministic, seed-free). */
-export function initialDesign(P: Problem) {
-  const { n, nel, o } = P, x = new Float64Array(nel);
+/** Small deterministic PRNG (mulberry32), so a seed reproduces its design everywhere. */
+export function rng(seed: number) {
+  let a = seed | 0;
+  return () => {
+    a = (a + 0x6d2b79f5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+/** Initial perturbation in [-1, 1]: the fixed cosine pattern, or with a seed a sum of random periodic modes. */
+function perturbation(P: Problem) {
+  const { n, nel, o } = P, f = new Float64Array(nel);
+  const modes: number[][] = [];
+  if (o.seed === undefined) modes.push([2, 0, 1, 0, 0], [0, 2, 1, 0, 0]);
+  else {
+    const r = rng(o.seed);
+    for (let m = 0; m < 6; m++) modes.push([1 + Math.floor(r() * 3), Math.floor(r() * 4), 0.3 + r(), r() * 2 * Math.PI, r() * 2 * Math.PI]);
+  }
   for (let e = 0; e < nel; e++) {
     const X = ((e % n) + 0.5) / n - 0.5, Y = (Math.floor(e / n) + 0.5) / n - 0.5;
-    x[e] = Math.hypot(X, Y) < o.voidRadius ? 0 : 1 + o.perturb * (Math.cos(4 * Math.PI * X) + Math.cos(4 * Math.PI * Y));
+    for (const [kx, ky, a, px, py] of modes) f[e] += a * Math.cos(2 * Math.PI * kx * X + px) * Math.cos(2 * Math.PI * ky * Y + py);
+  }
+  if (o.seed !== undefined) symmetrize(P, f);   // the fixed pattern is already D4-symmetric
+  let m = 0;
+  for (let e = 0; e < nel; e++) m = Math.max(m, Math.abs(f[e]));
+  return o.seed === undefined ? f.map((v) => v / 2) : f.map((v) => v / (m || 1));
+}
+
+/** Volume fraction plus a D4-symmetric perturbation and a central void. Deterministic unless a seed is set. */
+export function initialDesign(P: Problem) {
+  const { n, nel, o } = P, x = new Float64Array(nel), f = perturbation(P);
+  for (let e = 0; e < nel; e++) {
+    const X = ((e % n) + 0.5) / n - 0.5, Y = (Math.floor(e / n) + 0.5) / n - 0.5;
+    x[e] = Math.hypot(X, Y) < o.voidRadius ? 0 : 1 + 2 * o.perturb * f[e];
   }
   const mean = x.reduce((s, v) => s + v, 0) / nel;
   for (let e = 0; e < nel; e++) x[e] = Math.min(1, (x[e] * o.vf) / mean);

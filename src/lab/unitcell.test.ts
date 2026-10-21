@@ -50,8 +50,8 @@ describe.each(OBJECTIVES.map((o) => [o]))("sensitivities: %s", (obj) => {
   });
 });
 
-const runToEnd = (obj: (typeof OBJECTIVES)[number], n = 24) => {
-  const run = createRun(obj, { n });
+const runToEnd = (obj: (typeof OBJECTIVES)[number], n = 24, seed?: number) => {
+  const run = createRun(obj, { n, seed });
   let it = run.next();
   while (!it.done) it = run.next();
   return { run, it };
@@ -82,4 +82,11 @@ describe.each(OBJECTIVES.map((o) => [o]))("full run: %s", (obj) => {
     const P = createProblem({ n: 24 });
     expect(it.f).toBeLessThan(evaluate(P, initialDesign(P), obj, 1, 1).f);
   });
+});
+
+test("a seed reproduces its design, and different seeds give different designs", () => {
+  const go = (seed: number) => runToEnd("shear", 24, seed).run.design;
+  const a = Array.from(go(7919));
+  expect(Array.from(go(7919))).toEqual(a);
+  expect(Array.from(go(2 * 7919))).not.toEqual(a);
 });

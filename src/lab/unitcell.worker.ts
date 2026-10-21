@@ -2,7 +2,7 @@
 // Out, each iteration: { id, iter, rho (Float32Array, transferred), C, vol, E1, nu12, ms, done }.
 import { createRun, Objective } from "./unitcell";
 
-export type WorkerIn = { type: "run"; obj: Objective; n: number; id: number } | { type: "pause" | "resume" | "cancel" };
+export type WorkerIn = { type: "run"; obj: Objective; n: number; id: number; seed?: number } | { type: "pause" | "resume" | "cancel" };
 export interface WorkerOut {
   id: number; iter: number; rho: Float32Array; C: number[]; vol: number; E1: number; nu12: number; ms: number; done: boolean;
 }
@@ -31,7 +31,7 @@ ctx.onmessage = (e: MessageEvent<WorkerIn>) => {
   const m = e.data;
   if (timer) clearTimeout(timer);
   timer = undefined;
-  if (m.type === "run") { runId = m.id; run = createRun(m.obj, { n: m.n }); paused = false; step(); }
+  if (m.type === "run") { runId = m.id; run = createRun(m.obj, { n: m.n, seed: m.seed }); paused = false; step(); }
   else if (m.type === "pause") paused = true;
   else if (m.type === "resume") { paused = false; step(); }
   else { run = null; paused = false; }

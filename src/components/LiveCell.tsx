@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import { cells, initial, N } from "../lab/precomputed";
+import { cells, initial, N, seeds } from "../lab/precomputed";
 import type { Objective } from "../lab/unitcell";
 import type { WorkerOut } from "../lab/unitcell.worker";
 import { createWorker } from "../lab/createWorker";
@@ -7,11 +7,27 @@ import { createWorker } from "../lab/createWorker";
 type Mode = "precomputed" | "running" | "paused" | "converged";
 type Key = "E1" | "G12" | "nu12";
 
-const TARGETS: { id: Objective; label: string; goal: string; track: Key; name: string; aria: string }[] = [
-  { id: "axial", label: "Axial", goal: "Maximize C₁₁ + C₂₂", track: "E1", name: "E₁", aria: "axial stiffness" },
-  { id: "shear", label: "Shear", goal: "Maximize C₃₃", track: "G12", name: "G₁₂", aria: "shear stiffness" },
-  { id: "auxetic", label: "Auxetic", goal: "Minimize C₁₂ − w (C₁₁ + C₂₂)", track: "nu12", name: "ν₁₂", aria: "a negative Poisson's ratio" },
+const TARGETS: { id: Objective; label: string; track: Key; name: string; aria: string; active: number[] }[] = [
+  { id: "axial", label: "Axial", track: "E1", name: "E₁", aria: "axial stiffness", active: [0, 4] },
+  { id: "shear", label: "Shear", track: "G12", name: "G₁₂", aria: "shear stiffness", active: [8] },
+  { id: "auxetic", label: "Auxetic", track: "nu12", name: "ν₁₂", aria: "a negative Poisson's ratio", active: [0, 1, 3, 4] },
 ];
+
+// Objective and homogenized stiffness, typeset as MathML (native in current browsers, no math library).
+const Ch = (ij: string) => `<msubsup><mi>C</mi><mn>${ij}</mn><mi mathvariant="normal">H</mi></msubsup>`;
+const op = (name: string) => `<munder><mi>${name}</mi><mi>ρ</mi></munder><mspace width="0.3em"></mspace>`;
+const GOAL: Record<Objective, string> = {
+  axial: `${op("max")}${Ch("11")}<mo>+</mo>${Ch("22")}`,
+  shear: `${op("max")}${Ch("33")}`,
+  auxetic: `${op("min")}${Ch("12")}<mo>−</mo><mi>w</mi><mo stretchy="false">(</mo>${Ch("11")}<mo>+</mo>${Ch("22")}<mo stretchy="false">)</mo>`,
+};
+const goalMath = (t: Objective) =>
+  `<math displaystyle="true"><mrow>${GOAL[t]}<mspace width="1em"></mspace><mtext>subject to</mtext><mspace width="0.5em"></mspace><mi>V</mi><mo>≤</mo><mn>0.40</mn></mrow></math>`;
+const entry = (v: number) => (!Number.isFinite(v) ? "·" : Math.abs(v) < 5e-4 ? "0.000" : (v < 0 ? "−" : "") + Math.abs(v).toFixed(3));
+const tensorMath = (C: number[], active: number[]) =>
+  `<math displaystyle="true"><mrow><mfrac><msup><mi>C</mi><mi mathvariant="normal">H</mi></msup><mi>E</mi></mfrac><mo>=</mo><mrow><mo>[</mo><mtable>${[0, 1, 2]
+    .map((i) => `<mtr>${[0, 1, 2].map((j) => `<mtd><mn${active.includes(i * 3 + j) ? "" : ' class="dim"'}>${entry(C[i * 3 + j])}</mn></mtd>`).join("")}</mtr>`)
+    .join("")}</mtable><mo>]</mo></mrow></mrow></math>`;
 
 const decode = (b64: string) => Uint8Array.from(atob(b64), (c) => c.charCodeAt(0));
 const INITIAL = decode(initial);
@@ -29,11 +45,11 @@ for (let i = 0; i < 256; i++) {
 const fmt = (v: number, d = 3) => (v < 0 ? "−" : "") + Math.abs(v).toFixed(d);
 const media = (q: string) => typeof window !== "undefined" && !!window.matchMedia && window.matchMedia(q).matches;
 
-interface Readout { iter: number; vol: number; E1: number; G12: number; nu12: number; hist: number[] }
+interface Readout { iter: number; vol: number; E1: number; G12: number; nu12: number; C: number[]; seed?: number; hist: number[] }
 
 function finalReadout(t: Objective): Readout {
   const c = cells[t], track = TARGETS.find((x) => x.id === t)!.track;
-  return { iter: c.iter, vol: c.vol, E1: c.E1, G12: c.G12, nu12: c.nu12, hist: [...c.hist[track]] };
+  return { iter: c.iter, vol: c.vol, E1: c.E1, G12: c.G12, nu12: c.nu12, C: [...c.C], hist: [...c.hist[track]] };
 }
 
 const Sparkline: React.FC<{ data: number[]; live: boolean }> = ({ data, live }) => {
@@ -64,6 +80,7 @@ const LiveCell: React.FC = () => {
   const autoplayRef = useRef<boolean | null>(null);
   const runIdRef = useRef(0);
   const targetRef = useRef<Objective>("auxetic");
+  const lastSeedRef = useRef<Partial<Record<Objective, number>>>({});
 
   const [target, setTarget] = useState<Objective>("auxetic");
   const [mode, setMode] = useState<Mode>("precomputed");
@@ -131,21 +148,25 @@ const LiveCell: React.FC = () => {
     if (!w) { setSupported(false); showFinal(t); return; }
     const track = TARGETS.find((x) => x.id === t)!.track;
     const id = ++runIdRef.current;
+    // A different vetted seed each run (never the same twice in a row), so every run grows a new design.
+    const pool = seeds[t] ?? [];
+    let seed = pool[Math.floor(Math.random() * pool.length)];
+    while (pool.length > 1 && seed === lastSeedRef.current[t]) seed = pool[Math.floor(Math.random() * pool.length)];
+    lastSeedRef.current[t] = seed;
     w.onmessage = (e: MessageEvent<WorkerOut>) => {
       const m = e.data;
       if (m.id !== runIdRef.current) return;
       rhoRef.current = m.rho;
       const G12 = m.C[8];
-      setR((p) => ({ iter: m.iter, vol: m.vol, E1: m.E1, G12, nu12: m.nu12, hist: [...(m.iter === 1 ? [] : p.hist), { E1: m.E1, G12, nu12: m.nu12 }[track]] }));
+      setR((p) => ({ iter: m.iter, vol: m.vol, E1: m.E1, G12, nu12: m.nu12, C: m.C, seed, hist: [...(m.iter === 1 ? [] : p.hist), { E1: m.E1, G12, nu12: m.nu12 }[track]] }));
       if (m.done) setMode("converged");
       draw();
     };
     autoPausedRef.current = false;
-    rhoRef.current = INITIAL;
-    setR({ iter: 0, vol: cells[t].vol, E1: NaN, G12: NaN, nu12: NaN, hist: [] });
+    setR({ iter: 0, vol: cells[t].vol, E1: NaN, G12: NaN, nu12: NaN, C: Array(9).fill(NaN), seed, hist: [] });
     setMode("running");
     draw();
-    w.postMessage({ type: "run", obj: t, n: N, id });
+    w.postMessage({ type: "run", obj: t, n: N, id, seed });
   }, [draw, ensureWorker, showFinal]);
 
   const select = (t: Objective) => {
@@ -206,6 +227,10 @@ const LiveCell: React.FC = () => {
     <figure ref={boxRef} className="grid gap-x-8 gap-y-6 sm:grid-cols-[minmax(0,1fr)_13rem]">
       <div className="min-w-0">
         <canvas ref={canvasRef} role="img" aria-label={label} className="block aspect-square w-full max-w-[460px] [image-rendering:pixelated]" />
+        <div className="math mt-6 flex max-w-[460px] flex-col gap-4 overflow-x-auto overflow-y-hidden py-1">
+          <div dangerouslySetInnerHTML={{ __html: goalMath(target) }} />
+          <div dangerouslySetInnerHTML={{ __html: tensorMath(r.C, T.active) }} />
+        </div>
       </div>
 
       <div className="flex min-w-0 max-w-[20rem] flex-col gap-5">
@@ -223,7 +248,6 @@ const LiveCell: React.FC = () => {
               </button>
             ))}
           </div>
-          <p className="t-data mt-2 text-ink-2">{T.goal}, volume ≤ 0.40</p>
         </div>
 
         <dl className="t-data grid grid-cols-[auto_1fr] gap-x-4 gap-y-1">
@@ -232,6 +256,7 @@ const LiveCell: React.FC = () => {
           <dt className="text-ink-2">E₁ / E</dt><dd className="text-right">{num(r.E1)}</dd>
           <dt className="text-ink-2">G₁₂ / E</dt><dd className="text-right">{num(r.G12)}</dd>
           <dt className="text-ink-2">ν₁₂</dt><dd className="text-right">{num(r.nu12, 2)}</dd>
+          <dt className="text-ink-2">Seed</dt><dd className="text-right">{r.seed ?? "–"}</dd>
         </dl>
 
         <div>
@@ -242,7 +267,7 @@ const LiveCell: React.FC = () => {
         <div className="flex flex-wrap items-center gap-3">
           {supported && (
             <button type="button" onClick={toggle} className="t-data min-h-[44px] rounded-[2px] border border-ink px-4 hover:bg-[#EEF0EE]">
-              {mode === "running" ? "Pause" : mode === "paused" ? "Resume" : "Run live"}
+              {mode === "running" ? "Pause" : mode === "paused" ? "Resume" : mode === "converged" ? "Run again" : "Run live"}
             </button>
           )}
           {mode === "paused" && (

@@ -60,3 +60,9 @@
   }
   .link:hover { text-decoration-thickness: 2px; }
 }
+
+/* Typeset math in the live cell (MathML). Entries outside the current objective are dimmed. */
+.math math { font-family: "Latin Modern Math", "STIX Two Math", "Cambria Math", math; font-size: 1.125rem; color: theme("colors.ink"); }
+.math mtd { padding: 0.32em 0.55em; text-align: right; }
+.math mn { font-variant-numeric: tabular-nums; }
+.math .dim { color: theme("colors.ink-2"); }
