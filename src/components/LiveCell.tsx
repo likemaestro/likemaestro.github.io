@@ -38,7 +38,7 @@ function finalReadout(t: Objective): Readout {
 
 const Sparkline: React.FC<{ data: number[]; live: boolean }> = ({ data, live }) => {
   const W = 200, H = 52, pad = 4;
-  if (data.length < 2) return <svg viewBox={`0 0 ${W} ${H}`} className="h-[52px] w-full" aria-hidden="true" />;
+  if (data.length < 2) return <svg viewBox={`0 0 ${W} ${H}`} className="h-[52px] w-[200px] max-w-full" aria-hidden="true" />;
   let lo = Math.min(...data), hi = Math.max(...data);
   if (hi - lo < 1e-9) { lo -= 1; hi += 1; }
   const x = (i: number) => pad + (i / (data.length - 1)) * (W - 2 * pad);
@@ -46,7 +46,7 @@ const Sparkline: React.FC<{ data: number[]; live: boolean }> = ({ data, live }) 
   const pts = data.map((v, i) => `${x(i).toFixed(1)},${y(v).toFixed(1)}`).join(" ");
   const last = data.length - 1;
   return (
-    <svg viewBox={`0 0 ${W} ${H}`} className="h-[52px] w-full overflow-visible" aria-hidden="true">
+    <svg viewBox={`0 0 ${W} ${H}`} className="h-[52px] w-[200px] max-w-full overflow-visible" aria-hidden="true">
       {lo < 0 && hi > 0 && <line x1={pad} x2={W - pad} y1={y(0)} y2={y(0)} stroke="#CBD2D5" strokeDasharray="3 3" />}
       <polyline points={pts} fill="none" stroke="#172027" strokeWidth="1.25" vectorEffect="non-scaling-stroke" />
       <circle cx={x(last)} cy={y(data[last])} r="3" fill={live ? "#F05A24" : "#172027"} />
@@ -208,7 +208,7 @@ const LiveCell: React.FC = () => {
         <canvas ref={canvasRef} role="img" aria-label={label} className="block aspect-square w-full max-w-[460px] [image-rendering:pixelated]" />
       </div>
 
-      <div className="flex min-w-0 flex-col gap-5">
+      <div className="flex min-w-0 max-w-[20rem] flex-col gap-5">
         <div>
           <div className="flex flex-wrap gap-2" role="group" aria-label="Optimization target">
             {TARGETS.map((x) => (

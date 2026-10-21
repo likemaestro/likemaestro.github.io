@@ -10,7 +10,7 @@ module.exports = {
         steel: "#819199",
         rule: "#CBD2D5",
         laser: "#F05A24",
-        bay: "#1B252C",
+        bay: "#121A1F",
       },
       fontFamily: {
         sans: ['"Archivo Variable"', "Archivo", "system-ui", "sans-serif"],
