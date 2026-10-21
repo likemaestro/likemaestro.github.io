@@ -44,7 +44,7 @@ The remaining copy is in `src/components/Home.tsx`. Titles keep their published 
 ## 3. Direction
 
 - One memorable thing: the live unit cell in the hero. It is real computation, shown without a caption (Murat's call, 2026-10-21).
-- One cinematic thing: the dark PhD band. It is silent, driven by scroll, and captioned "Illustrative render".
+- One cinematic thing: the dark PhD band, "model to metal". It is silent, driven by scroll, and captioned "Illustrative render".
 - Everything else is quiet. Rows are not cards, and type and spacing carry the hierarchy.
 - Avoid template chrome:
   - no all-caps eyebrows;
@@ -92,7 +92,7 @@ Hero       statement + sub-line (fluid) | 80 px gutter | lab (fixed 44rem), side
                                                    | target value, status, seed; convergence line
            Everything mathematical is typeset (MathML); the interface speaks Archivo. No caption.
            Statement and sub-line use the CV profile wording.
-PhD band   dark, 240vh with a sticky stage: PhD paragraph (4 cols) | scroll render (8 cols)
+PhD band   dark, 340vh with a full-bleed sticky stage: frame → dive → laser holes → plasma cope → back; paragraph lands at the end
 Research   FEAD paper (recorded thesis states) · EWSHM (team) · concApp (team)
 Publications · Teaching and talks · About (bio | timeline) · Contact · Footer
 ```
@@ -190,30 +190,40 @@ Still to do: a browser and phone benchmark on real hardware. The preview pane th
    The auxetic run reaches −1 < ν₁₂ < 0.
 6. The same seed reproduces its design bit for bit, and a different seed gives a different design.
 
-## 7. PhD band (`src/components/LaserBand.tsx`, `src/lab/laser/`)
+## 7. PhD band, "model to metal" (`src/components/LaserBand.tsx`, `src/lab/laser/mount.js`)
 
-- **The only visible text:** the PhD paragraph (`phdParagraph`, **draft for Murat to confirm**) and the caption "Illustrative render". The section has a visually hidden h2.
-- **Timeline** (share of the band's scroll):
+Rebuilt 2026-10-21: Murat liked the idea but not the first render (soft grey CG, modelled nozzle, vignette). He chose this concept and look in a brainstorm.
+
+- **Concept:** one continuous camera move. An invented steel frame (3 bays × 2 storeys, not a real project) is drawn as BIM edge lines. One secondary beam is a dashed `laser` ghost: designed, not yet made. The camera dives in, the beam rises out of its slot as real steel, is cut, and settles back as the only steel member in a frame of lines.
+- **Accuracy rules:**
+  - no cutting heads are modelled and no laser beam is drawn;
+  - sparks leave the kerf on the side away from the torch;
+  - plasma shows a wider kerf, a visible short arc and temper colours (blue → purple → straw) along the cut, while the laser leaves a clean cut;
+  - no numbers or process labels on screen.
+- **Timeline** (share of the band's scroll; the band is 340vh with a sticky stage):
 
   | Share | Step |
   |---|---|
-  | 0–12 % | approach |
-  | 12–62 % | six bolt holes: pierce, lead-in, contour, at constant feed |
-  | 62–66 % | head retracts |
-  | 66–76 % | end-cut trace |
-  | 76–86 % | exploded offcut |
-  | 86–100 % | hold |
+  | 0–13 % | frame overview, ghost beam |
+  | 13–30 % | dive; steel fades in (18–27 %) and rises out of the slot |
+  | 30.5–52 % | laser: three web bolt holes (pierce, lead-in, contour); each slug drops |
+  | 56.5–62 % | plasma across the top flange (arc from above) |
+  | 62.7–72.5 % | plasma down the web and round the cope corner; offcut drops |
+  | 72.5–92 % | finished part, then pull back; the beam settles into its slot (82–92 %) |
+  | 86–100 % | the PhD paragraph fades in over the dark side (frame shifted right on wide screens, up on tall ones) |
 
-  There is no kerf close-up and no "decision" beat.
-- **Loading and rendering:**
-  - three.js (133 KB gz) loads through `import()` when the band is within 40 % of a viewport.
-  - It renders only on scroll, inside rAF, while the band is near.
-  - Below 1024 px: DPR is capped at 1.5 and shadows are off.
-  - The canvas edges fade into the bay with a radial mask.
+- **The only visible text:** the PhD paragraph (`phdParagraph`, **draft for Murat to confirm**) and the caption "Illustrative render" (always on, bottom right). The section has a visually hidden h2.
+- **Rendering:**
+  - three.js loads through `import()` when the band is within 40 % of a viewport.
+  - Bloom: UnrealBloomPass, threshold 1.0, so only hot elements bloom. The page background stays exact because there is no tone mapping.
+  - MSAA: 4 samples on desktop, 2 on phones. Particles are halved on phones; DPR is capped at 1.75 on desktop and 1.5 on phones.
+  - Scroll is eased with a time-based filter (τ = 0.12 s).
+  - The rAF loop runs only while the band is near and either the eased scroll is still moving or a cut is active, because sparks use wall-clock time. It was measured idle at share 0.10 (0 frames in 1.5 s).
 - **Fallbacks:**
-  - Reduced motion: no sticky scroll. One still of the finished part at a share of 0.9.
+  - Reduced motion: no sticky scroll. The paragraph sits above one still frame, mid plasma cope (share 0.66, spark time 0.37).
   - No WebGL: the text only.
-- **Layout stability:** the band's height is fixed from the first render, so hash links below it land correctly.
+- **Screenshot hook:** `?band=<share>&bt=<seconds>` renders exactly that frame, with no easing or loop.
+- **Layout stability:** the band's height is fixed from the first render, so hash links below it land correctly (`/#research` checked: lands at 24 px).
 
 ## 8. Other sections
 
@@ -252,10 +262,12 @@ Still to do: a browser and phone benchmark on real hardware. The preview pane th
   | Mobile | 96 | 100 | 100 | 100 |
   | Desktop | 99 | 100 | 100 | 100 |
 
-- **Visual checks at 375 (812 and 667 tall), 768, 1024, 1280 and 1440 px:** no horizontal scroll. The band's stage is a flex column below 1024 px, so the paragraph and the render fit a 667 px phone.
+  Re-run after the model-to-metal band (2026-10-21, performance and accessibility only): mobile 96 / 100, desktop 100 / 100.
+
+- **Visual checks at 375 (812 and 667 tall), 768, 1024, 1280 and 1440 px:** no horizontal scroll. On phones the band's paragraph lands over the last shot on a translucent bay panel.
 - **Keyboard:** the skip link appears on the first Tab and targets `#main`, and every control shows the focus ring.
-- **Reduced motion** (headless Chrome, `--force-prefers-reduced-motion`, 1440 × 900): no autoplay, and the band renders as a still. Without the flag, autoplay starts and the band is 240vh.
-- **Not browser-tested:** the no-WebGL path, which shows the text only. If WebGL fails, the band collapses from 240vh after first render, so a hash jump made before that moment lands a little low.
+- **Reduced motion** (headless Chrome, `--force-prefers-reduced-motion`, 1440 × 900): no autoplay, and the band renders as a still. Without the flag, autoplay starts and the band is 340vh.
+- **Not browser-tested:** the no-WebGL path, which shows the text only. If WebGL fails, the band collapses from 340vh after first render, so a hash jump made before that moment lands a little low.
 
 ## 11. Open items for Murat
 

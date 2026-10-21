@@ -36,7 +36,7 @@ const LaserBand: React.FC = () => {
     if (!hasWebGL()) { setGl(false); return; }
     const section = sectionRef.current!, canvas = canvasRef.current!;
     const fixed = still ? STILL : forced();
-    let view: View | null = null, near = false, raf = 0, dead = false, shown = -1;
+    let view: View | null = null, near = false, raf = 0, dead = false, shown = -1, last = 0;
     const t0 = performance.now();
 
     const goal = () => {
@@ -51,11 +51,13 @@ const LaserBand: React.FC = () => {
       raf = 0;
       if (!view || !near) return;
       if (fixed) { paint(fixed.t, fixed.time); return; }
-      const g = goal();
-      shown = shown < 0 ? g : shown + (g - shown) * 0.14;   // eased scroll, so the camera glides
+      const g = goal(), now = performance.now(), dt = last ? Math.min(0.1, (now - last) / 1000) : 0;
+      last = now;
+      shown = shown < 0 ? g : shown + (g - shown) * (1 - Math.exp(-dt / 0.12));   // eased scroll (time-based), so the camera glides
       if (Math.abs(g - shown) < 2e-4) shown = g;
-      paint(shown, (performance.now() - t0) / 1000);
+      paint(shown, (now - t0) / 1000);
       if (shown !== g || view.busy(shown)) raf = requestAnimationFrame(tick);
+      else last = 0;
     };
     const kick = () => { if (!raf) raf = requestAnimationFrame(tick); };
     const fail = () => {
@@ -94,22 +96,27 @@ const LaserBand: React.FC = () => {
   }, [still]);
 
   const scroll = gl && !still;
+  const text = (
+    <div
+      ref={textRef}
+      style={scroll ? { opacity: 0 } : undefined}
+      className={`relative max-w-[38ch] lg:max-w-[34ch] ${scroll ? "max-lg:-mx-4 max-lg:bg-bay/80 max-lg:px-4 max-lg:py-5" : ""}`}
+    >
+      <h2 id="phd-h" className="sr-only">Current work</h2>
+      <p className="lg:text-[1.25rem] lg:leading-[1.55]">{phdParagraph}</p>
+    </div>
+  );
+  // Scrolling: the paragraph lands over the last shot. Still or no WebGL: it sits above the image instead.
   return (
     <section ref={sectionRef} aria-labelledby="phd-h" className={`relative bg-bay text-[#D5DCDF] ${scroll ? "h-[340vh]" : ""}`}>
-      <div className={scroll ? "sticky top-0 h-screen overflow-hidden" : gl ? "relative h-[85vh] min-h-[30rem] overflow-hidden" : ""}>
-        {gl && <canvas ref={canvasRef} aria-hidden="true" className="absolute inset-0 h-full w-full" />}
-        <div className={`${gl ? "absolute inset-0" : "py-20"} mx-auto flex max-w-page items-end px-4 pb-10 sm:px-6 lg:items-center lg:pb-0`}>
-          <div
-            ref={textRef}
-            style={scroll ? { opacity: 0 } : undefined}
-            className="relative max-w-[38ch] max-lg:-mx-4 max-lg:bg-bay/80 max-lg:px-4 max-lg:py-5 lg:max-w-[34ch]"
-          >
-            <h2 id="phd-h" className="sr-only">Current work</h2>
-            <p className="lg:text-[1.25rem] lg:leading-[1.55]">{phdParagraph}</p>
-          </div>
+      {!scroll && <div className="mx-auto max-w-page px-4 py-16 sm:px-6 md:py-20">{text}</div>}
+      {gl && (
+        <div className={scroll ? "sticky top-0 h-screen overflow-hidden" : "relative h-[75vh] min-h-[28rem] overflow-hidden"}>
+          <canvas ref={canvasRef} aria-hidden="true" className="absolute inset-0 h-full w-full" />
+          {scroll && <div className="absolute inset-0 mx-auto flex max-w-page items-end px-4 pb-10 sm:px-6 lg:items-center lg:pb-0">{text}</div>}
+          <p className="t-small absolute bottom-3 right-4 text-[#8C9AA1] sm:right-6">Illustrative render</p>
         </div>
-        {gl && <p className="t-small absolute bottom-3 right-4 text-[#8C9AA1] sm:right-6">Illustrative render</p>}
-      </div>
+      )}
     </section>
   );
 };
