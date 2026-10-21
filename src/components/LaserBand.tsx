@@ -67,13 +67,13 @@ const LaserBand: React.FC = () => {
   return (
     <section ref={sectionRef} aria-labelledby="phd-h" className={`relative bg-bay text-[#D5DCDF] ${scroll ? "h-[240vh]" : ""}`}>
       <div className={scroll ? "sticky top-0 h-screen" : ""}>
-        <div className="mx-auto grid h-full max-w-page content-center gap-8 px-4 py-16 sm:px-6 lg:grid-cols-12 lg:items-center">
+        <div className="mx-auto flex h-full max-w-page flex-col justify-center gap-6 px-4 py-10 sm:px-6 lg:grid lg:grid-cols-12 lg:items-center lg:gap-8 lg:py-16">
           <div className="lg:col-span-4">
             <h2 id="phd-h" className="sr-only">Current work</h2>
             <p className="max-w-[40ch] lg:text-[1.25rem] lg:leading-[1.55]">{phdParagraph}</p>
           </div>
           {gl && (
-            <figure className="relative h-[52vh] min-w-0 lg:col-span-8 lg:h-[72vh]">
+            <figure className={`relative min-w-0 lg:col-span-8 lg:h-[72vh] lg:flex-none ${scroll ? "min-h-[12rem] flex-1" : "h-[52vh]"}`}>
               <canvas ref={canvasRef} aria-hidden="true" className="absolute inset-0 h-full w-full [mask-image:radial-gradient(ellipse_closest-side,#000_62%,transparent)]" />
               <figcaption className="t-small absolute bottom-0 right-0 text-[#8C9AA1]">Illustrative render</figcaption>
             </figure>

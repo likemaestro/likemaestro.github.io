@@ -234,7 +234,10 @@ Still to do: a browser and phone benchmark on real hardware. The preview pane th
   | Mobile | 96 | 100 | 100 | 100 |
   | Desktop | 99 | 100 | 100 | 100 |
 
-- **Visual checks at 375, 768, 1024 and 1440 px:** no horizontal scroll.
+- **Visual checks at 375 (812 and 667 tall), 768, 1024, 1280 and 1440 px:** no horizontal scroll. The band's stage is a flex column below 1024 px, so the paragraph and the render fit a 667 px phone.
+- **Keyboard:** the skip link appears on the first Tab and targets `#main`, and every control shows the focus ring.
+- **Reduced motion** (headless Chrome, `--force-prefers-reduced-motion`, 1440 × 900): no autoplay, and the band renders as a still. Without the flag, autoplay starts and the band is 240vh.
+- **Not browser-tested:** the no-WebGL path, which shows the text only. If WebGL fails, the band collapses from 240vh after first render, so a hash jump made before that moment lands a little low.
 
 ## 11. Open items for Murat
 
