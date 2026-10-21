@@ -85,7 +85,9 @@ The remaining copy is in `src/components/Home.tsx`. Titles keep their published 
 
 ```
 Header     Murat Güven                        Research  Publications  About  CV (PDF)
-Hero       statement + sub-line (5 cols) | live 3×3 lattice + targets, readouts, sparkline (7 cols)
+Hero       statement (8 cols) + sub-line (4 cols), then a rule and the lab panel:
+           target buttons | status, Run/Pause
+           3×3 lattice | objective, Cᴴ/E matrix, diagnostics (4 × 2), wide short convergence graph
 PhD band   dark, 240vh with a sticky stage: PhD paragraph (4 cols) | scroll render (8 cols)
 Research   FEAD paper (recorded thesis states) · EWSHM (team) · concApp (team)
 Publications · Teaching and talks · About (bio | timeline) · Contact · Footer
@@ -128,9 +130,10 @@ The caption reads: "Simplified linear-elastic topology optimization, running in 
   |---|---|---|
   | Axial | maximize C₁₁ + C₂₂ | grid; 43 iterations; E₁ = 0.233, ν₁₂ = 0.11 |
   | Shear | maximize C₃₃ | diamond; 82 iterations; G₁₂ = 0.104 |
+  | Bulk | maximize C₁₁ + C₂₂ + 2C₁₂ (= 4κ under equibiaxial strain) | rounded holes in a continuous matrix; κ ≈ 96 % of the Hashin–Shtrikman bound |
   | Auxetic | minimize C₁₂ − w (C₁₁ + C₂₂), with w = max(0.8^k, 0.02) | re-entrant cell; 127 iterations; ν₁₂ = −0.37 |
 
-- **Why there is no bulk target:** at this volume fraction, both the grid and the diamond reach the 2D bulk bound. A bulk target therefore always reproduces the axial or the shear design. A weighted mix collapses to one of them in the same way.
+- **Bulk target:** v3.0 left it out because, from the default start, it looked like a duplicate of the axial grid. With random starts it gives the classic bulk-modulus designs instead: rounded holes in a continuous matrix, distinct from the axial grid, reaching 94–96 % of the 2D Hashin–Shtrikman upper bound κ_HS = f κ_s μ_s / ((1 − f) κ_s + μ_s). From the default start at n = 24 it stalls on a symmetric grey saddle; at the site's n = 32 it converges cleanly, and the tests check bulk at n = 32.
 - **Random starts:** each live run draws a seed from a vetted pool (`seeds` in `src/lab/precomputed.ts`: 14 axial, 16 shear and 16 auxetic). The seed sets a D4-symmetrized sum of six random periodic modes on top of the central void, so every run grows a different design. A seed joins the pool only if its run:
   - converges before the iteration cap;
   - has a grey fraction under 5 %;
@@ -141,7 +144,8 @@ The caption reads: "Simplified linear-elastic topology optimization, running in 
   Without a seed, the default symmetric start is used: the precomputed fallback and the tests.
 - **Typeset math under the lattice (MathML, native, no library):** the objective (for example min over ρ of C₁₂ᴴ − w (C₁₁ᴴ + C₂₂ᴴ), subject to V ≤ 0.40), and the live homogenized tensor Cᴴ/E as a 3 × 3 matrix. Entries the objective uses are in `ink`; the rest are dimmed to `ink-2`.
 - **Readouts:**
-  - E₁ = 1/S₁₁, G₁₂ = C₃₃ and ν₁₂ = −S₁₂/S₁₁, relative to the solid material;
+  - E₁ = 1/S₁₁, G₁₂ = C₃₃, ν₁₂ = −S₁₂/S₁₁ and κ = (C₁₁ + C₂₂ + 2C₁₂)/4, relative to the solid material;
+  - κ/κ_HS, the bulk modulus as a fraction of its Hashin–Shtrikman upper bound at the current volume;
   - a sparkline of the target's quantity by iteration. Its live point is `laser`.
 
 ### Behaviour (`src/components/LiveCell.tsx`, `src/lab/unitcell.worker.ts`)
@@ -154,7 +158,7 @@ The caption reads: "Simplified linear-elastic topology optimization, running in 
 | Running | Pause is always available (WCAG 2.2.2). Pausing is automatic when the hero leaves the viewport or the tab is hidden, and the run resumes on return |
 | Worker error | Falls back to the precomputed result, and Run live is hidden |
 
-- **Worker pacing:** at least 40 ms per iteration, so that a run stays readable (about 2, 3 and 5 s for the three targets).
+- **Worker pacing:** at least 40 ms per iteration, so that a run stays readable (about 2–6 s per target).
 - **Run ids:** each run carries an id, so frames from a cancelled run are dropped.
 - **Precomputed results:** `npm run precompute` runs the same solver in Node and writes `src/lab/precomputed.ts` (11 KB: densities in base64 plus the history).
 - **Mesh:** n = 32 on every device, so the live and precomputed results agree.
@@ -172,7 +176,7 @@ Still to do: a browser and phone benchmark on real hardware. The preview pane th
 2. Results agree with the independent NumPy reference (`scripts/reference_homogenize.py`) to 1e-8 on three fields, one of them anisotropic.
 3. Periodicity: opposite boundary nodes share their DOFs.
 4. Sensitivities of every target match central finite differences to a relative error of 1e-5, and the volume gradient matches too.
-5. Full runs on all three targets:
+5. Full runs on all four targets (bulk at n = 32, the others at n = 24):
    - converge before the iteration cap;
    - keep volume ≤ 0.40;
    - have a grey fraction under 8 %;

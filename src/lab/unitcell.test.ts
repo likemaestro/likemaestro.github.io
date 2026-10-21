@@ -57,8 +57,12 @@ const runToEnd = (obj: (typeof OBJECTIVES)[number], n = 24, seed?: number) => {
   return { run, it };
 };
 
+// Bulk from the default start sits on a symmetric grey saddle at n = 24; at the site's n = 32 it converges cleanly.
+const meshFor = (obj: (typeof OBJECTIVES)[number]) => (obj === "bulk" ? 32 : 24);
+
 describe.each(OBJECTIVES.map((o) => [o]))("full run: %s", (obj) => {
-  const { run, it } = runToEnd(obj);
+  const n = meshFor(obj);
+  const { run, it } = runToEnd(obj, n);
   test("converges before the iteration cap to a crisp, D4-symmetric design at the target volume", () => {
     expect(it.iter).toBeLessThan(run.P.o.maxIter);
     expect(it.vol).toBeLessThan(run.P.o.vf + 1e-3);
@@ -71,15 +75,15 @@ describe.each(OBJECTIVES.map((o) => [o]))("full run: %s", (obj) => {
         expect(Math.abs(x[P.orbitMembers[k]] - x[P.orbitMembers[P.orbitStart[o]]])).toBeLessThan(1e-12);
   });
   test("is deterministic", () => {
-    const again = runToEnd(obj).run.design;
+    const again = runToEnd(obj, n).run.design;
     expect(Array.from(again)).toEqual(Array.from(run.design));
-  });
+  }, 20000);
   if (obj === "auxetic") test("reaches a negative Poisson's ratio", () => {
     expect(it.nu12).toBeLessThan(0);
     expect(it.nu12).toBeGreaterThan(-1);
   });
   else test("improves on the initial design", () => {
-    const P = createProblem({ n: 24 });
+    const P = createProblem({ n });
     expect(it.f).toBeLessThan(evaluate(P, initialDesign(P), obj, 1, 1).f);
   });
 });

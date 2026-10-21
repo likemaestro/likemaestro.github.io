@@ -63,14 +63,14 @@ const Home: React.FC = () => {
       </header>
 
       <main id="main">
-        <Wrap className="grid gap-x-8 gap-y-12 pb-20 pt-10 md:pt-16 lg:grid-cols-12 lg:pb-28">
-          <div className="lg:col-span-5">
-            <h1 className="t-display">I develop AI and optimization methods for structural engineering and steel construction.</h1>
-            <p className="mt-6 max-w-[46ch] text-ink-2">
+        <Wrap className="pb-20 pt-8 md:pt-12 lg:pb-28">
+          <div className="grid gap-x-8 gap-y-5 lg:grid-cols-12 lg:items-end">
+            <h1 className="t-display lg:col-span-8">I develop AI and optimization methods for structural engineering and steel construction.</h1>
+            <p className="max-w-[46ch] text-ink-2 lg:col-span-4">
               PhD candidate at Politecnico di Milano. My current work is decision support for choosing how steel parts are cut, built on BIM models.
             </p>
           </div>
-          <div className="min-w-0 lg:col-span-7">
+          <div className="mt-10 border-t border-rule pt-6 md:mt-14">
             <LiveCell />
           </div>
         </Wrap>

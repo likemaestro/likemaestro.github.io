@@ -3,10 +3,9 @@
 // Pure functions and typed arrays only: runs in a Web Worker, in Jest and in Node.
 import { Mma } from "./mma";
 
-// Three targets with distinct optima. Bulk (C11+C22+2C12) is left out: at this volume fraction the square grid and the
-// diamond grid both reach the 2D bulk bound, so it always reproduces the axial or the shear result.
-export type Objective = "axial" | "shear" | "auxetic";
-export const OBJECTIVES: Objective[] = ["axial", "shear", "auxetic"];
+// Targets: axial (C11 + C22), shear (C33), bulk (C11 + C22 + 2 C12 = 4 kappa under equibiaxial strain) and auxetic.
+export type Objective = "axial" | "shear" | "bulk" | "auxetic";
+export const OBJECTIVES: Objective[] = ["axial", "shear", "bulk", "auxetic"];
 
 export interface Options {
   n: number;            // elements per side
@@ -210,6 +209,7 @@ export function objective(obj: Objective, C: Float64Array, q: Float64Array[], wS
     case "axial": f = -(pick(C, 0, 0) + pick(C, 1, 1)); for (let e = 0; e < nel; e++) dE[e] = -(q[0][e] + q[1][e]); break;
     case "shear": f = -pick(C, 2, 2); for (let e = 0; e < nel; e++) dE[e] = -q[2][e]; break;
     case "auxetic": f = pick(C, 0, 1) - wStiff * (pick(C, 0, 0) + pick(C, 1, 1)); for (let e = 0; e < nel; e++) dE[e] = q[3][e] - wStiff * (q[0][e] + q[1][e]); break;
+    case "bulk": f = -(pick(C, 0, 0) + pick(C, 1, 1) + 2 * pick(C, 0, 1)); for (let e = 0; e < nel; e++) dE[e] = -(q[0][e] + q[1][e] + 2 * q[3][e]); break;
   }
   return { f, dE };
 }

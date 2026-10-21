@@ -5,11 +5,12 @@ import type { WorkerOut } from "../lab/unitcell.worker";
 import { createWorker } from "../lab/createWorker";
 
 type Mode = "precomputed" | "running" | "paused" | "converged";
-type Key = "E1" | "G12" | "nu12";
+type Key = "E1" | "G12" | "nu12" | "K";
 
 const TARGETS: { id: Objective; label: string; track: Key; name: string; aria: string; active: number[] }[] = [
   { id: "axial", label: "Axial", track: "E1", name: "E₁", aria: "axial stiffness", active: [0, 4] },
   { id: "shear", label: "Shear", track: "G12", name: "G₁₂", aria: "shear stiffness", active: [8] },
+  { id: "bulk", label: "Bulk", track: "K", name: "κ", aria: "bulk modulus", active: [0, 1, 3, 4] },
   { id: "auxetic", label: "Auxetic", track: "nu12", name: "ν₁₂", aria: "a negative Poisson's ratio", active: [0, 1, 3, 4] },
 ];
 
@@ -19,6 +20,7 @@ const op = (name: string) => `<munder><mi>${name}</mi><mi>ρ</mi></munder><mspac
 const GOAL: Record<Objective, string> = {
   axial: `${op("max")}${Ch("11")}<mo>+</mo>${Ch("22")}`,
   shear: `${op("max")}${Ch("33")}`,
+  bulk: `${op("max")}${Ch("11")}<mo>+</mo>${Ch("22")}<mo>+</mo><mn>2</mn>${Ch("12")}`,
   auxetic: `${op("min")}${Ch("12")}<mo>−</mo><mi>w</mi><mo stretchy="false">(</mo>${Ch("11")}<mo>+</mo>${Ch("22")}<mo stretchy="false">)</mo>`,
 };
 const goalMath = (t: Objective) =>
@@ -42,31 +44,40 @@ for (let i = 0; i < 256; i++) {
   LUT[i * 4 + 3] = 255;
 }
 
+// 2D bulk modulus from the equibiaxial energy, and its Hashin–Shtrikman upper bound for a porous solid at volume f
+// (plane stress, E = 1, nu = 0.3: kappa_s = 1/1.4, mu_s = 1/2.6).
+const kappa = (C: ArrayLike<number>) => (C[0] + C[4] + 2 * C[1]) / 4;
+const KS = 1 / 1.4, GS = 1 / 2.6;
+const kappaHS = (f: number) => (f * KS * GS) / ((1 - f) * KS + GS);
 const fmt = (v: number, d = 3) => (v < 0 ? "−" : "") + Math.abs(v).toFixed(d);
 const media = (q: string) => typeof window !== "undefined" && !!window.matchMedia && window.matchMedia(q).matches;
 
-interface Readout { iter: number; vol: number; E1: number; G12: number; nu12: number; C: number[]; seed?: number; hist: number[] }
+interface Readout { iter: number; vol: number; E1: number; G12: number; nu12: number; K: number; C: number[]; seed?: number; hist: number[] }
 
 function finalReadout(t: Objective): Readout {
   const c = cells[t], track = TARGETS.find((x) => x.id === t)!.track;
-  return { iter: c.iter, vol: c.vol, E1: c.E1, G12: c.G12, nu12: c.nu12, C: [...c.C], hist: [...c.hist[track]] };
+  return { iter: c.iter, vol: c.vol, E1: c.E1, G12: c.G12, nu12: c.nu12, K: c.K, C: [...c.C], hist: [...c.hist[track]] };
 }
 
 const Sparkline: React.FC<{ data: number[]; live: boolean }> = ({ data, live }) => {
-  const W = 200, H = 52, pad = 4;
-  if (data.length < 2) return <svg viewBox={`0 0 ${W} ${H}`} className="h-[52px] w-[200px] max-w-full" aria-hidden="true" />;
+  const W = 600, H = 44;
+  if (data.length < 2) return <div className="h-11" aria-hidden="true" />;
   let lo = Math.min(...data), hi = Math.max(...data);
   if (hi - lo < 1e-9) { lo -= 1; hi += 1; }
-  const x = (i: number) => pad + (i / (data.length - 1)) * (W - 2 * pad);
-  const y = (v: number) => H - pad - ((v - lo) / (hi - lo)) * (H - 2 * pad);
-  const pts = data.map((v, i) => `${x(i).toFixed(1)},${y(v).toFixed(1)}`).join(" ");
+  const x = (i: number) => (i / (data.length - 1)) * W;
+  const y = (v: number) => H - 3 - ((v - lo) / (hi - lo)) * (H - 6);
   const last = data.length - 1;
   return (
-    <svg viewBox={`0 0 ${W} ${H}`} className="h-[52px] w-[200px] max-w-full overflow-visible" aria-hidden="true">
-      {lo < 0 && hi > 0 && <line x1={pad} x2={W - pad} y1={y(0)} y2={y(0)} stroke="#CBD2D5" strokeDasharray="3 3" />}
-      <polyline points={pts} fill="none" stroke="#172027" strokeWidth="1.25" vectorEffect="non-scaling-stroke" />
-      <circle cx={x(last)} cy={y(data[last])} r="3" fill={live ? "#F05A24" : "#172027"} />
-    </svg>
+    <div className="relative h-11" aria-hidden="true">
+      <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" className="absolute inset-0 h-full w-full overflow-visible">
+        {lo < 0 && hi > 0 && <line x1={0} x2={W} y1={y(0)} y2={y(0)} stroke="#CBD2D5" strokeDasharray="3 3" vectorEffect="non-scaling-stroke" />}
+        <polyline points={data.map((v, i) => `${x(i).toFixed(1)},${y(v).toFixed(1)}`).join(" ")} fill="none" stroke="#172027" strokeWidth="1.25" vectorEffect="non-scaling-stroke" />
+      </svg>
+      <span
+        className={`absolute h-[7px] w-[7px] -translate-x-1/2 -translate-y-1/2 rounded-full ${live ? "bg-laser" : "bg-ink"}`}
+        style={{ left: `${(x(last) / W) * 100}%`, top: `${(y(data[last]) / H) * 100}%` }}
+      />
+    </div>
   );
 };
 
@@ -157,13 +168,13 @@ const LiveCell: React.FC = () => {
       const m = e.data;
       if (m.id !== runIdRef.current) return;
       rhoRef.current = m.rho;
-      const G12 = m.C[8];
-      setR((p) => ({ iter: m.iter, vol: m.vol, E1: m.E1, G12, nu12: m.nu12, C: m.C, seed, hist: [...(m.iter === 1 ? [] : p.hist), { E1: m.E1, G12, nu12: m.nu12 }[track]] }));
+      const G12 = m.C[8], K = kappa(m.C);
+      setR((p) => ({ iter: m.iter, vol: m.vol, E1: m.E1, G12, nu12: m.nu12, K, C: m.C, seed, hist: [...(m.iter === 1 ? [] : p.hist), { E1: m.E1, G12, nu12: m.nu12, K }[track]] }));
       if (m.done) setMode("converged");
       draw();
     };
     autoPausedRef.current = false;
-    setR({ iter: 0, vol: cells[t].vol, E1: NaN, G12: NaN, nu12: NaN, C: Array(9).fill(NaN), seed, hist: [] });
+    setR({ iter: 0, vol: cells[t].vol, E1: NaN, G12: NaN, nu12: NaN, K: NaN, C: Array(9).fill(NaN), seed, hist: [] });
     setMode("running");
     draw();
     w.postMessage({ type: "run", obj: t, n: N, id, seed });
@@ -223,63 +234,72 @@ const LiveCell: React.FC = () => {
   const label = `3 by 3 tiling of a unit cell optimized for ${T.aria}. ${mode === "running" ? `Iteration ${r.iter}.` : status + "."}`;
   const num = (v: number, d = 3) => (Number.isFinite(v) ? fmt(v, d) : "–");
 
+  const stat = (k: React.ReactNode, v: React.ReactNode) => (
+    <div className="min-w-0">
+      <dt className="t-data text-ink-2">{k}</dt>
+      <dd className="t-data mt-0.5 text-[1.0625rem] text-ink">{v}</dd>
+    </div>
+  );
+
   return (
-    <figure ref={boxRef} className="grid gap-x-8 gap-y-6 sm:grid-cols-[minmax(0,1fr)_13rem]">
-      <div className="min-w-0">
-        <canvas ref={canvasRef} role="img" aria-label={label} className="block aspect-square w-full max-w-[460px] [image-rendering:pixelated]" />
-        <div className="math mt-6 flex max-w-[460px] flex-col gap-4 overflow-x-auto overflow-y-hidden py-1">
-          <div dangerouslySetInnerHTML={{ __html: goalMath(target) }} />
-          <div dangerouslySetInnerHTML={{ __html: tensorMath(r.C, T.active) }} />
+    <figure ref={boxRef}>
+      <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-3">
+        <div className="flex flex-wrap gap-2" role="group" aria-label="Optimization target">
+          {TARGETS.map((x) => (
+            <button
+              key={x.id}
+              type="button"
+              aria-pressed={target === x.id}
+              onClick={() => select(x.id)}
+              className={`t-data min-h-[44px] rounded-[2px] border border-ink px-3 transition-colors duration-150 ${target === x.id ? "bg-ink text-canvas" : "hover:bg-[#EEF0EE]"}`}
+            >
+              {x.label}
+            </button>
+          ))}
         </div>
-      </div>
-
-      <div className="flex min-w-0 max-w-[20rem] flex-col gap-5">
-        <div>
-          <div className="flex flex-wrap gap-2" role="group" aria-label="Optimization target">
-            {TARGETS.map((x) => (
-              <button
-                key={x.id}
-                type="button"
-                aria-pressed={target === x.id}
-                onClick={() => select(x.id)}
-                className={`t-data min-h-[44px] rounded-[2px] border border-ink px-3 transition-colors duration-150 ${target === x.id ? "bg-ink text-canvas" : "hover:bg-[#EEF0EE]"}`}
-              >
-                {x.label}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        <dl className="t-data grid grid-cols-[auto_1fr] gap-x-4 gap-y-1">
-          <dt className="text-ink-2">Iteration</dt><dd className="text-right">{r.iter || "–"}</dd>
-          <dt className="text-ink-2">Volume</dt><dd className="text-right">{Number.isFinite(r.E1) ? fmt(r.vol, 2) : "–"}</dd>
-          <dt className="text-ink-2">E₁ / E</dt><dd className="text-right">{num(r.E1)}</dd>
-          <dt className="text-ink-2">G₁₂ / E</dt><dd className="text-right">{num(r.G12)}</dd>
-          <dt className="text-ink-2">ν₁₂</dt><dd className="text-right">{num(r.nu12, 2)}</dd>
-          <dt className="text-ink-2">Seed</dt><dd className="text-right">{r.seed ?? "–"}</dd>
-        </dl>
-
-        <div>
-          <Sparkline data={r.hist} live={live} />
-          <p className="t-data mt-1 text-ink-2">{T.name} by iteration</p>
-        </div>
-
-        <div className="flex flex-wrap items-center gap-3">
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+          <p className="t-data text-ink-2" role="status" aria-live="polite">{mode === "running" ? "Computing in your browser" : status}</p>
+          {mode === "paused" && (
+            <button type="button" onClick={() => start(target)} className="t-data link min-h-[44px] px-1">Restart</button>
+          )}
           {supported && (
             <button type="button" onClick={toggle} className="t-data min-h-[44px] rounded-[2px] border border-ink px-4 hover:bg-[#EEF0EE]">
               {mode === "running" ? "Pause" : mode === "paused" ? "Resume" : mode === "converged" ? "Run again" : "Run live"}
             </button>
           )}
-          {mode === "paused" && (
-            <button type="button" onClick={() => start(target)} className="t-data link min-h-[44px] px-1">Restart</button>
-          )}
         </div>
-        <p className="t-data text-ink-2" role="status" aria-live="polite">{mode === "running" ? "Computing in your browser" : status}</p>
       </div>
 
-      <figcaption className="t-small max-w-[62ch] text-ink-2 sm:col-span-2">
+      <div className="mt-6 grid gap-x-12 gap-y-8 md:grid-cols-[minmax(0,26rem)_minmax(0,1fr)] lg:grid-cols-[minmax(0,30rem)_minmax(0,1fr)]">
+        <canvas ref={canvasRef} role="img" aria-label={label} className="block aspect-square w-full [image-rendering:pixelated]" />
+
+        <div className="flex min-w-0 flex-col gap-6">
+          <div className="math flex flex-col gap-5 overflow-x-auto overflow-y-hidden py-1">
+            <div dangerouslySetInnerHTML={{ __html: goalMath(target) }} />
+            <div dangerouslySetInnerHTML={{ __html: tensorMath(r.C, T.active) }} />
+          </div>
+
+          <dl className="grid grid-cols-4 gap-x-4 gap-y-4 border-t border-rule pt-5">
+            {stat("Iteration", r.iter || "–")}
+            {stat("Volume", Number.isFinite(r.E1) ? fmt(r.vol, 2) : "–")}
+            {stat("Seed", r.seed ?? "–")}
+            {stat("ν₁₂", num(r.nu12, 2))}
+            {stat("E₁ / E", num(r.E1))}
+            {stat("G₁₂ / E", num(r.G12))}
+            {stat("κ / E", num(r.K))}
+            {stat(<>κ / κ<sub>HS</sub></>, num(r.K / kappaHS(r.vol), 2))}
+          </dl>
+
+          <div className="border-t border-rule pt-4">
+            <Sparkline data={r.hist} live={live} />
+            <p className="t-data mt-2 text-ink-2">{T.name} by iteration</p>
+          </div>
+        </div>
+      </div>
+
+      <figcaption className="t-small mt-6 max-w-[70ch] text-ink-2">
         Simplified linear-elastic topology optimization, running in your browser. Not the model from my publications.
-        <span className="block">Periodic homogenization, {N} × {N} elements, SIMP with projection, MMA, square symmetry.</span>
+        Periodic homogenization, {N} × {N} elements, SIMP with projection, MMA, square symmetry.
       </figcaption>
     </figure>
   );

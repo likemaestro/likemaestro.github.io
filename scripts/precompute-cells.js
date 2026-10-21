@@ -16,18 +16,19 @@ const N = 32;
 const q = (a) => Buffer.from(Uint8Array.from(a, (v) => Math.round(Math.min(1, Math.max(0, v)) * 255))).toString("base64");
 const r = (v, d = 4) => Number(v.toFixed(d));
 
+const kappa = (C) => (C[0] + C[4] + 2 * C[1]) / 4;   // 2D bulk modulus from the equibiaxial energy
 const cells = {};
 let initial = "";   // the design the solver evaluates first (same for every target)
 for (const obj of OBJECTIVES) {
   const run = createRun(obj, { n: N });
-  const hist = { E1: [], G12: [], nu12: [] };
+  const hist = { E1: [], G12: [], nu12: [], K: [] };
   let it;
   do {
     it = run.next();
     if (!initial) initial = q(it.phys);
-    hist.E1.push(r(it.E1)); hist.G12.push(r(it.C[8])); hist.nu12.push(r(it.nu12));
+    hist.E1.push(r(it.E1)); hist.G12.push(r(it.C[8])); hist.nu12.push(r(it.nu12)); hist.K.push(r(kappa(it.C)));
   } while (!it.done);
-  cells[obj] = { rho: q(it.phys), iter: it.iter, vol: r(it.vol), E1: r(it.E1), G12: r(it.C[8]), nu12: r(it.nu12), C: Array.from(it.C, (v) => r(v)), hist };
+  cells[obj] = { rho: q(it.phys), iter: it.iter, vol: r(it.vol), E1: r(it.E1), G12: r(it.C[8]), nu12: r(it.nu12), K: r(kappa(it.C)), C: Array.from(it.C, (v) => r(v)), hist };
   console.log(obj, "iter", it.iter, "vol", r(it.vol), "E1", r(it.E1), "G12", r(it.C[8]), "nu12", r(it.nu12));
 }
 
