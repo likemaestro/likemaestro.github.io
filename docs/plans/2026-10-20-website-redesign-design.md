@@ -85,14 +85,18 @@ The remaining copy is in `src/components/Home.tsx`. Titles keep their published 
 
 ```
 Header     Murat Güven                        Research  Publications  About  CV (PDF)
-Hero       statement + sub-line alone on the left (fluid, display type up to 4.25rem) | 80 px gutter | lab,
+Hero       statement + sub-line alone on the left (fluid, display type up to 3.5rem) | 64 px gutter | lab,
            side by side from 1280 px, stacked below. Nothing else under the statement (Murat, 2026-10-22).
            Lab (layout B, chosen 2026-10-22 from three mockups; 5 × 5 lattice the same day):
-             joined target selector (active filled in ink) ............ Run button with icon (32 px tall on desktop)
+             joined target selector (active filled in ink) ............ Run button with icon (32 px tall on desktop),
+             spanning lattice and readout
              lattice: the unit cell tiled 5 × 5, square, centre cell outlined
-             compact readout under a hairline: Objective | Homogenized stiffness, then the convergence line, status, seed
-           The lab's width is clamp(21rem, 100svh − 25rem, 32rem), so the whole lab fits the first screen
-           (checked at 1700 × 796, 1700 × 700, 1440 × 900 and 1280 × 720).
+             | readout column (13rem) to its right, under a hairline: Objective, Homogenized stiffness,
+               Convergence (value, line, status, seed)
+           Lattice side clamp(21rem, min(100svh − 12.75rem, 100vw − 22rem), 32rem), so the whole lab fits the first
+           screen (checked at 1700 × 796, 1700 × 700, 1440 × 900, 1280 × 720 and 2000 × 997).
+           Large screens: the root font size is clamp(100 %, 0.9375vw, 125 %) and the page width 85rem, so past
+           about 1700 px the whole composition grows instead of leaving wide empty margins.
            Everything mathematical is typeset (MathML); the interface speaks Archivo. No caption.
            Statement: "I develop AI and computational methods for structural engineering and sustainable construction."
            Phones: full-width selector, Run, lattice, convergence; formulation and matrix behind "Show technical details".
@@ -174,12 +178,12 @@ No caption: Murat removed it (2026-10-21). For the record, the demo is simplifie
 - **Worker pacing:** at least 40 ms per iteration. At n = 96 the solve takes longer than that anyway: a run lasts about 11–17 s in Chrome on this laptop (100–160 iterations at about 110 ms).
 - **Run ids:** each run carries an id, so frames from a cancelled run are dropped.
 - **Precomputed results:** `npm run precompute` runs the same solver in Node and writes `src/lab/precomputed.ts` (76 KB: densities in base64 plus the history; 3 KB more in the gzipped bundle than at n = 48).
-- **Mesh:** n = 96 on every device, so the live and precomputed results agree. In the 5 × 5 lattice one element is about one screen pixel, so a finer mesh would not show.
+- **Mesh:** n = 96 on every device, so the live and precomputed results agree. In the 5 × 5 lattice one element is one to two device pixels, so a finer mesh would barely show and cost about 3× the time.
 
 **Benchmarks (Node 24.14.1, this Windows laptop):**
 - full periodic solve: about 30 ms per iteration at n = 32 and 165 ms at n = 48;
 - quarter-cell solve: 7 ms at n = 48, 17 ms at n = 64 and 75 ms at n = 96 (Node); about 110 ms at n = 96 in headless Chrome;
-- n = 128 would take about 3× longer for no visible gain.
+- n = 128 would take about 3× longer for a barely visible gain.
 
 Still to do: a browser and phone benchmark on real hardware. The preview pane throttles timers, so it gives no usable numbers.
 
