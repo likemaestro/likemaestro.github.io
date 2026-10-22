@@ -281,15 +281,15 @@ const LiveCell: React.FC = () => {
   // formulation and matrix behind a toggle.
   return (
     <figure ref={boxRef} className="w-full min-w-0 md:grid md:w-max md:grid-cols-[clamp(21rem,min(calc(100svh-12.75rem),calc(100vw-22rem)),32rem)_13rem] md:gap-x-7">
-      <div className="mb-4 flex flex-wrap items-center justify-between gap-3 md:col-span-2 md:mb-3">
-        <div className="flex w-full rounded-[2px] border border-ink md:w-auto" role="group" aria-label="Optimization target">
+      <div className="mb-4 flex items-center justify-between gap-2 md:col-span-2 md:mb-3 md:gap-3">
+        <div className="flex min-w-0 flex-1 rounded-[2px] border border-ink md:flex-none" role="group" aria-label="Optimization target">
           {TARGETS.map((x, i) => (
             <button
               key={x.id}
               type="button"
               aria-pressed={target === x.id}
               onClick={() => select(x.id)}
-              className={`t-data h-11 flex-1 px-3 transition-colors duration-150 md:h-8 md:flex-none md:px-2.5 md:text-[0.875rem] ${i ? "border-l border-rule" : ""} ${
+              className={`t-data h-11 min-w-0 flex-1 px-1 transition-colors duration-150 md:h-8 md:flex-none md:px-2.5 md:text-[0.875rem] ${i ? "border-l border-rule" : ""} ${
                 target === x.id ? "bg-ink font-[600] text-canvas" : "text-ink-2 hover:bg-[#EEF0EE] hover:text-ink"
               }`}
             >
@@ -298,9 +298,9 @@ const LiveCell: React.FC = () => {
           ))}
         </div>
         {supported && (
-          <button type="button" onClick={toggle} className="t-data inline-flex h-11 items-center gap-2 rounded-[2px] border border-ink pl-2.5 pr-3 transition-colors duration-150 hover:bg-[#EEF0EE] md:h-8 md:gap-1.5 md:pl-2 md:pr-2.5 md:text-[0.875rem]">
+          <button type="button" onClick={toggle} className="t-data inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-[2px] border border-ink transition-colors duration-150 hover:bg-[#EEF0EE] md:h-8 md:w-auto md:gap-1.5 md:pl-2 md:pr-2.5 md:text-[0.875rem]">
             <svg viewBox="0 0 16 16" aria-hidden="true" className="h-4 w-4 md:h-3.5 md:w-3.5" fill="none" stroke="currentColor" strokeWidth="1.6">{run.icon}</svg>
-            {run.text}
+            <span className="max-md:sr-only">{run.text}</span>
           </button>
         )}
       </div>

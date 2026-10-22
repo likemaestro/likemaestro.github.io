@@ -99,7 +99,7 @@ Hero       statement + sub-line alone on the left (fluid, display type up to 3.5
            about 1700 px the whole composition grows instead of leaving wide empty margins.
            Everything mathematical is typeset (MathML); the interface speaks Archivo. No caption.
            Statement: "I develop AI and computational methods for structural engineering and sustainable construction."
-           Phones: full-width selector, Run, lattice, convergence; formulation and matrix behind "Show technical details".
+           Phones: one row of controls (selector, then a 44 px icon-only Run button whose label stays for screen readers), lattice, convergence; formulation and matrix behind "Show technical details".
 PhD band   dark, 340vh with a full-bleed sticky stage: frame → dive → laser holes → plasma cope → back; paragraph lands at the end
 Research   FEAD paper (recorded thesis states) · EWSHM (team) · concApp (team)
 Publications · Teaching and talks · About (bio | timeline) · Contact · Footer
