@@ -17,7 +17,7 @@ const MARKS: Record<string, string> = {
 };
 
 const Section: React.FC<{ id: string; title: string; children: React.ReactNode }> = ({ id, title, children }) => (
-  <section id={id} aria-labelledby={`${id}-h`} className="py-16 md:py-28">
+  <section id={id} aria-labelledby={`${id}-h`} className="-scroll-mt-6 py-16 md:-scroll-mt-[4.5rem] md:py-28">
     <Wrap>
       <h2 id={`${id}-h`} className="t-h2 mb-8 md:mb-12">{title}</h2>
       {children}

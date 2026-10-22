@@ -333,12 +333,14 @@ function perturbation(P: Problem) {
   return o.seed === undefined ? f.map((v) => v / 2) : f.map((v) => v / (m || 1));
 }
 
-/** Volume fraction plus a D4-symmetric perturbation and a central void. Deterministic unless a seed is set. */
+/** Volume fraction plus a D4-symmetric perturbation. Without a seed: the fixed pattern and a central void.
+ *  With a seed: a random field only, stronger (0.45) because nothing else breaks the uniform start. */
 export function initialDesign(P: Problem) {
   const { n, nel, o } = P, x = new Float64Array(nel), f = perturbation(P);
+  const amp = o.seed === undefined ? o.perturb : 0.45;
   for (let e = 0; e < nel; e++) {
     const X = ((e % n) + 0.5) / n - 0.5, Y = (Math.floor(e / n) + 0.5) / n - 0.5;
-    x[e] = Math.hypot(X, Y) < o.voidRadius ? 0 : 1 + 2 * o.perturb * f[e];
+    x[e] = o.seed === undefined && Math.hypot(X, Y) < o.voidRadius ? 0 : 1 + 2 * amp * f[e];
   }
   const mean = x.reduce((s, v) => s + v, 0) / nel;
   for (let e = 0; e < nel; e++) x[e] = Math.min(1, (x[e] * o.vf) / mean);

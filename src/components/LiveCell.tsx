@@ -185,7 +185,7 @@ const LiveCell: React.FC = () => {
     }
   }, [showFinal]);
 
-  const start = useCallback((t: Objective) => {
+  const start = useCallback((t: Objective, first?: number) => {
     const w = ensureWorker();
     if (!w) { setSupported(false); showFinal(t); return; }
     const track = TARGETS.find((x) => x.id === t)!.track;
@@ -194,8 +194,8 @@ const LiveCell: React.FC = () => {
     // Touch devices run the coarser mesh from its own pool: about as fast on a phone as the fine mesh on a desktop.
     const n = media("(pointer: coarse)") ? PHONE_N : N;
     const pool = (n === N ? seeds : phoneSeeds)[t] ?? [];
-    let seed = pool[Math.floor(Math.random() * pool.length)];
-    while (pool.length > 1 && seed === lastSeedRef.current[t]) seed = pool[Math.floor(Math.random() * pool.length)];
+    let seed = first ?? pool[Math.floor(Math.random() * pool.length)];
+    while (first === undefined && pool.length > 1 && seed === lastSeedRef.current[t]) seed = pool[Math.floor(Math.random() * pool.length)];
     lastSeedRef.current[t] = seed;
     w.onmessage = (e: MessageEvent<WorkerOut>) => {
       const m = e.data;
@@ -241,7 +241,7 @@ const LiveCell: React.FC = () => {
     };
     const io = new IntersectionObserver(([e]) => {
       visibleRef.current = e.isIntersecting;
-      if (e.isIntersecting && autoplayRef.current) { autoplayRef.current = false; start("auxetic"); }
+      if (e.isIntersecting && autoplayRef.current) { autoplayRef.current = false; start("auxetic", cells.auxetic.seed); }   // the seed whose first frame is already drawn
       pauseIfHidden();
     }, { threshold: 0.35 });
     if (box) io.observe(box);

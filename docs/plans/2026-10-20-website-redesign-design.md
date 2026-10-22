@@ -86,6 +86,7 @@ The remaining copy is in `src/components/Home.tsx`. Titles keep their published 
 ```
 Header     Murat Güven                        Research  Publications  About  CV  |  GitHub LinkedIn Scholar (icons)
            "CV" links the PDF (screen readers hear "CV, PDF"). ResearchGate and ORCID stay in Contact.
+           Section links land with the heading 2.5rem from the top (negative scroll margin equal to the padding less 2.5rem).
 Hero       statement + sub-line alone on the left, its cap height level with the lab's buttons (−0.134em), (fluid, display type up to 3.5rem) | 64 px gutter | lab,
            side by side from 1280 px, stacked below. Nothing else under the statement (Murat, 2026-10-22).
            Lab (layout B, chosen 2026-10-22 from three mockups; 5 × 5 lattice the same day):
@@ -140,18 +141,18 @@ No caption: Murat removed it (2026-10-21). For the record, the demo is simplifie
   - β starts at 1 and doubles at convergence or every 20 iterations, up to 16.
 - **Optimizer:** MMA (Svanberg) with one volume constraint, V ≤ 0.40. The dual is solved by scalar bisection.
 - **Symmetry:** D4 is enforced by averaging over orbits, in a fixed order, so runs are bit-reproducible.
-- **Initial design:** volume fraction 0.4, plus a 0.25 cosine perturbation (cos 4πx + cos 4πy) and a central void of radius 0.15.
+- **Initial design:** every live run starts from a random field (seeded, amplitude 0.45 around volume fraction 0.4), with no central void: Murat found the same circular hole at every start staged. Without a seed (tests only): a 0.25 cosine perturbation (cos 4πx + cos 4πy) and a central void of radius 0.15. From random starts some bulk seeds never leave the uniform grey state; the vetting drops them.
 - **Targets:**
 
   | Button | Objective | Default design (first pool seed, n = 80) |
   |---|---|---|
-  | Axial | maximize C₁₁ + C₂₂ | grid; 94 iterations; E₁ = 0.233, ν₁₂ = 0.11 |
-  | Shear | maximize C₃₃ | diagonal bars; 124 iterations; G₁₂ = 0.107 |
-  | Bulk | maximize C₁₁ + C₂₂ + 2C₁₂ (= 4κ under equibiaxial strain) | fine foam of rounded holes; 134 iterations; κ = 94 % of the Hashin–Shtrikman bound |
-  | Auxetic | minimize C₁₂ − w (C₁₁ + C₂₂), with w = max(0.8^k, 0.02) | re-entrant web; 110 iterations; ν₁₂ = −0.70 |
+  | Axial | maximize C₁₁ + C₂₂ | grid; 119 iterations; E₁ = 0.233, ν₁₂ = 0.11 |
+  | Shear | maximize C₃₃ | diagonal bars; 105 iterations; G₁₂ = 0.108 |
+  | Bulk | maximize C₁₁ + C₂₂ + 2C₁₂ (= 4κ under equibiaxial strain) | network of elliptical holes; 150 iterations; κ = 95 % of the Hashin–Shtrikman bound |
+  | Auxetic | minimize C₁₂ − w (C₁₁ + C₂₂), with w = max(0.8^k, 0.02) | gear-like rosettes; 143 iterations; ν₁₂ = −0.70 |
 
-- **Bulk target:** v3.0 left it out because, from the default start, it looked like a duplicate of the axial grid. With random starts it gives the classic bulk-modulus designs instead: rounded holes in a continuous matrix, distinct from the axial grid, reaching 94–97 % (the hand-picked pool at n = 80, measured 2026-10-22; median 95 %); auxetic ν₁₂ from −0.71 to −0.57 of the 2D Hashin–Shtrikman upper bound κ_HS = f κ_s μ_s / ((1 − f) κ_s + μ_s). From the default start at n = 24 it stalls on a symmetric grey saddle; at n = 32 it converges cleanly, and the tests check bulk at n = 32.
-- **Random starts:** each live run draws a seed from a vetted pool (`seeds` in `src/lab/precomputed.ts`: 16 axial, 16 shear, 13 bulk, 14 auxetic; `phoneSeeds` at n = 48: 8 axial and 16 for each other target). The seed sets a D4-symmetrized sum of ten random periodic modes, up to wavenumber 5, on top of the central void, so every run grows a different design. A seed joins the pool only if its run:
+- **Bulk target:** v3.0 left it out because, from the default start, it looked like a duplicate of the axial grid. With random starts it gives the classic bulk-modulus designs instead: rounded holes in a continuous matrix, distinct from the axial grid, reaching 93–98 % (the hand-picked pool at n = 80, random starts, measured 2026-10-22; median 96 %); auxetic ν₁₂ from −0.78 to −0.56 of the 2D Hashin–Shtrikman upper bound κ_HS = f κ_s μ_s / ((1 − f) κ_s + μ_s). From the default start at n = 24 it stalls on a symmetric grey saddle; at n = 32 it converges cleanly, and the tests check bulk at n = 32.
+- **Random starts:** each live run draws a seed from a vetted pool (`seeds` in `src/lab/precomputed.ts`: 16 axial, 16 shear, 11 bulk, 14 auxetic; `phoneSeeds` at n = 48: 15 axial, 16 shear, 10 bulk, 16 auxetic). The seed sets a D4-symmetrized sum of ten random periodic modes, up to wavenumber 5, on top of the central void, so every run grows a different design. A seed joins the pool only if its run:
   - converges before the iteration cap;
   - has a grey fraction under 5 %;
   - has a solid phase that is one connected piece on the periodic cell;
@@ -159,7 +160,7 @@ No caption: Murat removed it (2026-10-21). For the record, the demo is simplifie
   - for auxetic, reaches ν₁₂ < −0.2.
 
   Bulk and auxetic pools are hand-picked (`PICKS` in `scripts/precompute-cells.js`) from 48 rendered candidates each at n = 80, for the most intricate and varied cells (Murat asked for better designs); they still pass every check above. Axial and shear take the first 16 seeds that pass.
-  The precomputed design shown before a run (and on phones until Run is pressed) is the first seed of each pool. Without a seed, the default symmetric start is used; only the tests use it.
+  The precomputed design shown before a run (and on phones until Run is pressed) is the first seed of each pool. Autoplay's first run uses the default auxetic seed, whose first frame (`initial`) is drawn before the worker answers. Without a seed, the default symmetric start is used; only the tests use it.
 - **Typeset math under the lattice (MathML, native, no library):** the objective (for example min over ρ of C₁₂ᴴ − w (C₁₁ᴴ + C₂₂ᴴ), subject to V ≤ 0.40), and the live homogenized tensor Cᴴ/E as a 3 × 3 matrix. Entries the objective uses are in `ink`; the rest are dimmed to `ink-2`.
 - **Readouts:**
   - E₁ = 1/S₁₁, G₁₂ = C₃₃, ν₁₂ = −S₁₂/S₁₁ and κ = (C₁₁ + C₂₂ + 2C₁₂)/4, relative to the solid material;
