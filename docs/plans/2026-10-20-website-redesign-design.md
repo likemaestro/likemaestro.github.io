@@ -91,7 +91,9 @@ Hero       statement + sub-line (fluid) | 80 px gutter | lab (fixed 44rem), side
                                                    | Cᴴ/E matrix
                                                    | target value, status, seed; convergence line
            Everything mathematical is typeset (MathML); the interface speaks Archivo. No caption.
-           Statement and sub-line use the CV profile wording.
+           Statement: "I develop AI and computational methods for structural engineering and sustainable construction."
+           (shortened after an outside design review, 2026-10-22); sub-line keeps the CV profile terms.
+           Phones: 2×2 target buttons, lattice, Run, history; formulation and matrix behind "Show technical details".
 PhD band   dark, 340vh with a full-bleed sticky stage: frame → dive → laser holes → plasma cope → back; paragraph lands at the end
 Research   FEAD paper (recorded thesis states) · EWSHM (team) · concApp (team)
 Publications · Teaching and talks · About (bio | timeline) · Contact · Footer
@@ -204,7 +206,7 @@ Rebuilt 2026-10-21: Murat liked the idea but not the first render (soft grey CG,
 
   | Share | Step |
   |---|---|
-  | 0–13 % | frame overview, ghost beam |
+  | 0–13 % | frame overview, ghost beam; the band enters on the light page canvas with ink lines and darkens to the bay over 8–22 %, so there is no hard colour edge after the hero |
   | 13–30 % | dive; steel fades in (18–27 %) and rises out of the slot |
   | 30.5–52 % | laser: three web bolt holes (pierce, lead-in, contour); each slug drops |
   | 56.5–62 % | plasma across the top flange (arc from above) |
@@ -212,7 +214,7 @@ Rebuilt 2026-10-21: Murat liked the idea but not the first render (soft grey CG,
   | 72.5–92 % | finished part, then pull back; the beam settles into its slot (82–92 %) |
   | 86–100 % | the PhD paragraph fades in over the dark side (frame shifted right on wide screens, up on tall ones) |
 
-- **The only visible text:** the PhD paragraph (`phdParagraph`, plain language, chosen by Murat 2026-10-21) and the caption "Illustrative render" (always on, bottom right). The section has a visually hidden h2.
+- **The only visible text:** the PhD paragraph (`phdParagraph`, a one-sentence research statement chosen by Murat 2026-10-22) and the caption "Illustrative render" (always on, bottom right). The section has a visually hidden h2.
 - **Rendering:**
   - three.js loads through `import()` when the band is within 40 % of a viewport.
   - Bloom: UnrealBloomPass, threshold 1.0, so only hot elements bloom. The page background stays exact because there is no tone mapping.

@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useId, useRef, useState } from "react";
 import { cells, initial, N, seeds } from "../lab/precomputed";
 import type { Objective } from "../lab/unitcell";
 import type { WorkerOut } from "../lab/unitcell.worker";
@@ -112,6 +112,8 @@ const LiveCell: React.FC = () => {
   const [mode, setMode] = useState<Mode>("precomputed");
   const [supported, setSupported] = useState(true);
   const [r, setR] = useState<Readout>(() => finalReadout("auxetic"));
+  const [details, setDetails] = useState(false);   // phones only: formulation and matrix open on demand
+  const detailsId = useId();
   const modeRef = useRef(mode);
   modeRef.current = mode;
 
@@ -255,18 +257,22 @@ const LiveCell: React.FC = () => {
           : `Precomputed, iteration ${r.iter}`;
   const reference = target === "auxetic" ? 0 : target === "bulk" ? kappaHS(r.vol) : undefined;
 
+  // Desktop: targets and Run above the lattice; formulation, matrix and history beside it.
+  // Phones: 2×2 targets, the lattice, Run, the history, then the maths behind a toggle.
   return (
-    <figure ref={boxRef} className="grid gap-x-10 gap-y-6 md:grid-cols-[minmax(0,24rem)_17.5rem]">
-      <div className="flex flex-wrap items-center justify-between gap-x-6">
-        <div className="flex gap-5" role="group" aria-label="Optimization target">
+    <figure ref={boxRef} className="grid gap-x-10 gap-y-5 md:grid-cols-[minmax(0,24rem)_17.5rem] md:gap-y-6">
+      <div className="contents md:flex md:flex-wrap md:items-center md:justify-between md:gap-x-6">
+        <div className="grid grid-cols-2 gap-2 md:flex md:gap-5" role="group" aria-label="Optimization target">
           {TARGETS.map((x) => (
             <button
               key={x.id}
               type="button"
               aria-pressed={target === x.id}
               onClick={() => select(x.id)}
-              className={`t-data relative min-h-[44px] transition-colors duration-150 ${
-                target === x.id ? "font-[640] text-ink after:absolute after:inset-x-0 after:bottom-2 after:h-[2px] after:bg-laser" : "text-ink-2 hover:text-ink"
+              className={`t-data relative min-h-[48px] rounded-[2px] border transition-colors duration-150 md:min-h-[44px] md:border-0 ${
+                target === x.id
+                  ? "border-ink font-[640] text-ink after:absolute after:inset-x-5 after:bottom-2 after:h-[2px] after:bg-laser md:after:inset-x-0"
+                  : "border-rule text-ink-2 hover:border-ink-2 hover:text-ink"
               }`}
             >
               {x.label}
@@ -274,7 +280,7 @@ const LiveCell: React.FC = () => {
           ))}
         </div>
         {supported && (
-          <button type="button" onClick={toggle} className="t-data min-h-[44px] rounded-[2px] border border-ink px-4 transition-colors duration-150 hover:bg-[#EEF0EE]">
+          <button type="button" onClick={toggle} className="t-data order-1 min-h-[48px] rounded-[2px] border border-ink px-4 transition-colors duration-150 hover:bg-[#EEF0EE] md:min-h-[44px]">
             {mode === "running" ? "Pause" : mode === "paused" ? "Resume" : mode === "converged" ? "Run again" : "Run live"}
           </button>
         )}
@@ -282,13 +288,15 @@ const LiveCell: React.FC = () => {
 
       <canvas ref={canvasRef} role="img" aria-label={label} className="block aspect-square w-full [image-rendering:pixelated] md:row-start-2" />
 
-      <div className="flex min-w-0 flex-col justify-between gap-8 md:col-start-2 md:row-start-2">
-        <div className="math flex flex-col gap-1 overflow-x-auto overflow-y-hidden">
-          <div dangerouslySetInnerHTML={{ __html: goalMath(target) }} />
-          <div dangerouslySetInnerHTML={{ __html: SUBJECT }} />
+      <div className="flex min-w-0 flex-col justify-between gap-5 max-md:order-2 md:col-start-2 md:row-start-2 md:gap-8">
+        <div id={detailsId} className={`flex flex-col gap-6 max-md:order-3 md:contents ${details ? "" : "max-md:hidden"}`}>
+          <div className="math flex flex-col gap-1 overflow-x-auto overflow-y-hidden">
+            <div dangerouslySetInnerHTML={{ __html: goalMath(target) }} />
+            <div dangerouslySetInnerHTML={{ __html: SUBJECT }} />
+          </div>
+          <div className="math overflow-x-auto overflow-y-hidden py-1" dangerouslySetInnerHTML={{ __html: tensorMath(r.C, T.active) }} />
         </div>
-        <div className="math overflow-x-auto overflow-y-hidden py-1" dangerouslySetInnerHTML={{ __html: tensorMath(r.C, T.active) }} />
-        <div>
+        <div className="max-md:order-1">
           <div className="flex flex-wrap items-baseline justify-between gap-x-4">
             <div className="math" dangerouslySetInnerHTML={{ __html: quantity(T.track, r) }} />
             <p className="t-data text-ink-2" aria-hidden="true">
@@ -299,6 +307,15 @@ const LiveCell: React.FC = () => {
           <div className="mt-3 flex"><Trace data={r.hist} reference={reference} live={live} /></div>
           <p className="sr-only" role="status" aria-live="polite">{mode === "running" ? "Computing in your browser" : status}</p>
         </div>
+        <button
+          type="button"
+          aria-expanded={details}
+          aria-controls={detailsId}
+          onClick={() => setDetails((v) => !v)}
+          className="t-data link min-h-[44px] self-start text-ink max-md:order-2 md:hidden"
+        >
+          {details ? "Hide technical details" : "Show technical details"}
+        </button>
       </div>
     </figure>
   );

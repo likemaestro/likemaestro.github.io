@@ -113,7 +113,7 @@ const LaserBand: React.FC = () => {
     <section ref={sectionRef} aria-labelledby="phd-h" className={`relative bg-bay text-[#D5DCDF] ${scroll ? "h-[340vh]" : ""}`}>
       {!scroll && <div className="mx-auto max-w-page px-4 py-16 sm:px-6 md:py-20">{text}</div>}
       {gl && (
-        <div className={scroll ? "sticky top-0 h-screen overflow-hidden" : "relative h-[75vh] min-h-[28rem] overflow-hidden"}>
+        <div className={scroll ? "sticky top-0 h-screen overflow-hidden bg-canvas" : "relative h-[75vh] min-h-[28rem] overflow-hidden"}>
           <canvas ref={canvasRef} aria-hidden="true" className="absolute inset-0 h-full w-full" />
           {scroll && <div className="absolute inset-0 mx-auto flex max-w-page items-end px-4 pb-10 sm:px-6 lg:items-center lg:pb-0">{text}</div>}
           <p className="t-small absolute bottom-3 right-4 text-[#8C9AA1] sm:right-6">Illustrative render</p>

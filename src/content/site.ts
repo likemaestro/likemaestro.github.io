@@ -100,9 +100,10 @@ export const timeline = [
   { year: "2016–20", title: "BSc, Civil Engineering", place: "Kocaeli University", note: "" },
 ];
 
-// Plain language, chosen by Murat (2026-10-21). Method only: no case, partner or machine names, no numbers.
+// Research statement chosen by Murat (2026-10-22), close to his CV thesis title. Method only: no case, partner or
+// machine names, no numbers.
 export const phdParagraph =
-  "My PhD helps steel fabricators decide how to cut every part of a building: laser or plasma. It starts from the design model, compares cost, time and carbon for each choice, and finds the plans that balance them best for the people deciding.";
+  "In my PhD I develop BIM-integrated decision support for choosing between laser and plasma cutting in steel construction, balancing cost, time and carbon across a whole project.";
 
 export const email = "murat.guven@polimi.it";
 

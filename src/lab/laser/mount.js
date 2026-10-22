@@ -11,6 +11,7 @@ import { OutputPass } from "three/addons/postprocessing/OutputPass.js";
 import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
 
 const BG = 0x121a1f;
+const LIGHT = new THREE.Color(0xf6f7f5), DARK = new THREE.Color(BG), INK = new THREE.Color(0x172027), GREY = new THREE.Color(0x819199);
 const clamp = (v, a = 0, b = 1) => Math.min(b, Math.max(a, v));
 const seg = (t, a, b) => clamp((t - a) / (b - a));
 const ease = (u) => (u < 0.5 ? 4 * u * u * u : 1 - Math.pow(-2 * u + 2, 3) / 2);
@@ -236,7 +237,7 @@ export function mount(canvas, { small = false } = {}) {
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, small ? 1.5 : 1.75));
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(BG);
-  scene.fog = new THREE.Fog(BG, 50, 200);
+  scene.fog = new THREE.Fog(BG, 50, 200);   // both follow the light-to-dark entry in render()
   const pmrem = new THREE.PMREMGenerator(renderer);
   const room = new RoomEnvironment(), env = pmrem.fromScene(room, 0.04).texture;
   pmrem.dispose(); room.dispose();
@@ -413,6 +414,8 @@ export function mount(canvas, { small = false } = {}) {
       beam.updateMatrixWorld();
       const r = seg(t, 0.18, 0.27);
       if (r !== steelOn) setSteel(r);
+      const dark = ease(seg(t, 0.08, 0.22));   // the band enters on the page's light canvas and darkens during the dive
+      scene.background.copy(LIGHT).lerp(DARK, dark); scene.fog.color.copy(scene.background); lines.color.copy(INK).lerp(GREY, dark);
       ghostMat.opacity = 0.85 * (1 - seg(t, 0.9, 0.95));
       edgeMat.opacity = 0.3 * r + 0.45 * seg(t, 0.9, 0.95);   // once it lands, the made beam reads out of the model
       slugs.forEach((s, i) => fall(s, V(HOLES[i][0], HOLES[i][1], 0), holeDone(i), t, 24, V(0, 0, -0.9), V(6, 0, 0)));
