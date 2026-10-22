@@ -3,6 +3,8 @@ import { Navigate, Route, Routes } from "react-router-dom";
 import Home from "./components/Home";
 
 // /tools/* stays reachable by URL for existing links but is not linked from the site; loaded on demand.
+// The postbuild script in package.json copies index.html to each route listed there, so GitHub Pages answers those
+// URLs with 200 instead of the 404 fallback page. Add a new route there too.
 const ToolsPage = lazy(() => import("./components/pages/ToolsPage"));
 const GaugeTool = lazy(() => import("./components/tools/GaugeTool/GaugeTool"));
 const CUTTIA = lazy(() => import("./components/tools/CUTT-IA/CUTT-IA"));

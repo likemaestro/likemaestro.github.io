@@ -40,7 +40,7 @@
     "eject": "react-scripts eject",
     "predeploy": "npm run build",
     "deploy": "gh-pages -d build",
-    "postbuild": "node -e \"require('fs').copyFileSync('build/index.html','build/404.html')\"",
+    "postbuild": "node -e \"const f=require('fs'),p=require('path');for(const r of ['404','publications','tools','tools/WorldMap','tools/gauge-tool']){f.mkdirSync(p.dirname('build/'+r),{recursive:true});f.copyFileSync('build/index.html','build/'+r+'.html')}\"",
     "precompute": "node scripts/precompute-cells.js"
   },
   "eslintConfig": {
