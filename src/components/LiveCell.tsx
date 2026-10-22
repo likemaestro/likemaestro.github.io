@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useId, useRef, useState } from "react";
-import { cells, initial, N, seeds } from "../lab/precomputed";
+import { cells, initial, N, PHONE_N, phoneSeeds, seeds } from "../lab/precomputed";
 import type { Objective } from "../lab/unitcell";
 import type { WorkerOut } from "../lab/unitcell.worker";
 import { createWorker } from "../lab/createWorker";
@@ -132,20 +132,20 @@ const LiveCell: React.FC = () => {
     if (cv.width !== px || cv.height !== py) { cv.width = px; cv.height = py; }
     const g = cv.getContext("2d");
     if (!g) return;
-    const src = rhoRef.current, isFloat = src instanceof Float32Array;
+    const src = rhoRef.current, isFloat = src instanceof Float32Array, n = Math.round(Math.sqrt(src.length));   // precomputed or live mesh
     // The whole lattice as one image at one pixel per element (no seams between tiles), blown up with hard edges to
     // the next whole multiple of the screen size, then scaled down smoothly: element edges blend over at most one
     // device pixel, so they stay crisp and evenly wide at any screen density.
-    const W = N * COLS, img = new ImageData(W, N * ROWS);
-    for (let ey = 0; ey < N; ey++)
-      for (let ex = 0; ex < N; ex++) {
-        const v = src[ey * N + ex], k = isFloat ? Math.round(Math.min(1, Math.max(0, v)) * 255) : v, c = LUT.subarray(k * 4, k * 4 + 4);
-        for (let j = 0; j < ROWS; j++) for (let i = 0; i < COLS; i++) img.data.set(c, ((j * N + N - 1 - ey) * W + i * N + ex) * 4);   // row 0 is the bottom edge
+    const W = n * COLS, img = new ImageData(W, n * ROWS);
+    for (let ey = 0; ey < n; ey++)
+      for (let ex = 0; ex < n; ex++) {
+        const v = src[ey * n + ex], k = isFloat ? Math.round(Math.min(1, Math.max(0, v)) * 255) : v, c = LUT.subarray(k * 4, k * 4 + 4);
+        for (let j = 0; j < ROWS; j++) for (let i = 0; i < COLS; i++) img.data.set(c, ((j * n + n - 1 - ey) * W + i * n + ex) * 4);   // row 0 is the bottom edge
       }
     const lattice = document.createElement("canvas"), big = document.createElement("canvas"), k = Math.ceil(px / W);
-    lattice.width = W; lattice.height = N * ROWS;
+    lattice.width = W; lattice.height = n * ROWS;
     lattice.getContext("2d")!.putImageData(img, 0, 0);
-    big.width = W * k; big.height = N * ROWS * k;
+    big.width = W * k; big.height = n * ROWS * k;
     const b = big.getContext("2d")!;
     b.imageSmoothingEnabled = false;
     b.drawImage(lattice, 0, 0, big.width, big.height);
@@ -185,15 +185,17 @@ const LiveCell: React.FC = () => {
     }
   }, [showFinal]);
 
-  const start = useCallback((t: Objective) => {
+  const start = useCallback((t: Objective, first?: number) => {
     const w = ensureWorker();
     if (!w) { setSupported(false); showFinal(t); return; }
     const track = TARGETS.find((x) => x.id === t)!.track;
     const id = ++runIdRef.current;
     // A different vetted seed each run (never the same twice in a row), so every run grows a new design.
-    const pool = seeds[t] ?? [];
-    let seed = pool[Math.floor(Math.random() * pool.length)];
-    while (pool.length > 1 && seed === lastSeedRef.current[t]) seed = pool[Math.floor(Math.random() * pool.length)];
+    // Touch devices run the coarser mesh from its own pool: about as fast on a phone as the fine mesh on a desktop.
+    const n = media("(pointer: coarse)") ? PHONE_N : N;
+    const pool = (n === N ? seeds : phoneSeeds)[t] ?? [];
+    let seed = first ?? pool[Math.floor(Math.random() * pool.length)];
+    while (first === undefined && pool.length > 1 && seed === lastSeedRef.current[t]) seed = pool[Math.floor(Math.random() * pool.length)];
     lastSeedRef.current[t] = seed;
     w.onmessage = (e: MessageEvent<WorkerOut>) => {
       const m = e.data;
@@ -208,7 +210,7 @@ const LiveCell: React.FC = () => {
     setR({ iter: 0, vol: cells[t].vol, E1: NaN, G12: NaN, nu12: NaN, K: NaN, C: Array(9).fill(NaN), seed, hist: [] });
     setMode("running");
     draw();
-    w.postMessage({ type: "run", obj: t, n: N, id, seed });
+    w.postMessage({ type: "run", obj: t, n, id, seed });
   }, [draw, ensureWorker, showFinal]);
 
   const select = (t: Objective) => {
@@ -239,7 +241,7 @@ const LiveCell: React.FC = () => {
     };
     const io = new IntersectionObserver(([e]) => {
       visibleRef.current = e.isIntersecting;
-      if (e.isIntersecting && autoplayRef.current) { autoplayRef.current = false; start("auxetic"); }
+      if (e.isIntersecting && autoplayRef.current) { autoplayRef.current = false; start("auxetic", cells.auxetic.seed); }   // the seed whose first frame is already drawn
       pauseIfHidden();
     }, { threshold: 0.35 });
     if (box) io.observe(box);
