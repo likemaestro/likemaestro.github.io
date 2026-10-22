@@ -7,17 +7,17 @@ const fs = require("fs");
 const os = require("os");
 const path = require("path");
 
-const N = 96;
-// Hand-picked after looking at every converged design (2026-10-22): the most intricate, varied cells. They still go
+const N = 80, PHONE_N = 48;   // touch devices run live at the coarser mesh, from their own vetted pool
+// Hand-picked after looking at every converged design at n = 80 (2026-10-22): the most intricate, varied cells. They still go
 // through the checks below. Other targets try k x 7919 in order. The first seed of each list is the default design.
 const PICKS = {
-  bulk: [213813, 87109, 324679, 340517, 356355, 245489, 110866, 221732, 79190, 205894, 71271, 372193],
-  auxetic: [293003, 7919, 87109, 118785, 79190, 221732, 245489, 364274, 95028, 23757, 324679, 332598, 63352],
+  bulk: [79190, 197975, 102947, 63352, 261327, 221732, 110866, 380112, 356355, 174218, 31676, 142542, 285084],
+  auxetic: [293003, 7919, 87109, 118785, 79190, 221732, 364274, 95028, 23757, 324679, 102947, 229651, 308841, 63352],
 };
 const root = path.resolve(__dirname, "..");
 
 // Solid phase (density > 0.5) as one connected piece on the periodic cell: no floating islands.
-function connected(phys) {
+function connected(phys, N) {
   const seen = new Uint8Array(N * N), solid = (e) => phys[e] > 0.5;
   const start = phys.findIndex((v) => v > 0.5);
   if (start < 0) return false;
@@ -36,16 +36,16 @@ const q = (a) => Buffer.from(Uint8Array.from(a, (v) => Math.round(Math.min(1, Ma
 const r = (v, d = 4) => Number(v.toFixed(d));
 const kappa = (C) => (C[0] + C[4] + 2 * C[1]) / 4;   // 2D bulk modulus from the equibiaxial energy
 
-// Child: vet seeds for one target. A seed joins the pool when its run converges to a crisp, connected design that
-// is distinct from the others (and, for the auxetic target, clearly negative in Poisson's ratio).
-function vet(solver, obj) {
+// Child: vet seeds for one target at mesh n. A seed joins the pool when its run converges to a crisp, connected design
+// that is distinct from the others (and, for the auxetic target, clearly negative in Poisson's ratio).
+function vet(solver, obj, n) {
   const { createRun } = require(solver);
   const KEEP = 16, pool = [], keys = new Set();
-  const candidates = PICKS[obj] ?? Array.from({ length: 40 }, (_, k) => (k + 1) * 7919);
+  const candidates = (n === N && PICKS[obj]) || Array.from({ length: 40 }, (_, k) => (k + 1) * 7919);
   let cell = null;
   for (const seed of candidates) {
     if (pool.length >= KEEP) break;
-    const run = createRun(obj, { n: N, seed });
+    const run = createRun(obj, { n, seed });
     const hist = { E1: [], G12: [], nu12: [], K: [] };
     let it;
     do {
@@ -54,18 +54,18 @@ function vet(solver, obj) {
     } while (!it.done);
     const grey = it.phys.filter((v) => v > 0.1 && v < 0.9).length / it.phys.length;
     const key = [it.E1, it.C[8], it.nu12].map((v) => v.toFixed(3)).join();
-    const ok = it.iter < run.P.o.maxIter && grey < 0.05 && connected(it.phys) && !keys.has(key) && (obj !== "auxetic" || it.nu12 < -0.2);
+    const ok = it.iter < run.P.o.maxIter && grey < 0.05 && connected(it.phys, n) && !keys.has(key) && (obj !== "auxetic" || it.nu12 < -0.2);
     if (ok) {
       keys.add(key); pool.push(seed);
       cell ??= { seed, rho: q(it.phys), iter: it.iter, vol: r(it.vol), E1: r(it.E1), G12: r(it.C[8]), nu12: r(it.nu12), K: r(kappa(it.C)), C: Array.from(it.C, (v) => r(v)), hist };
     }
-    console.error(obj, seed, ok ? "kept" : "skipped", "iter", it.iter, "grey", grey.toFixed(3), "nu12", it.nu12.toFixed(3));
+    console.error(obj, n, seed, ok ? "kept" : "skipped", "iter", it.iter, "grey", grey.toFixed(3), "nu12", it.nu12.toFixed(3));
   }
   return { pool, cell };
 }
 
 if (process.argv[2] === "--vet") {
-  process.send(vet(process.argv[3], process.argv[4]), () => process.exit(0));
+  process.send(vet(process.argv[3], process.argv[4], +process.argv[5]), () => process.exit(0));
 } else {
   const out = fs.mkdtempSync(path.join(os.tmpdir(), "cells-"));
   execFileSync(process.execPath, [require.resolve("typescript/bin/tsc"), "--outDir", out, "--module", "commonjs",
@@ -73,14 +73,16 @@ if (process.argv[2] === "--vet") {
   const solver = path.join(out, "unitcell.js");
   const { createRun, OBJECTIVES } = require(solver);
   const initial = q(createRun(OBJECTIVES[0], { n: N }).next().phys);   // the default start, before any run's first frame
-  Promise.all(OBJECTIVES.map((obj) => new Promise((resolve, reject) => {
-    const child = fork(__filename, ["--vet", solver, obj]);
-    child.on("message", (m) => resolve([obj, m]));
-    child.on("exit", (code) => code && reject(new Error(`${obj} exited with ${code}`)));
+  const jobs = OBJECTIVES.flatMap((obj) => [[obj, N], [obj, PHONE_N]]);
+  Promise.all(jobs.map(([obj, n]) => new Promise((resolve, reject) => {
+    const child = fork(__filename, ["--vet", solver, obj, String(n)]);
+    child.on("message", (m) => resolve([obj, n, m]));
+    child.on("exit", (code) => code && reject(new Error(`${obj} at n = ${n} exited with ${code}`)));
   }))).then((results) => {
-    const cells = {}, seeds = {};
-    for (const [obj, { pool, cell }] of results) {
-      if (!cell) throw new Error(`no vetted seed for ${obj}`);
+    const cells = {}, seeds = {}, phoneSeeds = {};
+    for (const [obj, n, { pool, cell }] of results) {
+      if (!cell) throw new Error(`no vetted seed for ${obj} at n = ${n}`);
+      if (n === PHONE_N) { phoneSeeds[obj] = pool; console.log(obj, "phone pool", pool.length); continue; }
       cells[obj] = cell; seeds[obj] = pool;
       console.log(obj, "pool", pool.length, "default seed", cell.seed, "iter", cell.iter, "E1", cell.E1, "G12", cell.G12, "nu12", cell.nu12, "K", cell.K);
     }
@@ -89,6 +91,8 @@ export const N = ${N};
 export const initial = "${initial}";
 export const cells = ${JSON.stringify(cells)} as const;
 export const seeds: Record<string, number[]> = ${JSON.stringify(seeds)};
+export const PHONE_N = ${PHONE_N};
+export const phoneSeeds: Record<string, number[]> = ${JSON.stringify(phoneSeeds)};
 `;
     fs.writeFileSync(path.join(root, "src/lab/precomputed.ts"), ts);
     fs.rmSync(out, { recursive: true, force: true });
