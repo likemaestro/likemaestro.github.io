@@ -85,15 +85,14 @@ The remaining copy is in `src/components/Home.tsx`. Titles keep their published 
 
 ```
 Header     Murat Güven                        Research  Publications  About  CV (PDF)
-Hero       statement + sub-line (fluid) | 80 px gutter | lab (fixed 44rem), side by side from 1280 px, stacked below:
-             tabs Axial Shear Bulk Auxetic + Run   |
-             3×3 lattice (≤ 24rem)                 | objective, "subject to V ≤ 0.40"
-                                                   | Cᴴ/E matrix
-                                                   | target value, status, seed; convergence line
+Hero       statement + sub-line (fluid) | 80 px gutter | lab (fixed 42rem), side by side from 1280 px, stacked below.
+           Lab (layout B, chosen 2026-10-22 from three mockups):
+             joined target selector (active filled in ink) ............ Run button with icon
+             lattice: the unit cell tiled 4 columns × 3 rows, full lab width, centre-left cell outlined
+             readout row under a hairline: Objective | Homogenized stiffness | Convergence (value, line, status, seed)
            Everything mathematical is typeset (MathML); the interface speaks Archivo. No caption.
            Statement: "I develop AI and computational methods for structural engineering and sustainable construction."
-           (shortened after an outside design review, 2026-10-22); sub-line keeps the CV profile terms.
-           Phones: 2×2 target buttons, lattice, Run, history; formulation and matrix behind "Show technical details".
+           Phones: full-width selector, Run, lattice, convergence; formulation and matrix behind "Show technical details".
 PhD band   dark, 340vh with a full-bleed sticky stage: frame → dive → laser holes → plasma cope → back; paragraph lands at the end
 Research   FEAD paper (recorded thesis states) · EWSHM (team) · concApp (team)
 Publications · Teaching and talks · About (bio | timeline) · Contact · Footer

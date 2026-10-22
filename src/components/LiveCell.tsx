@@ -63,7 +63,14 @@ const quantity = (k: Key, r: { E1: number; G12: number; nu12: number; K: number;
   const hs = k === "K" ? `<mo>=</mo><mn>${num(r.K / kappaHS(r.vol), 2)}</mn>${sp}<msub><mi>κ</mi><mtext>HS</mtext></msub>` : "";
   return `<math>${SYM[k]}<mo>=</mo><mn>${num(r[k], k === "nu12" ? 2 : 3)}</mn>${unit}${hs}</math>`;
 };
+const COLS = 4, ROWS = 3;   // the lattice shows the cell tiled 4 × 3
 const media = (q: string) => typeof window !== "undefined" && !!window.matchMedia && window.matchMedia(q).matches;
+
+const ICON = {
+  play: <path d="M5 3.5v9l7.5-4.5z" fill="currentColor" stroke="none" />,
+  pause: <path d="M5.5 3.5v9M10.5 3.5v9" />,
+  again: <><path d="M13.5 8a5.5 5.5 0 1 1-1.6-3.9" /><path d="M12.6 1.8v2.8H9.8" /></>,
+};
 
 interface Readout { iter: number; vol: number; E1: number; G12: number; nu12: number; K: number; C: number[]; seed?: number; hist: number[] }
 
@@ -121,9 +128,8 @@ const LiveCell: React.FC = () => {
     const cv = canvasRef.current;
     if (!cv) return;
     const dpr = window.devicePixelRatio || 1;
-    const css = cv.clientWidth || 300;
-    const px = Math.round(css * dpr);
-    if (cv.width !== px) { cv.width = px; cv.height = px; }
+    const px = Math.round((cv.clientWidth || 300) * dpr), t = px / COLS, py = Math.round(t * ROWS);
+    if (cv.width !== px || cv.height !== py) { cv.width = px; cv.height = py; }
     const g = cv.getContext("2d");
     if (!g) return;
     const src = rhoRef.current, isFloat = src instanceof Float32Array;
@@ -137,11 +143,12 @@ const LiveCell: React.FC = () => {
     tile.width = N; tile.height = N;
     tile.getContext("2d")!.putImageData(img, 0, 0);
     g.imageSmoothingEnabled = false;
-    const t = px / 3;
-    for (let i = 0; i < 3; i++) for (let j = 0; j < 3; j++) g.drawImage(tile, Math.round(i * t), Math.round(j * t), Math.round((i + 1) * t) - Math.round(i * t), Math.round((j + 1) * t) - Math.round(j * t));
+    const at = (k: number) => Math.round(k * t);
+    for (let i = 0; i < COLS; i++) for (let j = 0; j < ROWS; j++) g.drawImage(tile, at(i), at(j), at(i + 1) - at(i), at(j + 1) - at(j));
     g.strokeStyle = "#F05A24";
     g.lineWidth = 1.5 * dpr;
-    g.strokeRect(Math.round(t) + g.lineWidth / 2, Math.round(t) + g.lineWidth / 2, Math.round(2 * t) - Math.round(t) - g.lineWidth, Math.round(2 * t) - Math.round(t) - g.lineWidth);
+    const h = g.lineWidth / 2;
+    g.strokeRect(at(1) + h, at(1) + h, at(2) - at(1) - 2 * h, at(2) - at(1) - 2 * h);
   }, []);
 
   const showFinal = useCallback((t: Objective) => {
@@ -248,7 +255,7 @@ const LiveCell: React.FC = () => {
       : mode === "paused" ? `Paused at iteration ${r.iter}`
         : mode === "converged" ? `Converged at iteration ${r.iter}, computed in your browser`
           : `Precomputed result, converged at iteration ${r.iter}`;
-  const label = `3 by 3 tiling of a unit cell optimized for ${T.aria}. ${mode === "running" ? `Iteration ${r.iter}.` : status + "."}`;
+  const label = `4 by 3 tiling of a unit cell optimized for ${T.aria}. ${mode === "running" ? `Iteration ${r.iter}.` : status + "."}`;
 
   const progress =
     mode === "running" ? `Iteration ${r.iter}`
@@ -257,22 +264,25 @@ const LiveCell: React.FC = () => {
           : `Precomputed, iteration ${r.iter}`;
   const reference = target === "auxetic" ? 0 : target === "bulk" ? kappaHS(r.vol) : undefined;
 
-  // Desktop: targets and Run above the lattice; formulation, matrix and history beside it.
-  // Phones: 2×2 targets, the lattice, Run, the history, then the maths behind a toggle.
+  const run = mode === "running" ? { icon: ICON.pause, text: "Pause" }
+    : mode === "paused" ? { icon: ICON.play, text: "Resume" }
+      : mode === "converged" ? { icon: ICON.again, text: "Run again" }
+        : { icon: ICON.play, text: "Run live" };
+
+  // The lattice is the object: controls above it, the maths as a quiet readout row below.
+  // Phones: the convergence line first, formulation and matrix behind a toggle.
   return (
-    <figure ref={boxRef} className="grid gap-x-10 gap-y-5 md:grid-cols-[minmax(0,24rem)_17.5rem] md:gap-y-6">
-      <div className="contents md:flex md:flex-wrap md:items-center md:justify-between md:gap-x-6">
-        <div className="grid grid-cols-2 gap-2 md:flex md:gap-5" role="group" aria-label="Optimization target">
-          {TARGETS.map((x) => (
+    <figure ref={boxRef} className="w-full min-w-0 max-w-[42rem] xl:w-[42rem]">
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-3 md:mb-5">
+        <div className="flex w-full rounded-[2px] border border-ink md:w-auto" role="group" aria-label="Optimization target">
+          {TARGETS.map((x, i) => (
             <button
               key={x.id}
               type="button"
               aria-pressed={target === x.id}
               onClick={() => select(x.id)}
-              className={`t-data relative min-h-[48px] rounded-[2px] border transition-colors duration-150 md:min-h-[44px] md:border-0 ${
-                target === x.id
-                  ? "border-ink font-[640] text-ink after:absolute after:inset-x-5 after:bottom-2 after:h-[2px] after:bg-laser md:after:inset-x-0"
-                  : "border-rule text-ink-2 hover:border-ink-2 hover:text-ink"
+              className={`t-data h-11 flex-1 px-3 transition-colors duration-150 md:h-10 md:flex-none md:px-[18px] ${i ? "border-l border-rule" : ""} ${
+                target === x.id ? "bg-ink font-[600] text-canvas" : "text-ink-2 hover:bg-[#EEF0EE] hover:text-ink"
               }`}
             >
               {x.label}
@@ -280,31 +290,37 @@ const LiveCell: React.FC = () => {
           ))}
         </div>
         {supported && (
-          <button type="button" onClick={toggle} className="t-data order-1 min-h-[48px] rounded-[2px] border border-ink px-4 transition-colors duration-150 hover:bg-[#EEF0EE] md:min-h-[44px]">
-            {mode === "running" ? "Pause" : mode === "paused" ? "Resume" : mode === "converged" ? "Run again" : "Run live"}
+          <button type="button" onClick={toggle} className="t-data inline-flex h-11 items-center gap-2 rounded-[2px] border border-ink pl-3 pr-3.5 transition-colors duration-150 hover:bg-[#EEF0EE] md:h-10">
+            <svg viewBox="0 0 16 16" aria-hidden="true" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.6">{run.icon}</svg>
+            {run.text}
           </button>
         )}
       </div>
 
-      <canvas ref={canvasRef} role="img" aria-label={label} className="block aspect-square w-full [image-rendering:pixelated] md:row-start-2" />
+      <canvas ref={canvasRef} role="img" aria-label={label} className="block aspect-[4/3] w-full [image-rendering:pixelated]" />
 
-      <div className="flex min-w-0 flex-col justify-between gap-5 max-md:order-2 md:col-start-2 md:row-start-2 md:gap-8">
-        <div id={detailsId} className={`flex flex-col gap-6 max-md:order-3 md:contents ${details ? "" : "max-md:hidden"}`}>
-          <div className="math flex flex-col gap-1 overflow-x-auto overflow-y-hidden">
-            <div dangerouslySetInnerHTML={{ __html: goalMath(target) }} />
-            <div dangerouslySetInnerHTML={{ __html: SUBJECT }} />
+      <div className="mt-5 flex flex-col gap-4 border-t border-rule pt-4 md:mt-6 md:grid md:grid-cols-[auto_auto_minmax(0,1fr)] md:gap-x-8">
+        <div id={detailsId} className={`flex flex-col gap-5 max-md:order-3 md:contents ${details ? "" : "max-md:hidden"}`}>
+          <div className="min-w-0">
+            <p className="t-small mb-1.5 text-ink-2">Objective</p>
+            <div className="math sm flex flex-col gap-1 overflow-x-auto overflow-y-hidden">
+              <div dangerouslySetInnerHTML={{ __html: goalMath(target) }} />
+              <div dangerouslySetInnerHTML={{ __html: SUBJECT }} />
+            </div>
           </div>
-          <div className="math overflow-x-auto overflow-y-hidden py-1" dangerouslySetInnerHTML={{ __html: tensorMath(r.C, T.active) }} />
+          <div className="min-w-0">
+            <p className="t-small mb-0.5 text-ink-2">Homogenized stiffness</p>
+            <div className="math sm overflow-x-auto overflow-y-hidden" dangerouslySetInnerHTML={{ __html: tensorMath(r.C, T.active) }} />
+          </div>
         </div>
-        <div className="max-md:order-1">
-          <div className="flex flex-wrap items-baseline justify-between gap-x-4">
-            <div className="math" dangerouslySetInnerHTML={{ __html: quantity(T.track, r) }} />
-            <p className="t-data text-ink-2" aria-hidden="true">
-              {progress}
-              {r.seed !== undefined && <span className="ml-3">Seed {r.seed}</span>}
-            </p>
-          </div>
-          <div className="mt-3 flex"><Trace data={r.hist} reference={reference} live={live} /></div>
+        <div className="min-w-0 max-md:order-1">
+          <p className="t-small mb-1.5 text-ink-2">Convergence</p>
+          <div className="math sm" dangerouslySetInnerHTML={{ __html: quantity(T.track, r) }} />
+          <div className="mt-2 flex"><Trace data={r.hist} reference={reference} live={live} /></div>
+          <p className="t-data mt-1.5 flex flex-wrap gap-x-3 text-ink-2" aria-hidden="true">
+            <span>{progress}</span>
+            {r.seed !== undefined && <span>Seed {r.seed}</span>}
+          </p>
           <p className="sr-only" role="status" aria-live="polite">{mode === "running" ? "Computing in your browser" : status}</p>
         </div>
         <button

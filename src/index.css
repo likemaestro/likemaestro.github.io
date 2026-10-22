@@ -66,3 +66,4 @@
 .math mtd { padding: 0.32em 0.45em; text-align: right; min-width: 3.3em; }
 .math mn { font-variant-numeric: tabular-nums; }
 .math .dim { color: theme("colors.ink-2"); }
+.math.sm math { font-size: 0.9375rem; }
