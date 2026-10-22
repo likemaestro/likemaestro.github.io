@@ -30,15 +30,23 @@ const DEFAULTS = { vf: 0.4, nu: 0.3, penal: 3, rmin: 2, Emin: 1e-9, move: 0.2, m
 // q[0]=11, q[1]=22, q[2]=33, q[3]=12, q[4]=13, q[5]=23.
 const PAIRS: [number, number][] = [[0, 0], [1, 1], [2, 2], [0, 1], [0, 2], [1, 2]];
 
-export interface Problem {
-  n: number; nel: number; neq: number;
+/** A mesh's equations in profile (skyline) storage. */
+export interface Mesh {
+  neq: number;
+  edof: Int32Array;              // nel x 8 equation numbers, -1 for a fixed DOF
+  first: Int32Array; rowStart: Int32Array; nnzProfile: number;
+  kmap: Int32Array;              // nel x 36 positions of the element's lower triangle in the profile
+}
+
+export interface Problem extends Mesh {
+  n: number; nel: number;
   o: Required<Options>;
   ke: Float64Array;              // 8x8 element stiffness for E = 1
   chi0: Float64Array[];          // 3 x 8 nodal values of the unit test strains
   fe: Float64Array[];            // 3 x 8 element loads ke * chi0
-  edof: Int32Array;              // nel x 8 equation numbers, -1 for the fixed node
-  first: Int32Array; rowStart: Int32Array; nnzProfile: number;  // profile (skyline) storage
-  kmap: Int32Array;              // nel x 36 positions of the element's lower triangle in the profile
+  // Mirror-symmetric designs (even n): the quarter cell [0, 1/2]^2 with symmetry conditions on its edges.
+  // cells[k] is the full-cell element of quarter element k; normal carries load cases 11 and 22, shear case 12.
+  quarter?: { m: number; cells: Int32Array; normal: Mesh; shear: Mesh };
   orbit: Int32Array; orbitStart: Int32Array; orbitMembers: Int32Array; // D4 orbits of elements
   filt: { idx: Int32Array; w: Float64Array; sum: number };            // periodic density filter (same stencil everywhere)
 }
@@ -90,24 +98,7 @@ export function createProblem(opts: Options): Problem {
     nodes.forEach((p, a) => { edof[e * 8 + 2 * a] = p === 0 ? -1 : 2 * p - 2; edof[e * 8 + 2 * a + 1] = p === 0 ? -1 : 2 * p - 1; });
   }
   const neq = 2 * nel - 2;
-  const first = new Int32Array(neq).map((_, i) => i);
-  for (let e = 0; e < nel; e++) {
-    let lo = Infinity;
-    for (let a = 0; a < 8; a++) { const d = edof[e * 8 + a]; if (d >= 0 && d < lo) lo = d; }
-    for (let a = 0; a < 8; a++) { const d = edof[e * 8 + a]; if (d >= 0 && lo < first[d]) first[d] = lo; }
-  }
-  const rowStart = new Int32Array(neq + 1);
-  for (let i = 0; i < neq; i++) rowStart[i + 1] = rowStart[i] + (i - first[i] + 1);
-  const kmap = new Int32Array(nel * 36).fill(-1);
-  for (let e = 0; e < nel; e++) {
-    let t = 0;
-    for (let a = 0; a < 8; a++) for (let b = 0; b <= a; b++, t++) {
-      let I = edof[e * 8 + a], J = edof[e * 8 + b];
-      if (I < 0 || J < 0) continue;
-      if (J > I) [I, J] = [J, I];
-      kmap[e * 36 + t] = rowStart[I] + (J - first[I]);
-    }
-  }
+  const mesh = profile(nel, neq, edof);
 
   // D4 orbits of element (ex, ey) about the cell centre.
   const imgs = (x: number, y: number) => { const X = n - 1 - x, Y = n - 1 - y; return [[x, y], [X, y], [x, Y], [X, Y], [y, x], [Y, x], [y, X], [Y, X]]; };
@@ -131,12 +122,60 @@ export function createProblem(opts: Options): Problem {
     offs.forEach(([dx, dy], k) => { idx[(ey * n + ex) * offs.length + k] = ((ey + dy + n) % n) * n + ((ex + dx + n) % n); });
   const sum = offs.reduce((s, [, , wt]) => s + wt, 0);
 
-  return { n, nel, neq, o, ke, chi0, fe, edof, first, rowStart, nnzProfile: rowStart[neq], kmap,
+  return { n, nel, o, ke, chi0, fe, ...mesh, quarter: n % 2 ? undefined : quarter(n),
     orbit, orbitStart: Int32Array.from(starts), orbitMembers: Int32Array.from(members), filt: { idx, w, sum } };
 }
 
+/** Profile layout of a mesh's equations: each row starts at the lowest equation it couples to. */
+function profile(nel: number, neq: number, edof: Int32Array): Mesh {
+  const first = new Int32Array(neq).map((_, i) => i);
+  for (let e = 0; e < nel; e++) {
+    let lo = Infinity;
+    for (let a = 0; a < 8; a++) { const d = edof[e * 8 + a]; if (d >= 0 && d < lo) lo = d; }
+    for (let a = 0; a < 8; a++) { const d = edof[e * 8 + a]; if (d >= 0 && lo < first[d]) first[d] = lo; }
+  }
+  const rowStart = new Int32Array(neq + 1);
+  for (let i = 0; i < neq; i++) rowStart[i + 1] = rowStart[i] + (i - first[i] + 1);
+  const kmap = new Int32Array(nel * 36).fill(-1);
+  for (let e = 0; e < nel; e++) {
+    let t = 0;
+    for (let a = 0; a < 8; a++) for (let b = 0; b <= a; b++, t++) {
+      let I = edof[e * 8 + a], J = edof[e * 8 + b];
+      if (I < 0 || J < 0) continue;
+      if (J > I) [I, J] = [J, I];
+      kmap[e * 36 + t] = rowStart[I] + (J - first[I]);
+    }
+  }
+  return { neq, edof, first, rowStart, nnzProfile: rowStart[neq], kmap };
+}
+
+// In a cell symmetric about its mirror lines (x = 0, 1/2 and y = 0, 1/2), the fluctuation of a normal strain load is
+// odd in x for ux and odd in y for uy, so ux = 0 on the vertical edges of the quarter and uy = 0 on the horizontal
+// ones; under shear it is the other way round. Nodes are numbered row by row: bandwidth about one row of the quarter.
+function quarter(n: number) {
+  const m = n / 2, cells = new Int32Array(m * m);
+  for (let ey = 0; ey < m; ey++) for (let ex = 0; ex < m; ex++) cells[ey * m + ex] = ey * n + ex;
+  const mesh = (shear: boolean) => {
+    const id = new Int32Array(2 * (m + 1) * (m + 1)).fill(-1);
+    let neq = 0;
+    for (let y = 0; y <= m; y++) for (let x = 0; x <= m; x++) {
+      const v = x === 0 || x === m, h = y === 0 || y === m, p = 2 * (y * (m + 1) + x);
+      if (!(shear ? h : v)) id[p] = neq++;
+      if (!(shear ? v : h)) id[p + 1] = neq++;
+    }
+    const edof = new Int32Array(m * m * 8);
+    for (let ey = 0; ey < m; ey++) for (let ex = 0; ex < m; ex++)
+      [[ex, ey], [ex + 1, ey], [ex + 1, ey + 1], [ex, ey + 1]].forEach(([x, y], a) => {
+        const p = 2 * (y * (m + 1) + x), e = ey * m + ex;
+        edof[e * 8 + 2 * a] = id[p]; edof[e * 8 + 2 * a + 1] = id[p + 1];
+      });
+    return profile(m * m, neq, edof);
+  };
+  return { m, cells, normal: mesh(false), shear: mesh(true) };
+}
+
 // ---------- linear algebra: profile Cholesky ----------
-function cholesky(P: Problem, A: Float64Array) {
+function cholesky(P: Mesh, A: Float64Array) {
   const { first, rowStart, neq } = P;
   for (let i = 0; i < neq; i++) {
     const fi = first[i], ri = rowStart[i];
@@ -149,7 +188,7 @@ function cholesky(P: Problem, A: Float64Array) {
     }
   }
 }
-function solve(P: Problem, L: Float64Array, b: Float64Array) {
+function solve(P: Mesh, L: Float64Array, b: Float64Array) {
   const { first, rowStart, neq } = P;
   for (let i = 0; i < neq; i++) {
     const fi = first[i], ri = rowStart[i]; let s = b[i];
@@ -164,31 +203,62 @@ function solve(P: Problem, L: Float64Array, b: Float64Array) {
 
 // ---------- homogenization ----------
 export interface Homog { C: Float64Array; q: Float64Array[]; chi: Float64Array[] }
-/** Effective stiffness C (3x3, row-major) for element moduli E; q[pair][e] are the element energies for E = 1. */
-export function homogenize(P: Problem, E: Float64Array): Homog {
-  const { nel, neq, ke, kmap, edof, fe, chi0 } = P;
-  const K = new Float64Array(P.nnzProfile);
+/** Fluctuation fields of the given unit load cases on a mesh with element moduli E. */
+function fields(S: Mesh, P: Problem, E: Float64Array, cases: number[]) {
+  const { ke, fe } = P, { neq, kmap, edof } = S, nel = E.length;
+  const K = new Float64Array(S.nnzProfile);
   const keL = new Float64Array(36);
   { let t = 0; for (let a = 0; a < 8; a++) for (let b = 0; b <= a; b++) keL[t++] = ke[a * 8 + b]; }
   for (let e = 0; e < nel; e++) { const Ee = E[e], base = e * 36; for (let t = 0; t < 36; t++) { const m = kmap[base + t]; if (m >= 0) K[m] += Ee * keL[t]; } }
-  cholesky(P, K);
-  const chi = [0, 1, 2].map((c) => {
+  cholesky(S, K);
+  return cases.map((c) => {
     const F = new Float64Array(neq);
     for (let e = 0; e < nel; e++) for (let a = 0; a < 8; a++) { const d = edof[e * 8 + a]; if (d >= 0) F[d] += E[e] * fe[c][a]; }
-    solve(P, K, F); return F;
+    solve(S, K, F); return F;
   });
+}
+/** Element energies q[pair][e] for E = 1 from the three fields; edofs[c] maps the elements of field c. */
+function energies(P: Problem, chi: Float64Array[], edofs: Int32Array[], nel: number) {
+  const { ke, chi0 } = P;
   const q = PAIRS.map(() => new Float64Array(nel));
-  const C = new Float64Array(9);
   const d = [new Float64Array(8), new Float64Array(8), new Float64Array(8)], kd = [new Float64Array(8), new Float64Array(8), new Float64Array(8)];
   for (let e = 0; e < nel; e++) {
     for (let c = 0; c < 3; c++) {
-      for (let a = 0; a < 8; a++) { const g = edof[e * 8 + a]; d[c][a] = chi0[c][a] - (g >= 0 ? chi[c][g] : 0); }
+      for (let a = 0; a < 8; a++) { const g = edofs[c][e * 8 + a]; d[c][a] = chi0[c][a] - (g >= 0 ? chi[c][g] : 0); }
       for (let a = 0; a < 8; a++) { let s = 0; for (let b = 0; b < 8; b++) s += ke[a * 8 + b] * d[c][b]; kd[c][a] = s; }
     }
     PAIRS.forEach(([i, j], p) => { let s = 0; for (let a = 0; a < 8; a++) s += d[i][a] * kd[j][a]; q[p][e] = s; });
   }
-  PAIRS.forEach(([i, j], p) => { let s = 0; for (let e = 0; e < nel; e++) s += E[e] * q[p][e]; C[i * 3 + j] = s; C[j * 3 + i] = s; });
-  return { C, q, chi };
+  return q;
+}
+function tensor(E: Float64Array, q: Float64Array[]) {
+  const C = new Float64Array(9);
+  PAIRS.forEach(([i, j], p) => { let s = 0; for (let e = 0; e < E.length; e++) s += E[e] * q[p][e]; C[i * 3 + j] = s; C[j * 3 + i] = s; });
+  return C;
+}
+
+/** Effective stiffness C (3x3, row-major) for element moduli E; q[pair][e] are the element energies for E = 1. */
+export function homogenize(P: Problem, E: Float64Array): Homog {
+  const chi = fields(P, P, E, [0, 1, 2]);
+  const q = energies(P, chi, [P.edof, P.edof, P.edof], P.nel);
+  return { C: tensor(E, q), q, chi };
+}
+
+/** homogenize for a design symmetric about the cell's mirror lines, solved on the quarter cell (two factorizations
+ *  of a quarter-size, non-periodic mesh instead of one of the full periodic one). The other quarters' energies are
+ *  mirror images; the normal-shear pairs flip sign under a single mirror, so C13 = C23 = 0 exactly. */
+export function homogenizeSym(P: Problem, E: Float64Array): Homog {
+  const { n, nel } = P, { m, cells, normal, shear } = P.quarter!;
+  const Eq = Float64Array.from(cells, (e) => E[e]);
+  const chi = [...fields(normal, P, Eq, [0, 1]), ...fields(shear, P, Eq, [2])];
+  const qq = energies(P, chi, [normal.edof, normal.edof, shear.edof], m * m);
+  const q = PAIRS.map(() => new Float64Array(nel));
+  for (let e = 0; e < nel; e++) {
+    const ex = e % n, ey = (e - ex) / n, mx = ex < m, my = ey < m;
+    const k = (my ? ey : n - 1 - ey) * m + (mx ? ex : n - 1 - ex), sign = mx === my ? 1 : -1;
+    for (let p = 0; p < PAIRS.length; p++) q[p][e] = p < 4 ? qq[p][k] : sign * qq[p][k];
+  }
+  return { C: tensor(E, q), q, chi };
 }
 
 /** Engineering constants from C: E1 = 1/S11, nu12 = -S12/S11 with S = C^-1. */
@@ -250,7 +320,8 @@ function perturbation(P: Problem) {
   if (o.seed === undefined) modes.push([2, 0, 1, 0, 0], [0, 2, 1, 0, 0]);
   else {
     const r = rng(o.seed);
-    for (let m = 0; m < 6; m++) modes.push([1 + Math.floor(r() * 3), Math.floor(r() * 4), 0.3 + r(), r() * 2 * Math.PI, r() * 2 * Math.PI]);
+    // Ten modes up to wavenumber 5 seed many small holes, so the optimized cells come out intricate rather than plain.
+    for (let m = 0; m < 10; m++) modes.push([1 + Math.floor(r() * 5), Math.floor(r() * 6), 0.3 + r(), r() * 2 * Math.PI, r() * 2 * Math.PI]);
   }
   for (let e = 0; e < nel; e++) {
     const X = ((e % n) + 0.5) / n - 0.5, Y = (Math.floor(e / n) + 0.5) / n - 0.5;
@@ -292,7 +363,7 @@ export function evaluate(P: Problem, x: Float64Array, obj: Objective, wStiff = 1
   const { out: phys, deriv } = project(applyFilter(P, x), beta);
   const E = new Float64Array(nel), dEdr = new Float64Array(nel);
   for (let e = 0; e < nel; e++) { const r = phys[e]; E[e] = o.Emin + Math.pow(r, o.penal) * (1 - o.Emin); dEdr[e] = o.penal * Math.pow(r, o.penal - 1) * (1 - o.Emin); }
-  const H = homogenize(P, E);
+  const H = P.quarter ? homogenizeSym(P, E) : homogenize(P, E);   // designs here are always D4-symmetric
   const { f, dE } = objective(obj, H.C, H.q, wStiff);
   const t1 = new Float64Array(nel), t2 = new Float64Array(nel);
   for (let e = 0; e < nel; e++) { t1[e] = dE[e] * dEdr[e] * deriv[e]; t2[e] = deriv[e] / nel; }

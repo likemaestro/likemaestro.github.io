@@ -85,11 +85,14 @@ The remaining copy is in `src/components/Home.tsx`. Titles keep their published 
 
 ```
 Header     Murat Güven                        Research  Publications  About  CV (PDF)
-Hero       statement + sub-line (fluid) | 80 px gutter | lab (fixed 42rem), side by side from 1280 px, stacked below.
-           Lab (layout B, chosen 2026-10-22 from three mockups):
-             joined target selector (active filled in ink) ............ Run button with icon
-             lattice: the unit cell tiled 4 columns × 3 rows, full lab width, centre-left cell outlined
-             readout row under a hairline: Objective | Homogenized stiffness | Convergence (value, line, status, seed)
+Hero       statement + sub-line alone on the left (fluid, display type up to 4.25rem) | 80 px gutter | lab,
+           side by side from 1280 px, stacked below. Nothing else under the statement (Murat, 2026-10-22).
+           Lab (layout B, chosen 2026-10-22 from three mockups; 5 × 5 lattice the same day):
+             joined target selector (active filled in ink) ............ Run button with icon (32 px tall on desktop)
+             lattice: the unit cell tiled 5 × 5, square, centre cell outlined
+             compact readout under a hairline: Objective | Homogenized stiffness, then the convergence line, status, seed
+           The lab's width is clamp(21rem, 100svh − 25rem, 32rem), so the whole lab fits the first screen
+           (checked at 1700 × 796, 1700 × 700, 1440 × 900 and 1280 × 720).
            Everything mathematical is typeset (MathML); the interface speaks Archivo. No caption.
            Statement: "I develop AI and computational methods for structural engineering and sustainable construction."
            Phones: full-width selector, Run, lattice, convergence; formulation and matrix behind "Show technical details".
@@ -121,7 +124,11 @@ No caption: Murat removed it (2026-10-21). For the record, the demo is simplifie
   - Voigt order [11, 22, 12] with engineering shear.
 - **Homogenization:** energy-based (Andreassen & Andreasen 2014).
   - The periodic fluctuation is imposed by DOF aliasing, and one node is fixed.
-  - The solver is a profile Cholesky with folded ordering. One factorization serves all three load cases.
+  - The general solver is a profile Cholesky with folded ordering; one factorization serves all three load cases.
+  - Designs here are always mirror-symmetric, so `evaluate` solves on the quarter cell instead: normal strains with
+    ux = 0 on its vertical edges and uy = 0 on its horizontal ones, shear the other way round (two factorizations of
+    a non-periodic quarter mesh). The other quarters' energies are mirror images. At n = 48 this is 7 ms per
+    iteration instead of 165 ms, which is what makes n = 96 affordable.
 - **Filter and projection:**
   - periodic density filter, r_min = 2 elements;
   - Heaviside projection with η = 0.5;
@@ -190,6 +197,7 @@ Still to do: a browser and phone benchmark on real hardware. The preview pane th
 
    The auxetic run reaches −1 < ν₁₂ < 0.
 6. The same seed reproduces its design bit for bit, and a different seed gives a different design.
+7. On a D4-symmetric design the quarter-cell solve matches the full periodic one: C and every element energy to 1e-10.
 
 ## 7. PhD band, "model to metal" (`src/components/LaserBand.tsx`, `src/lab/laser/mount.js`)
 

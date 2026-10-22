@@ -63,7 +63,7 @@ const Home: React.FC = () => {
       </header>
 
       <main id="main">
-        <Wrap className="grid gap-y-12 pb-16 pt-10 md:pt-16 lg:pb-20 xl:grid-cols-[minmax(0,1fr)_auto] xl:gap-x-20">
+        <Wrap className="grid gap-y-12 pb-16 pt-10 md:pt-12 lg:pb-20 xl:grid-cols-[minmax(0,1fr)_auto] xl:gap-x-16">
           <div className="min-w-0">
             <h1 className="t-display max-w-[22ch]">I develop AI and computational methods for structural engineering and sustainable construction.</h1>
             <p className="mt-6 max-w-[46ch] text-ink-2">

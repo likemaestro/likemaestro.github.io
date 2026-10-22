@@ -1,6 +1,6 @@
 import fixture from "./__fixtures__/homogenize.json";
 import {
-  OBJECTIVES, createProblem, createRun, evaluate, homogenize, initialDesign, properties, symmetrize,
+  OBJECTIVES, createProblem, createRun, evaluate, homogenize, homogenizeSym, initialDesign, properties, symmetrize,
 } from "./unitcell";
 
 const nu = 0.3, c = 1 / (1 - nu * nu);
@@ -17,6 +17,14 @@ test.each(fixture.cases.map((k) => [k.name, k] as const))("matches the NumPy ref
   const P = createProblem({ n: fixture.n, nu: fixture.nu });
   const { C } = homogenize(P, Float64Array.from(k.E));
   k.C.forEach((v, i) => expect(Math.abs(C[i] - v)).toBeLessThan(1e-8));
+});
+
+test.each([8, 12])("the quarter-cell solve matches the full periodic one on a D4-symmetric design (n = %i)", (n) => {
+  const P = createProblem({ n });
+  const E = symmetrize(P, Float64Array.from({ length: P.nel }, (_, e) => 1e-3 + Math.abs(Math.sin(e * 78.233) * 43758.5453 % 1)));
+  const full = homogenize(P, E), sym = homogenizeSym(P, E);
+  for (let k = 0; k < 9; k++) expect(Math.abs(sym.C[k] - full.C[k])).toBeLessThan(1e-10);
+  for (let p = 0; p < 6; p++) for (let e = 0; e < P.nel; e++) expect(Math.abs(sym.q[p][e] - full.q[p][e])).toBeLessThan(1e-10);
 });
 
 test("opposite boundary nodes share their fluctuation DOFs (periodicity)", () => {
@@ -57,7 +65,7 @@ const runToEnd = (obj: (typeof OBJECTIVES)[number], n = 24, seed?: number) => {
   return { run, it };
 };
 
-// Bulk from the default start sits on a symmetric grey saddle at n = 24; at the site's n = 32 it converges cleanly.
+// Bulk from the default start sits on a symmetric grey saddle at n = 24; at n = 32 it converges cleanly.
 const meshFor = (obj: (typeof OBJECTIVES)[number]) => (obj === "bulk" ? 32 : 24);
 
 describe.each(OBJECTIVES.map((o) => [o]))("full run: %s", (obj) => {

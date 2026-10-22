@@ -8,6 +8,8 @@
   html {
     scroll-behavior: smooth;
     -webkit-text-size-adjust: 100%;
+    /* Large screens get the same composition, larger: rem grows past about 1700 px, up to 125 %. */
+    font-size: clamp(100%, 0.9375vw, 125%);
   }
   @media (prefers-reduced-motion: reduce) {
     html { scroll-behavior: auto; }
@@ -27,11 +29,11 @@
 
 @layer components {
   .t-display {
-    font-size: clamp(2rem, 3.3vw, 3.125rem);
-    line-height: 1.04;
-    font-weight: 560;
+    font-size: clamp(2rem, 3.6vw, 3.5rem);
+    line-height: 1;
+    font-weight: 600;
     font-stretch: 112%;
-    letter-spacing: -0.02em;
+    letter-spacing: -0.03em;
     text-wrap: balance;
   }
   .t-name { font-size: 1.125rem; line-height: 1.2; font-weight: 600; font-stretch: 112%; }
@@ -67,3 +69,4 @@
 .math mn { font-variant-numeric: tabular-nums; }
 .math .dim { color: theme("colors.ink-2"); }
 .math.sm math { font-size: 0.9375rem; }
+@media (min-width: 768px) { .math.sm math { font-size: 0.8125rem; } }
