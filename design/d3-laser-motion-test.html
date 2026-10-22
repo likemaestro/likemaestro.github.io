@@ -1,0 +1,170 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Laser Chapter Motion Test</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&display=swap">
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.176.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.176.0/examples/jsm/"}}</script>
+<style>
+/* Layout: light page -> pinned dark bay (native scroll scrubs the cut) -> light decision section. One deliberate look. */
+:root {
+  --porcelain: #F6F7F5; --ink: #172027; --ink-2: #4F5D68; --mist: #D5DCDF; --bay: #121A1F; --bay-ink: #E9EEF0; --bay-ink-2: #A9B6BD;
+  --cut: #F05A24; --sans: "Archivo", "Helvetica Neue", Arial, sans-serif; color-scheme: light;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--porcelain); color: var(--ink); font-family: var(--sans); font-size: 17px; line-height: 1.6; }
+.wrap { max-width: 1200px; margin: 0 auto; padding-left: max(24px, env(safe-area-inset-left, 0px)); padding-right: max(24px, env(safe-area-inset-right, 0px)); }
+h2 { font-size: clamp(2rem, 5vw, 3.6rem); line-height: 1.02; font-weight: 570; font-variation-settings: "wdth" 118; letter-spacing: -0.02em; margin: 0; text-wrap: balance; }
+p { margin: 0; max-width: 62ch; }
+.intro { padding-block: 96px 56px; display: grid; gap: 18px; }
+.muted { color: var(--ink-2); }
+.skip { color: var(--ink); text-underline-offset: 4px; font-size: 0.95rem; justify-self: start; }
+:focus-visible { outline: 2px solid var(--cut); outline-offset: 3px; }
+
+.film { position: relative; height: 640vh; background: var(--bay); }
+.stage { position: sticky; top: env(safe-area-inset-top, 0px); height: 100vh; height: 100svh; overflow: hidden; }
+canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.prog { position: absolute; left: max(24px, env(safe-area-inset-left, 0px)); right: max(24px, env(safe-area-inset-right, 0px)); top: 22px; height: 2px; background: rgba(233,238,240,0.16); }
+.prog i { position: absolute; left: 0; top: 0; bottom: 0; width: 0; background: var(--cut); }
+.beats { position: absolute; left: max(24px, env(safe-area-inset-left, 0px)); bottom: 28px; right: max(24px, env(safe-area-inset-right, 0px)); pointer-events: none; }
+.beat { position: absolute; left: 0; bottom: 0; max-width: 34rem; color: var(--bay-ink); opacity: 0; transform: translateY(8px); transition: opacity 260ms ease-out, transform 260ms ease-out; }
+.beat.on { opacity: 1; transform: none; }
+.beat h3 { margin: 0 0 6px; font-size: clamp(1.4rem, 3vw, 2.2rem); font-weight: 560; font-variation-settings: "wdth" 114; letter-spacing: -0.015em; line-height: 1.05; }
+.beat p { color: var(--bay-ink-2); font-size: 0.98rem; }
+.label { position: absolute; right: max(24px, env(safe-area-inset-right, 0px)); bottom: 28px; font-size: 0.78rem; color: var(--bay-ink-2); font-variation-settings: "wdth" 85; text-align: right; }
+.meter { position: absolute; right: max(24px, env(safe-area-inset-right, 0px)); top: 34px; font-size: 0.74rem; color: var(--bay-ink-2); font-variant-numeric: tabular-nums; font-variation-settings: "wdth" 80; }
+.lens { position: absolute; right: max(24px, env(safe-area-inset-right, 0px)); top: 64px; width: min(300px, 40vw); aspect-ratio: 1; border-radius: 50%; overflow: hidden; background: var(--porcelain); border: 2px solid var(--cut); opacity: 0; transition: opacity 260ms ease-out; }
+.lens.on { opacity: 1; }
+.lens svg { width: 100%; height: 100%; display: block; }
+.flow { position: absolute; inset: 0; display: grid; place-items: center; padding: 64px 24px; background: rgba(246,247,245,0); opacity: 0; transition: opacity 400ms ease-out, background 400ms ease-out; pointer-events: none; }
+.flow.on { opacity: 1; background: rgba(246,247,245,0.96); }
+.flow svg, .flowfig svg { width: min(980px, 100%); height: auto; }
+.tall { display: none; } .flow .tall, .flowfig .tall { width: min(360px, 100%); }
+.flowfig { margin: 24px 0 0; }
+.lensfig svg { width: min(100%, 320px); aspect-ratio: 1; border-radius: 50%; border: 2px solid var(--cut); justify-self: center; }
+svg text { font-family: var(--sans); }
+.decision { padding-block: 96px; display: grid; gap: 18px; }
+.static { display: none; padding-block: 24px 64px; gap: 20px; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
+.static figure { margin: 0; display: grid; gap: 8px; }
+.static img { width: 100%; display: block; background: var(--bay); }
+.static figcaption { font-size: 0.85rem; color: var(--ink-2); }
+@media (prefers-reduced-motion: reduce) {
+  .film { display: none; }
+  .static { display: grid; }
+}
+@media (max-width: 640px) {
+  .lens { width: 46vw; top: 84px; } .beat p { font-size: 0.92rem; }
+  .label { top: 34px; bottom: auto; left: max(24px, env(safe-area-inset-left, 0px)); right: auto; text-align: left; }
+  .wide { display: none; } .tall { display: block; }
+}
+</style>
+
+<section class="wrap intro" aria-labelledby="ch-h">
+  <h2 id="ch-h">From geometry to a cut part</h2>
+  <p class="muted">Motion test for the laser chapter (design stage D3). Scroll to scrub the sequence; scrolling back reverses it. Everything below is an illustrative render of a generic beam; no process values are shown.</p>
+  <a class="skip" href="#decision">Skip the cutting sequence</a>
+</section>
+
+<section class="film" id="film" aria-label="Laser cutting sequence, scroll-controlled">
+  <div class="stage">
+    <canvas id="c" role="img" aria-label="Illustrative render of a laser head cutting bolt holes in the web of a steel H-section beam"></canvas>
+    <div class="prog" aria-hidden="true"><i id="bar"></i></div>
+    <div class="meter" id="meter" aria-hidden="true">CPU per render — ms</div>
+    <div class="lens" id="lens" aria-hidden="true"></div>
+    <div class="beats" id="beats">
+      <div class="beat" data-r="0,0.15"><h3>Laser cutting</h3><p>A focused beam melts steel locally; an assist-gas jet drives the melt out through a narrow kerf as the head follows a planned contour.</p></div>
+      <div class="beat" data-r="0.15,0.25"><h3>Piercing</h3><p>The cut starts inside the material that will be removed, then a short lead-in joins the contour.</p></div>
+      <div class="beat" data-r="0.25,0.6"><h3>Cutting the holes</h3><p>The head cuts each bolt hole in turn, moving along the fixed beam between the flanges.</p></div>
+      <div class="beat" data-r="0.6,0.75"><h3>Kerf</h3><p>Material is removed only along a narrow kerf. The lens is a drawn section, not a measurement.</p></div>
+      <div class="beat" data-r="0.75,0.9"><h3>Finished part</h3><p>The bolt holes are complete. The end cut is drawn as a trace around the section and the offcut is shown as an exploded view; the head's path around the flanges is not modelled.</p></div>
+      <div class="beat" data-r="0.9,1.01" style="color:#172027"><h3 style="color:#172027">&nbsp;</h3></div>
+    </div>
+    <div class="label" id="label">Illustrative render<br>No process parameters shown</div>
+    <div class="flow" id="flow" aria-hidden="true"></div>
+  </div>
+</section>
+
+<section class="wrap static" aria-label="Laser cutting sequence as still frames">
+  <figure><img data-t="0.12" alt="Head above the beam web; the bolt holes and the end cut are drawn as dashed lines"><figcaption><strong>Laser cutting.</strong> A focused beam melts steel locally; an assist-gas jet drives the melt out through a narrow kerf as the head follows a planned contour. The cut starts inside the material that will be removed, then a short lead-in joins the contour. Illustrative render.</figcaption></figure>
+  <figure><img data-t="0.5" alt="Localized cut front at the nozzle tip, kerf trailing around a bolt hole"><figcaption><strong>Cutting the holes.</strong> The head cuts each bolt hole in turn, moving along the fixed beam between the flanges. Illustrative render.</figcaption></figure>
+  <figure class="lensfig">
+      <svg viewBox="0 0 200 200" role="img" aria-label="Drawn section through the web at the kerf: nozzle above, narrow gap in the plate, melt leaving below"><rect width="200" height="200" fill="#F6F7F5"/>
+        <rect x="10" y="96" width="82" height="22" fill="#D5DCDF" stroke="#172027"/><rect x="108" y="96" width="82" height="22" fill="#D5DCDF" stroke="#172027"/>
+        <path d="M80 30 H120 V62 L108 84 H92 L80 62 Z" fill="#F6F7F5" stroke="#172027"/>
+        <line x1="92" y1="96" x2="92" y2="118" stroke="#F05A24" stroke-width="2.5"/>
+        <path d="M100 100 V128 M95 122 l5 6 5-6" fill="none" stroke="#4F5D68"/>
+        <circle cx="98" cy="140" r="2" fill="#F05A24"/><circle cx="102" cy="150" r="1.5" fill="#F05A24"/>
+        <text x="100" y="172" text-anchor="middle" font-size="10" fill="#4F5D68">section at the kerf, drawn</text>
+        <text x="148" y="90" text-anchor="middle" font-size="10" fill="#4F5D68">kerf</text>
+      </svg>
+    <figcaption><strong>Kerf.</strong> Material is removed only along a narrow kerf. Drawn section, not a measurement.</figcaption></figure>
+  <figure><img data-t="0.9" alt="Finished part with six bolt holes; the offcut from the end cut shown as an exploded view"><figcaption><strong>Finished part.</strong> The bolt holes are complete. The end cut is drawn as a trace and the offcut is shown as an exploded view; the head's path around the flanges is not modelled. Illustrative render.</figcaption></figure>
+</section>
+
+<section class="wrap decision" id="decision" tabindex="-1" aria-labelledby="dec-h">
+  <h2 id="dec-h">Choosing how a part is cut</h2>
+  <p class="muted">My PhD develops a BIM-integrated method for choosing cutting technologies and machines in steel fabrication. It reads parts from the design model, estimates cost, time and fabrication-stage carbon for each machine option, searches for project-level plans, and reports how stable a recommendation is. (Draft wording for Murat to confirm.)</p>
+  <figure class="flowfig">
+<svg class="wide" viewBox="0 0 980 370" role="img" aria-label="Conceptual workflow: parts read from the design model, estimates for each machine option, project-level plans, plans ranked by preferences with a stability check"><rect width="980" height="370" fill="#F6F7F5"/><g><rect x="20" y="30" width="210" height="280" fill="#F6F7F5" stroke="#172027"/><text x="36" y="62" font-size="17" font-weight="600" fill="#172027">1  Design model</text><text x="36" y="84" font-size="13" fill="#4F5D68">Tekla API</text><text x="36" y="116" font-size="13.5" fill="#172027">Parts and their cut</text><text x="36" y="135" font-size="13.5" fill="#172027">features are read from</text><text x="36" y="154" font-size="13.5" fill="#172027">the BIM model.</text><g transform="translate(35 222)"><rect x="0" y="22" width="180" height="26" fill="none" stroke="#172027"/><circle cx="112" cy="30" r="3.5" fill="none" stroke="#172027"/><circle cx="112" cy="40" r="3.5" fill="none" stroke="#172027"/><circle cx="132" cy="30" r="3.5" fill="none" stroke="#172027"/><circle cx="132" cy="40" r="3.5" fill="none" stroke="#172027"/><circle cx="152" cy="30" r="3.5" fill="none" stroke="#172027"/><circle cx="152" cy="40" r="3.5" fill="none" stroke="#172027"/><line x1="166" y1="16" x2="172" y2="54" stroke="#172027" stroke-dasharray="4 3"/></g></g><g fill="none" stroke="#4F5D68"><path d="M234 170 H256"/><path d="M250 164 L257 170 L250 176"/></g><g><rect x="260" y="30" width="210" height="280" fill="#F6F7F5" stroke="#172027"/><text x="276" y="62" font-size="17" font-weight="600" fill="#172027">2  Estimates</text><text x="276" y="84" font-size="13" fill="#4F5D68">process models</text><text x="276" y="116" font-size="13.5" fill="#172027">Time, cost and</text><text x="276" y="135" font-size="13.5" fill="#172027">fabrication-stage carbon</text><text x="276" y="154" font-size="13.5" fill="#172027">for each part on each</text><text x="276" y="173" font-size="13.5" fill="#172027">machine option.</text><g transform="translate(275 222)"><g font-size="11" fill="#4F5D68"><text x="64" y="10">Laser</text><text x="122" y="10">Plasma</text><text x="0" y="28">time</text><text x="0" y="46">cost</text><text x="0" y="64">carbon</text></g><rect x="60" y="17" width="52" height="14" fill="none" stroke="#9FB0B8"/><rect x="118" y="17" width="58" height="14" fill="none" stroke="#9FB0B8"/><rect x="60" y="35" width="52" height="14" fill="none" stroke="#9FB0B8"/><rect x="118" y="35" width="58" height="14" fill="none" stroke="#9FB0B8"/><rect x="60" y="53" width="52" height="14" fill="none" stroke="#9FB0B8"/><rect x="118" y="53" width="58" height="14" fill="none" stroke="#9FB0B8"/></g></g><g fill="none" stroke="#4F5D68"><path d="M474 170 H496"/><path d="M490 164 L497 170 L490 176"/></g><g><rect x="500" y="30" width="210" height="280" fill="#F6F7F5" stroke="#172027"/><text x="516" y="62" font-size="17" font-weight="600" fill="#172027">3  Plans</text><text x="516" y="84" font-size="13" fill="#4F5D68">NSGA-II</text><text x="516" y="116" font-size="13.5" fill="#172027">Project-level plans assign</text><text x="516" y="135" font-size="13.5" fill="#172027">parts to machines; none</text><text x="516" y="154" font-size="13.5" fill="#172027">is best on all three.</text><g transform="translate(515 222)"><path d="M10 0 V68 H180" fill="none" stroke="#172027"/><circle cx="22" cy="13.0" r="3" fill="#4F5D68"/><circle cx="37" cy="24.0" r="3" fill="#4F5D68"/><circle cx="52" cy="38.5" r="3" fill="#4F5D68"/><circle cx="67" cy="45.9" r="3" fill="#4F5D68"/><circle cx="82" cy="47.0" r="3" fill="#4F5D68"/><circle cx="97" cy="54.6" r="3" fill="#4F5D68"/><circle cx="112" cy="57.1" r="3" fill="#4F5D68"/><circle cx="127" cy="54.9" r="3" fill="#4F5D68"/><circle cx="142" cy="60.1" r="3" fill="#4F5D68"/><circle cx="157" cy="61.0" r="3" fill="#4F5D68"/><circle cx="172" cy="57.6" r="3" fill="#4F5D68"/></g></g><g fill="none" stroke="#4F5D68"><path d="M714 170 H736"/><path d="M730 164 L737 170 L730 176"/></g><g><rect x="740" y="30" width="210" height="280" fill="#F6F7F5" stroke="#172027"/><text x="756" y="62" font-size="17" font-weight="600" fill="#172027">4  Ranking</text><text x="756" y="84" font-size="13" fill="#4F5D68">AHP, SMAA-2</text><text x="756" y="116" font-size="13.5" fill="#172027">Your priorities rank the</text><text x="756" y="135" font-size="13.5" fill="#172027">plans, with a check of how</text><text x="756" y="154" font-size="13.5" fill="#172027">stable the ranking is.</text><g transform="translate(755 222)"><text x="0" y="13" font-size="12" fill="#4F5D68">1</text><rect x="16" y="0" width="160" height="18" fill="none" stroke="#172027"/><text x="24" y="13" font-size="11" fill="#4F5D68">Plan</text><text x="0" y="37" font-size="12" fill="#4F5D68">2</text><rect x="16" y="24" width="160" height="18" fill="none" stroke="#172027"/><text x="24" y="37" font-size="11" fill="#4F5D68">Plan</text><text x="0" y="61" font-size="12" fill="#4F5D68">3</text><rect x="16" y="48" width="160" height="18" fill="none" stroke="#172027"/><text x="24" y="61" font-size="11" fill="#4F5D68">Plan</text></g></g><text x="20" y="346" font-size="14" fill="#4F5D68">Conceptual workflow. Illustrative, no data; no plan is shown as chosen.</text></svg>
+<svg class="tall" viewBox="0 0 340 960" role="img" aria-label="Conceptual workflow: parts read from the design model, estimates for each machine option, project-level plans, plans ranked by preferences with a stability check"><rect width="340" height="960" fill="#F6F7F5"/><rect x="20" y="20" width="300" height="200" fill="#F6F7F5" stroke="#172027"/><text x="34" y="50" font-size="16" font-weight="600" fill="#172027">1  Design model</text><text x="34" y="70" font-size="12.5" fill="#4F5D68">Tekla API</text><text x="34" y="96" font-size="13" fill="#172027">Parts and their cut features are read</text><text x="34" y="114" font-size="13" fill="#172027">from the BIM model.</text><g transform="translate(34 136)"><rect x="0" y="22" width="180" height="26" fill="none" stroke="#172027"/><circle cx="112" cy="30" r="3.5" fill="none" stroke="#172027"/><circle cx="112" cy="40" r="3.5" fill="none" stroke="#172027"/><circle cx="132" cy="30" r="3.5" fill="none" stroke="#172027"/><circle cx="132" cy="40" r="3.5" fill="none" stroke="#172027"/><circle cx="152" cy="30" r="3.5" fill="none" stroke="#172027"/><circle cx="152" cy="40" r="3.5" fill="none" stroke="#172027"/><line x1="166" y1="16" x2="172" y2="54" stroke="#172027" stroke-dasharray="4 3"/></g><g fill="none" stroke="#4F5D68"><path d="M170 222 V246"/><path d="M164 240 L170 247 L176 240"/></g><rect x="20" y="248" width="300" height="200" fill="#F6F7F5" stroke="#172027"/><text x="34" y="278" font-size="16" font-weight="600" fill="#172027">2  Estimates</text><text x="34" y="298" font-size="12.5" fill="#4F5D68">process models</text><text x="34" y="324" font-size="13" fill="#172027">Time, cost and fabrication-stage carbon</text><text x="34" y="342" font-size="13" fill="#172027">for each part on each machine option.</text><g transform="translate(34 364)"><g font-size="11" fill="#4F5D68"><text x="64" y="10">Laser</text><text x="122" y="10">Plasma</text><text x="0" y="28">time</text><text x="0" y="46">cost</text><text x="0" y="64">carbon</text></g><rect x="60" y="17" width="52" height="14" fill="none" stroke="#9FB0B8"/><rect x="118" y="17" width="58" height="14" fill="none" stroke="#9FB0B8"/><rect x="60" y="35" width="52" height="14" fill="none" stroke="#9FB0B8"/><rect x="118" y="35" width="58" height="14" fill="none" stroke="#9FB0B8"/><rect x="60" y="53" width="52" height="14" fill="none" stroke="#9FB0B8"/><rect x="118" y="53" width="58" height="14" fill="none" stroke="#9FB0B8"/></g><g fill="none" stroke="#4F5D68"><path d="M170 450 V474"/><path d="M164 468 L170 475 L176 468"/></g><rect x="20" y="476" width="300" height="200" fill="#F6F7F5" stroke="#172027"/><text x="34" y="506" font-size="16" font-weight="600" fill="#172027">3  Plans</text><text x="34" y="526" font-size="12.5" fill="#4F5D68">NSGA-II</text><text x="34" y="552" font-size="13" fill="#172027">Project-level plans assign parts to</text><text x="34" y="570" font-size="13" fill="#172027">machines; none is best on all three.</text><g transform="translate(34 592)"><path d="M10 0 V68 H180" fill="none" stroke="#172027"/><circle cx="22" cy="13.0" r="3" fill="#4F5D68"/><circle cx="37" cy="24.0" r="3" fill="#4F5D68"/><circle cx="52" cy="38.5" r="3" fill="#4F5D68"/><circle cx="67" cy="45.9" r="3" fill="#4F5D68"/><circle cx="82" cy="47.0" r="3" fill="#4F5D68"/><circle cx="97" cy="54.6" r="3" fill="#4F5D68"/><circle cx="112" cy="57.1" r="3" fill="#4F5D68"/><circle cx="127" cy="54.9" r="3" fill="#4F5D68"/><circle cx="142" cy="60.1" r="3" fill="#4F5D68"/><circle cx="157" cy="61.0" r="3" fill="#4F5D68"/><circle cx="172" cy="57.6" r="3" fill="#4F5D68"/></g><g fill="none" stroke="#4F5D68"><path d="M170 678 V702"/><path d="M164 696 L170 703 L176 696"/></g><rect x="20" y="704" width="300" height="200" fill="#F6F7F5" stroke="#172027"/><text x="34" y="734" font-size="16" font-weight="600" fill="#172027">4  Ranking</text><text x="34" y="754" font-size="12.5" fill="#4F5D68">AHP, SMAA-2</text><text x="34" y="780" font-size="13" fill="#172027">Your priorities rank the plans, with a</text><text x="34" y="798" font-size="13" fill="#172027">check of how stable the ranking is.</text><g transform="translate(34 820)"><text x="0" y="13" font-size="12" fill="#4F5D68">1</text><rect x="16" y="0" width="160" height="18" fill="none" stroke="#172027"/><text x="24" y="13" font-size="11" fill="#4F5D68">Plan</text><text x="0" y="37" font-size="12" fill="#4F5D68">2</text><rect x="16" y="24" width="160" height="18" fill="none" stroke="#172027"/><text x="24" y="37" font-size="11" fill="#4F5D68">Plan</text><text x="0" y="61" font-size="12" fill="#4F5D68">3</text><rect x="16" y="48" width="160" height="18" fill="none" stroke="#172027"/><text x="24" y="61" font-size="11" fill="#4F5D68">Plan</text></g><text x="20" y="938" font-size="12" fill="#4F5D68">Conceptual workflow. Illustrative, no data;</text><text x="20" y="954" font-size="12" fill="#4F5D68">no plan is shown as chosen.</text></svg>
+  </figure>
+</section>
+
+<script type="module">
+import { createRenderer, createScene, renderAll } from "./lib/beam-scene.js";
+import { progressAt, explodeAt, endCutAt, parkAt, headAt, cameraAt, frameAt } from "./lib/laser-sequence.js";
+
+// The static frames and the decision flow are the canonical content; the film only shows aria-hidden copies.
+const reduce = matchMedia("(prefers-reduced-motion: reduce)");
+if (reduce.matches) {
+  const st = document.querySelector(".static");
+  for (const img of st.querySelectorAll("img[data-t]")) img.dataset.frame = JSON.stringify(frameAt(+img.dataset.t, 900, 600));
+  renderAll(st);
+} else start();
+
+function start() {
+  const canvas = document.getElementById("c"), film = document.getElementById("film");
+  const lens = document.getElementById("lens"), flow = document.getElementById("flow"), meter = document.getElementById("meter");
+  lens.append(document.querySelector(".lensfig svg").cloneNode(true));
+  for (const svg of document.querySelectorAll(".flowfig svg")) flow.append(svg.cloneNode(true));
+  for (const el of [lens, flow]) el.querySelectorAll("[role]").forEach((n) => n.removeAttribute("role"));
+
+  const r = createRenderer(canvas);
+  const S = createScene(r, "bay");
+  const clamp = (v) => Math.min(1, Math.max(0, v));
+  const beats = [...document.querySelectorAll(".beat")], bar = document.getElementById("bar");
+  const times = [];
+  let lastT = -1, queued = false, w = 0, h = 0, compiled = false;
+
+  function resize() {
+    const box = canvas.getBoundingClientRect();
+    if (box.width !== w || box.height !== h) { w = box.width; h = box.height; r.setSize(w, h, false); lastT = -1; }
+  }
+  function frame() {
+    queued = false; resize();
+    const box = film.getBoundingClientRect();
+    const t = clamp(-box.top / (box.height - innerHeight));
+    if (Math.abs(t - lastT) < 1e-4) return;
+    lastT = t;
+    const t0 = performance.now();
+    S.update({ progress: progressAt(t), explode: explodeAt(t), endCut: endCutAt(t), park: parkAt(t), head: headAt(t) });
+    const c = cameraAt(t, w / h);
+    S.camera.fov = c.fov; S.camera.aspect = w / h; S.camera.updateProjectionMatrix();
+    S.camera.position.copy(c.pos); S.camera.lookAt(c.target);
+    if (!compiled) { r.compile(S.scene, S.camera); compiled = true; }
+    r.render(S.scene, S.camera);
+    // CPU time to submit one render, not GPU frame time.
+    times.push(performance.now() - t0); if (times.length > 90) times.shift();
+    const med = [...times].sort((x, y) => x - y)[times.length >> 1];
+    meter.textContent = `CPU per render ${med.toFixed(1)} ms median, last ${times.at(-1).toFixed(1)} ms (${times.length})`;
+    bar.style.width = `${(progressAt(t) * 100).toFixed(1)}%`;
+    for (const b of beats) { const [a, z] = b.dataset.r.split(",").map(Number); b.classList.toggle("on", t >= a && t < z); }
+    lens.classList.toggle("on", t >= 0.62 && t < 0.75);
+    flow.classList.toggle("on", t >= 0.9);
+  }
+  const request = () => { if (!queued) { queued = true; requestAnimationFrame(frame); } };
+  addEventListener("scroll", request, { passive: true });
+  addEventListener("resize", request);
+  reduce.addEventListener?.("change", () => location.reload());
+  request();
+}
+</script>

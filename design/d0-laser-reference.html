@@ -1,0 +1,144 @@
+<meta charset="utf-8">
+<title>Web Opening Cut Reference</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&display=swap">
+<style>
+/* Layout: a technical drawing sheet. Three orthographic views stacked, rules and sources below. */
+:root {
+  --paper: #F6F7F5; --ink: #172027; --ink-2: #4F5D68; --steel: #D5DCDF; --steel-2: #9AA7AD;
+  --cut: #F05A24; --rule: #CBD2D5;
+  --sans: "Archivo", "Helvetica Neue", Arial, sans-serif;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --paper: #141B20; --ink: #E7ECEE; --ink-2: #A9B6BD; --steel: #2F3D45; --steel-2: #5B6A72; --cut: #FF6A33; --rule: #34424A; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --paper: #141B20; --ink: #E7ECEE; --ink-2: #A9B6BD; --steel: #2F3D45; --steel-2: #5B6A72; --cut: #FF6A33; --rule: #34424A; color-scheme: dark }
+body { background: var(--paper); color: var(--ink); font-family: var(--sans); font-size: 16px; line-height: 1.55;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 40px 64px; }
+main { max-width: 1040px; margin: 0 auto; display: grid; gap: 40px; }
+h1 { font-size: clamp(1.8rem, 4vw, 2.6rem); line-height: 1.05; font-weight: 580; font-variation-settings: "wdth" 116; letter-spacing: -0.02em; margin: 0; text-wrap: balance; }
+h2 { font-size: 1.15rem; font-weight: 600; font-variation-settings: "wdth" 108; margin: 0; }
+p { margin: 0; max-width: 68ch; }
+.lede { color: var(--ink-2); margin-top: 12px; }
+.views { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 32px 40px; }
+figure { margin: 0; display: grid; gap: 10px; min-width: 0; }
+figure svg { width: 100%; height: auto; display: block; border-top: 1px solid var(--rule); padding-top: 12px; }
+figcaption { font-size: 0.9rem; color: var(--ink-2); font-variation-settings: "wdth" 88; }
+svg text { font-family: var(--sans); font-size: 11px; fill: var(--ink-2); font-variation-settings: "wdth" 80; }
+svg .steel { fill: var(--steel); stroke: var(--ink); stroke-width: 1.2; }
+svg .line { fill: none; stroke: var(--ink); stroke-width: 1.2; }
+svg .thin { fill: none; stroke: var(--ink-2); stroke-width: 0.8; }
+svg .dim { fill: none; stroke: var(--ink-2); stroke-width: 0.8; marker-start: url(#tick); marker-end: url(#tick); }
+svg .cut { fill: none; stroke: var(--cut); stroke-width: 2; }
+svg .illus { fill: none; stroke: var(--cut); stroke-width: 1.2; stroke-dasharray: 4 3; }
+svg .hole { fill: var(--paper); stroke: var(--ink); stroke-width: 1.2; }
+svg .num { fill: var(--ink); font-weight: 600; font-size: 11px; }
+.rules { display: grid; gap: 14px; counter-reset: r; padding: 0; margin: 0; list-style: none; }
+.rules li { display: grid; grid-template-columns: 2.2em 1fr; gap: 8px; max-width: 76ch; }
+.rules li::before { counter-increment: r; content: counter(r); font-weight: 600; font-variant-numeric: tabular-nums; color: var(--ink-2); }
+.sources { font-size: 0.9rem; color: var(--ink-2); display: grid; gap: 6px; }
+.sources a { color: var(--ink); text-underline-offset: 3px; }
+.note { font-size: 0.9rem; color: var(--ink-2); border-top: 1px solid var(--rule); padding-top: 14px; }
+</style>
+
+<main>
+  <header>
+    <h1>Cutting an opening in an I-beam web</h1>
+    <p class="lede">Technical reference for the laser keyframes. Every render in the design boards has to agree with these three views. Not to scale; no machine parameters are given or implied.</p>
+  </header>
+
+  <section class="views" aria-label="Orthographic views">
+    <figure>
+      <svg viewBox="0 0 360 300" role="img" aria-labelledby="t1">
+        <title id="t1">End view: beam lying with web horizontal and flanges vertical; cutting head above the web, between the flanges</title>
+        <defs><marker id="tick" viewBox="0 0 6 6" refX="3" refY="3" markerWidth="6" markerHeight="6"><path d="M3 0 V6" stroke="currentColor" style="stroke: var(--ink-2)"/></marker></defs>
+        <rect class="steel" x="70" y="96" width="12" height="190"/>
+        <rect class="steel" x="278" y="96" width="12" height="190"/>
+        <rect class="steel" x="82" y="162" width="196" height="12"/>
+        <path class="line" d="M150 20 H210 V100 L192 150 H168 L150 100 Z" style="fill: var(--paper)"/>
+        <line class="thin" x1="150" y1="100" x2="210" y2="100"/>
+        <line class="illus" x1="180" y1="150" x2="180" y2="162"/>
+        <line class="dim" x1="82" y1="70" x2="150" y2="70"/>
+        <line class="dim" x1="210" y1="70" x2="278" y2="70"/>
+        <text x="116" y="62" text-anchor="middle">clearance</text>
+        <text x="244" y="62" text-anchor="middle">clearance</text>
+        <line class="dim" x1="222" y1="150" x2="222" y2="162"/>
+        <text x="230" y="159">standoff</text>
+        <text x="40" y="250" text-anchor="middle">flange</text>
+        <text x="320" y="250" text-anchor="middle">flange</text>
+        <text x="180" y="192" text-anchor="middle">web</text>
+        <text x="180" y="40" text-anchor="middle">cutting head</text>
+        <text x="214" y="132">nozzle</text>
+      </svg>
+      <figcaption>End view. The section stays fixed; the head comes down between the flanges and never crosses a flange. The dashed line marks where the focused beam acts and is drawn for illustration only: a laser beam is not visible in air.</figcaption>
+    </figure>
+
+    <figure>
+      <svg viewBox="0 0 360 300" role="img" aria-labelledby="t2">
+        <title id="t2">Plan view of the web: pierce inside the material to be removed, lead-in, contour, close</title>
+        <rect class="steel" x="16" y="70" width="328" height="160"/>
+        <rect x="16" y="70" width="328" height="14" style="fill: var(--steel-2)"/>
+        <rect x="16" y="216" width="328" height="14" style="fill: var(--steel-2)"/>
+        <rect class="hole" x="110" y="118" width="140" height="64" rx="32"/>
+        <rect class="cut" x="110" y="118" width="140" height="64" rx="32"/>
+        <circle cx="180" cy="160" r="3" style="fill: var(--ink)"/>
+        <path class="line" d="M180 160 Q180 140 196 118" style="stroke-dasharray: 3 2"/>
+        <path class="thin" d="M224 110 h18" style="marker-end: url(#tick)"/>
+        <path d="M236 106 l8 4 -8 4" style="fill: none; stroke: var(--ink-2)"/>
+        <text class="num" x="170" y="176">1</text><text x="146" y="198">pierce, inside the slug</text>
+        <text class="num" x="190" y="140">2</text><text x="200" y="150">lead-in</text>
+        <text class="num" x="254" y="112">3</text><text x="262" y="112">contour</text>
+        <text class="num" x="200" y="112">4</text>
+        <text x="20" y="60">flange edge (seen from above)</text>
+        <text x="20" y="252">head travels along the beam axis; the section stays fixed</text>
+        <path class="thin" d="M20 266 H200"/><path d="M194 262 l8 4 -8 4" style="fill: none; stroke: var(--ink-2)"/>
+      </svg>
+      <figcaption>Plan of the web. Sequence: pierce inside the material that will be removed, short lead-in onto the contour, travel around the contour, close at the lead-in point. Opening shape is generic.</figcaption>
+    </figure>
+
+    <figure>
+      <svg viewBox="0 0 360 300" role="img" aria-labelledby="t3">
+        <title id="t3">Section through the web at the kerf: narrow gap, assist gas through the kerf, melt ejected below</title>
+        <path class="line" d="M156 30 H204 V70 L190 104 H170 L156 70 Z" style="fill: var(--paper)"/>
+        <rect class="steel" x="30" y="128" width="142" height="34"/>
+        <rect class="steel" x="188" y="128" width="142" height="34"/>
+        <path d="M172 128 L180 104 L188 128" style="fill: none; stroke: var(--cut); stroke-width: 1; stroke-dasharray: 3 2"/>
+        <line x1="172" y1="128" x2="172" y2="162" style="stroke: var(--cut); stroke-width: 2"/>
+        <g style="stroke: var(--ink-2); fill: none; stroke-width: 0.9">
+          <path d="M166 108 L170 124"/><path d="M194 108 L190 124"/>
+          <path d="M180 132 V156"/><path d="M176 150 l4 6 4-6"/>
+        </g>
+        <g style="fill: var(--cut)"><circle cx="178" cy="172" r="1.8"/><circle cx="183" cy="180" r="1.4"/><circle cx="176" cy="187" r="1.1"/></g>
+        <text x="100" y="120" text-anchor="middle">remaining web</text>
+        <text x="260" y="120" text-anchor="middle">part to be removed</text>
+        <text x="216" y="88">assist gas</text>
+        <text x="196" y="200">melt ejected through the kerf</text>
+        <text x="40" y="190">kerf: narrow, width not to scale</text>
+        <text x="40" y="206">cut front: localized, at the kerf</text>
+      </svg>
+      <figcaption>Section at the kerf. The focused beam melts the material locally and the assist-gas jet drives the melt out through the bottom of the kerf. Only a little ejected melt is shown, with no torch-like flame and no full-sheet glow.</figcaption>
+    </figure>
+  </section>
+
+  <section aria-labelledby="rules-h" style="display:grid; gap:16px">
+    <h2 id="rules-h">Rules every laser keyframe must follow</h2>
+    <ol class="rules">
+      <li>The beam lies with the web horizontal and the flanges vertical. The section stays fixed and the head moves.</li>
+      <li>The nozzle and head body stay between the flanges and never intersect one, in any camera angle.</li>
+      <li>Piercing comes first, inside the material to be removed. A short lead-in joins the contour, which then runs closed.</li>
+      <li>The cut front stays localized at the kerf: a narrow orange-to-white point with a short, thin trail. No flame, no full-plate glow, no spark shower that hides the process.</li>
+      <li>Any visible beam is captioned “Beam shown for illustration”.</li>
+      <li>The removed part appears only in a labelled exploded or explanatory view. It never lifts itself out of the beam.</li>
+      <li>No values: no laser power, speed, gas type, pressure, thickness or kerf width on any frame.</li>
+      <li>Plasma, if shown, is a separate process with its own torch. The laser nozzle never morphs into a plasma torch.</li>
+      <li>Every render carries “Illustrative render”. The beam and opening are generic, not a project part.</li>
+    </ol>
+  </section>
+
+  <section aria-labelledby="src-h" class="sources">
+    <h2 id="src-h" style="color: var(--ink)">Sources used for plausibility</h2>
+    <p>Machine configuration (head moving along a fixed H-section, multi-axis head for web and flange features): <a href="https://www.ctemag.com/products/bodor-lasers-all-one-profile-cutting-solution-structural-steel-fabrication/">Bodor profile cutting line</a>, <a href="https://www.blechexpo-messe.de/en/Product-Innovations/13521-gantry-beam-processing-machine-1250s">JQLASER HL1250S gantry beam station</a>, <a href="https://weihong.com.cn/en/cases/detail/82">Weihong five-axis H-beam system</a>.</p>
+    <p>Process physics (local melting, assist gas expelling melt through the kerf): <a href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6337310/">Laser Cutting: A Review on the Influence of Assist Gas, Materials 2019</a>, <a href="https://www.trumpf.com/en_INT/solutions/applications/laser-cutting/">TRUMPF laser cutting overview</a>.</p>
+    <p class="note">These are vendor descriptions and a review article, used only to keep the drawing plausible. They are not sources for any value, and none appear on the site.</p>
+  </section>
+</main>

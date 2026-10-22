@@ -1,0 +1,40 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "design-boards",
+      "runtimeExecutable": "python",
+      "runtimeArgs": [
+        "-m",
+        "http.server",
+        "8765",
+        "--directory",
+        "design"
+      ],
+      "port": 8765
+    },
+    {
+      "name": "site",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "start"
+      ],
+      "port": 3000,
+      "env": {
+        "BROWSER": "none"
+      }
+    },
+    {
+      "name": "site-build",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": [
+        "--yes",
+        "serve@14.2.4",
+        "build",
+        "-l",
+        "5050"
+      ],
+      "port": 5050
+    }
+  ]
+}

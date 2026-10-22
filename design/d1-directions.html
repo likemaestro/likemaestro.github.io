@@ -1,0 +1,420 @@
+<meta charset="utf-8">
+<title>Computational Matter Directions</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&display=swap">
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.176.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.176.0/examples/jsm/"}}</script>
+<style>
+/* Layout: a review board. Each direction is a band of four keyframes (desktop hero, mobile hero, laser, science),
+   then independent scoring, the hybrid test, and the decision. Mock frames carry their own fixed palettes. */
+:root {
+  --bg: #EEF1F0; --surface: #F8F9F8; --ink: #172027; --ink-2: #4F5D68; --rule: #CBD2D5; --cut: #F05A24;
+  --sans: "Archivo", "Helvetica Neue", Arial, sans-serif;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --bg: #12191D; --surface: #182126; --ink: #E7ECEE; --ink-2: #A9B6BD; --rule: #33424A; --cut: #FF6A33; color-scheme: dark } }
+:root[data-theme="dark"] { --bg: #12191D; --surface: #182126; --ink: #E7ECEE; --ink-2: #A9B6BD; --rule: #33424A; --cut: #FF6A33; color-scheme: dark }
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font-family: var(--sans); font-size: 16px; line-height: 1.55;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 40px 80px; }
+main { max-width: 1240px; margin: 0 auto; display: grid; gap: 72px; }
+h1 { font-size: clamp(2rem, 5vw, 3.4rem); line-height: 1.02; font-weight: 600; font-variation-settings: "wdth" 118; letter-spacing: -0.025em; margin: 0; text-wrap: balance; }
+h2 { font-size: clamp(1.5rem, 3vw, 2.1rem); line-height: 1.1; font-weight: 580; font-variation-settings: "wdth" 112; letter-spacing: -0.02em; margin: 0; text-wrap: balance; }
+h3 { font-size: 1rem; font-weight: 600; margin: 0; }
+p { margin: 0; max-width: 70ch; }
+.muted { color: var(--ink-2); }
+.small { font-size: 0.875rem; }
+.intro { display: grid; gap: 16px; }
+.legend { display: flex; flex-wrap: wrap; gap: 8px 20px; font-size: 0.875rem; color: var(--ink-2); }
+.legend b { color: var(--ink); font-weight: 600; }
+.direction { display: grid; gap: 24px; border-top: 1px solid var(--rule); padding-top: 28px; }
+.dir-head { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr); gap: 16px 40px; align-items: end; }
+@media (max-width: 760px) { .dir-head { grid-template-columns: 1fr; } }
+.letter { font-size: 0.9rem; color: var(--ink-2); font-variation-settings: "wdth" 90; }
+.frames { display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 1fr); gap: 20px; }
+.frames2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 20px; }
+@media (max-width: 760px) { .frames { grid-template-columns: 1fr; } }
+figure { margin: 0; display: grid; gap: 8px; min-width: 0; align-content: start; }
+figcaption { font-size: 0.82rem; color: var(--ink-2); font-variation-settings: "wdth" 90; }
+figcaption b { color: var(--ink); font-weight: 600; }
+.mock { container-type: inline-size; position: relative; overflow: hidden; border-radius: 6px; outline: 1px solid var(--rule); max-width: 100%; }
+.mobile { max-width: 300px; justify-self: center; width: 100%; }
+img.r { display: block; width: 100%; height: auto; background: #1a2227; }
+
+/* Direction A: Steel / Light */
+.A { background: #F6F7F5; color: #172027; }
+.A .nav, .C .nav { display: flex; justify-content: space-between; align-items: center; padding: 1.6cqw 3.3cqw; font-size: 1.05cqw; }
+.A .nav b, .B .nav b, .C .nav b { font-weight: 640; font-variation-settings: "wdth" 112; font-size: 1.25cqw; }
+.nav span { display: flex; gap: 2.2cqw; }
+.cv { border: 0.08cqw solid currentColor; padding: 0.3cqw 0.9cqw; border-radius: 0.15cqw; }
+.A .hero { display: grid; grid-template-columns: minmax(0, 5.4fr) minmax(0, 6.6fr); align-items: center; gap: 2cqw; padding: 2cqw 0 3cqw 3.3cqw; }
+.stmt { font-weight: 560; font-variation-settings: "wdth" 118; letter-spacing: -0.02em; line-height: 1.02; text-wrap: balance; }
+.A .stmt, .C .stmt { font-size: 4.3cqw; }
+.sub { margin-top: 1.8cqw; font-size: 1.25cqw; line-height: 1.5; max-width: 36cqw; }
+.A .sub, .C .sub { color: #4F5D68; }
+.links { margin-top: 2.2cqw; display: flex; gap: 1.8cqw; font-size: 1.05cqw; }
+.links u { text-underline-offset: 0.3cqw; }
+.cap { font-size: 0.85cqw; color: #6B7880; margin-top: 0.6cqw; font-variation-settings: "wdth" 85; }
+/* mobile mocks use their own scale: 1cqw = 3.9px at 390 */
+.m .nav { padding: 4cqw 5cqw; font-size: 3.6cqw; }
+.m .nav b { font-size: 4.2cqw; }
+.m .nav span { display: none; }
+.m .menu { font-size: 3.6cqw; }
+.m .txt { padding: 4cqw 5cqw 0; }
+.m .stmt { font-size: 9cqw; }
+.m .sub { font-size: 4cqw; margin-top: 4cqw; max-width: none; }
+.m .links { font-size: 3.8cqw; gap: 5cqw; margin-top: 5cqw; flex-wrap: wrap; }
+.m .cap { font-size: 3cqw; padding: 2cqw 5cqw 5cqw; margin: 0; }
+.m .vis { margin-top: 6cqw; }
+
+/* Direction B: Digital Fabrication Cinema */
+.B { background: #0B1013; color: #E9EEF0; }
+.B .stage { position: relative; }
+.B .nav { position: absolute; inset: 0 0 auto 0; display: flex; justify-content: space-between; padding: 1.6cqw 3.3cqw; font-size: 1.05cqw; z-index: 2; }
+.B .over { position: absolute; left: 3.3cqw; bottom: 4cqw; max-width: 46cqw; z-index: 2; }
+.B .stmt { font-size: 4.6cqw; }
+.B .sub { color: #B8C4CA; }
+.B .cap { color: #8C9AA1; }
+.B.m .nav { position: static; }
+.B.m .over { position: static; padding: 2cqw 5cqw 0; max-width: none; }
+
+/* Direction C: Computational Atlas */
+.C { background: #FFFFFF; color: #172027; }
+.C .hero { display: grid; grid-template-columns: minmax(0, 4.6fr) minmax(0, 7.4fr); gap: 2cqw; padding: 2cqw 3.3cqw 3cqw; align-items: start; }
+.C .atlas { position: relative; }
+.C .tag { position: absolute; font-size: 0.95cqw; color: #172027; background: #fff; padding: 0.2cqw 0.5cqw; border-left: 0.12cqw solid #F05A24; white-space: nowrap; }
+.C .strip { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0.8cqw; margin-top: 1.2cqw; }
+.C .strip img { width: 100%; display: block; outline: 0.08cqw solid #CBD2D5; }
+.C .strip small { display: block; font-size: 0.85cqw; color: #4F5D68; margin-top: 0.3cqw; font-variation-settings: "wdth" 80; }
+
+/* Laser keyframes */
+.laserA { background: #F6F7F5; padding: 2.4cqw; display: grid; gap: 1.4cqw; }
+.laserA .bay { border-radius: 0.4cqw; overflow: hidden; }
+.chap { display: flex; justify-content: space-between; gap: 2cqw; align-items: baseline; }
+.chap h4 { margin: 0; font-size: 2.6cqw; line-height: 1.05; font-weight: 580; font-variation-settings: "wdth" 116; letter-spacing: -0.02em; }
+.chap p { font-size: 1.2cqw; max-width: 40cqw; color: inherit; opacity: 1; }
+.laserA .chap p { color: #4F5D68; }
+.laserB { background: #0B1013; color: #E9EEF0; position: relative; }
+.laserB .chap { position: absolute; left: 3cqw; right: 3cqw; bottom: 2.6cqw; }
+.laserB .chap p { color: #B8C4CA; }
+.prog { position: absolute; left: 3cqw; right: 3cqw; top: 2.6cqw; height: 0.25cqw; background: rgba(233,238,240,0.18); }
+.prog i { position: absolute; inset: 0 38% 0 0; background: #F05A24; }
+.prog small { position: absolute; top: 0.8cqw; font-size: 0.9cqw; color: #8C9AA1; }
+.laserC { background: #FFFFFF; color: #172027; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.6fr); gap: 2cqw; padding: 2.4cqw; align-items: center; }
+.laserC ol { margin: 1.6cqw 0 0; padding: 0; list-style: none; display: grid; gap: 0.8cqw; font-size: 1.2cqw; }
+.laserC ol li { display: grid; grid-template-columns: 2cqw 1fr; color: #4F5D68; }
+.laserC ol li b { color: #172027; }
+.laserC ol li.on b { color: #F05A24; }
+
+/* Science keyframes */
+.sci { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.5fr); gap: 2.4cqw; padding: 2.6cqw; align-items: center; }
+.sci h4 { margin: 0; font-size: 2.6cqw; line-height: 1.05; font-weight: 580; font-variation-settings: "wdth" 116; letter-spacing: -0.02em; }
+.sci p { font-size: 1.15cqw; margin-top: 1.2cqw; }
+.seq { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1cqw; }
+.seq img { width: 100%; display: block; }
+.seq small { display: block; font-size: 0.9cqw; margin-top: 0.4cqw; font-variation-settings: "wdth" 82; }
+.btn { display: inline-block; margin-top: 1.6cqw; font-size: 1.05cqw; border: 0.08cqw solid currentColor; padding: 0.5cqw 1cqw; border-radius: 0.15cqw; }
+.sciA { background: #F6F7F5; color: #172027; } .sciA p, .sciA small { color: #4F5D68; }
+.sciA .big { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); gap: 1.2cqw; margin-bottom: 1.2cqw; align-items: end; }
+.sciA .big img { width: 100%; display: block; }
+.sciB { background: #0E1519; color: #E9EEF0; } .sciB p, .sciB small { color: #A9B6BD; }
+.sciB .seq img { outline: 0.1cqw solid #2C3940; }
+.sciC { background: #FFFFFF; color: #172027; } .sciC p, .sciC small { color: #4F5D68; }
+.sciC .axis { position: relative; margin-top: 0.8cqw; height: 1.4cqw; border-top: 0.08cqw solid #172027; font-size: 0.85cqw; color: #4F5D68; }
+.sciC .seq img { outline: 0.08cqw solid #CBD2D5; }
+.prov { font-size: 0.85cqw; margin-top: 1.4cqw; font-variation-settings: "wdth" 85; }
+
+/* Scoring */
+.scroll { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; min-width: 720px; font-size: 0.92rem; }
+th, td { text-align: left; vertical-align: top; padding: 10px 12px; border-bottom: 1px solid var(--rule); }
+th { font-weight: 600; font-variation-settings: "wdth" 100; }
+td.n { font-variant-numeric: tabular-nums; font-weight: 600; white-space: nowrap; }
+td small { display: block; color: var(--ink-2); font-weight: 400; margin-top: 2px; }
+tr.total td { font-weight: 700; border-bottom: 2px solid var(--ink); }
+.decision { display: grid; gap: 16px; background: var(--surface); padding: 28px; border-radius: 8px; }
+.changes { display: grid; gap: 10px; padding: 0; margin: 0; list-style: none; }
+.changes li { display: grid; grid-template-columns: 11em 1fr; gap: 12px; max-width: 90ch; }
+@media (max-width: 640px) { .changes li { grid-template-columns: 1fr; gap: 2px; } }
+.changes li b { font-weight: 600; }
+:focus-visible { outline: 2px solid var(--cut); outline-offset: 3px; }
+</style>
+
+<main>
+  <header class="intro">
+    <p class="muted small">Computational Matter · design stage D1 · for Murat Güven’s review</p>
+    <h1>Three directions, the same content</h1>
+    <p>Each direction is drawn on the identical hero, laser chapter and MSc chapter, so the differences come from art direction alone. The 3D frames are rendered live in your browser with three.js from one generic I-beam model built to the <a href="https://claude.ai/artifact/BmMc9P1PRdgrdjwNwJx4kk">laser reference sheet</a>. Science frames use only recorded optimization states from the MSc thesis.</p>
+    <div class="legend"><span><b>Illustrative render</b>: generic geometry, no process values</span><span><b>Recorded states</b>: images taken from the thesis, in their real order</span><span><b>Visual</b>: an arrangement for presentation, not a result</span></div>
+  </header>
+
+  <!-- A -->
+  <section class="direction" aria-labelledby="a-h">
+    <div class="dir-head">
+      <div><p class="letter">Direction A</p><h2 id="a-h">Steel / Light</h2></div>
+      <p class="muted">A pale gallery stage with one machined steel object. CAD linework resolves into material across the hero. The laser chapter is a controlled dark bay set inside the light page, then the page returns to light.</p>
+    </div>
+    <div class="frames">
+      <figure>
+        <div class="mock A">
+          <div class="nav"><b>Murat Güven</b><span><span>Work</span><span>Publications</span><span>About</span><span>Contact</span><span class="cv">CV</span></span></div>
+          <div class="hero">
+            <div>
+              <div class="stmt">I develop AI and optimization methods for structural engineering and steel construction.</div>
+              <p class="sub">PhD candidate at Politecnico di Milano, working on decision support for how steel parts are cut.</p>
+              <div class="links"><u>Work</u><u>Publications</u><u>murat.guven@polimi.it</u></div>
+            </div>
+            <div><img class="r" alt="Steel I-beam fragment: the left part drawn as CAD linework, the right part rendered as brushed steel, with opening contours marked on the web" data-frame='{"style":"studio","width":1000,"height":820,"progress":0,"head":false,"split":-0.4,"camera":{"pos":[2.7,3.6,2.4],"target":[0.15,-0.1,0],"fov":30}}'><p class="cap">Illustrative render</p></div>
+          </div>
+        </div>
+        <figcaption><b>Desktop hero, 1440.</b> Identity and statement read first; the object resolves from drawing to steel on load (0.8–1.3 s, skippable).</figcaption>
+      </figure>
+      <figure class="mobile">
+        <div class="mock A m">
+          <div class="nav"><b>Murat Güven</b><span class="menu">Menu</span></div>
+          <div class="txt">
+            <div class="stmt">I develop AI and optimization methods for structural engineering and steel construction.</div>
+            <p class="sub">PhD candidate at Politecnico di Milano.</p>
+            <div class="links"><u>Work</u><u>Publications</u><u>CV</u></div>
+          </div>
+          <div class="vis"><img class="r" alt="Same steel I-beam fragment, cropped for a phone" data-frame='{"style":"studio","width":780,"height":640,"progress":0,"head":false,"split":-0.2,"camera":{"pos":[1.9,3.2,2.0],"target":[0.1,-0.1,0],"fov":34}}'></div>
+          <p class="cap">Illustrative render</p>
+        </div>
+        <figcaption><b>Mobile hero, 390.</b> Text first, then a poster frame. No 3D download on load.</figcaption>
+      </figure>
+    </div>
+    <div class="frames2">
+      <figure>
+        <div class="mock laserA">
+          <div class="chap"><h4>Laser cutting</h4><p>The head follows a planned contour on the beam web. Piercing comes first, inside the material that will be removed.</p></div>
+          <div class="bay"><img class="r" alt="Dark bay: cutting head between the flanges, a localized cut front advancing along the opening contour, kerf behind it" data-frame='{"style":"bay","width":1200,"height":640,"progress":0.62,"camera":{"relPos":[1.1,1.3,-0.15],"relTarget":[0,0.05,0],"fov":30}}'></div>
+          <p class="cap" style="font-size:0.85cqw">Illustrative render. No process parameters shown.</p>
+        </div>
+        <figcaption><b>Laser keyframe: contour travel.</b> A dark bay inside the light page; the page frame stays visible around it.</figcaption>
+      </figure>
+      <figure>
+        <div class="mock sci sciA">
+          <div>
+            <h4>Material can be designed</h4>
+            <p>MSc research: topology optimization of nonlinear elastic microstructures. Published in <i>Finite Elements in Analysis and Design</i> 260 (2026).</p>
+            <span class="btn">Run simplified linear-elastic demo</span>
+          </div>
+          <div>
+            <div class="big"><img src="assets/thesis/fig7.16_p74_1.png" alt="Final optimized unit cell, nonlinear, negative Poisson's ratio target"><img src="assets/thesis/fig7.16_p74_2.png" alt="3 by 3 periodic arrangement of the final unit cell"></div>
+            <div class="seq">
+              <div><img src="assets/thesis/fig7.16_p74_0.png" alt="Initial design"><small>initial</small></div>
+              <div><img src="assets/thesis/npr_iter010.png" alt="Iteration 10"><small>iteration 10</small></div>
+              <div><img src="assets/thesis/npr_iter050.png" alt="Iteration 50"><small>iteration 50</small></div>
+              <div><img src="assets/thesis/fig7.16_p74_1.png" alt="Final, iteration 250"><small>final (250)</small></div>
+            </div>
+            <p class="prov">Recorded states, negative Poisson’s ratio target. Right image: 3×3 arrangement (visual). Source: MSc thesis, İzmir Institute of Technology, 2023.</p>
+          </div>
+        </div>
+        <figcaption><b>Science keyframe.</b> Calm and gallery-like; recorded states as a contact strip.</figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <!-- B -->
+  <section class="direction" aria-labelledby="b-h">
+    <div class="dir-head">
+      <div><p class="letter">Direction B</p><h2 id="b-h">Digital Fabrication Cinema</h2></div>
+      <p class="muted">Near-black, material-led and directed like a short film. Extreme macro views of nozzle, kerf and steel carry the identity from the first frame. Spectacular, at the risk of reading as a fabrication company.</p>
+    </div>
+    <div class="frames">
+      <figure>
+        <div class="mock B">
+          <div class="stage">
+            <div class="nav"><b>Murat Güven</b><span><span>Work</span><span>Publications</span><span>About</span><span>Contact</span><span class="cv">CV</span></span></div>
+            <img class="r" alt="Macro view at web level: copper nozzle above a white-hot cut front, kerf line receding" data-frame='{"style":"macro","width":1440,"height":780,"progress":0.62,"camera":{"relPos":[0.46,0.12,-0.22],"relTarget":[-0.06,0.05,0],"fov":42}}'>
+            <div class="over">
+              <div class="stmt">I develop AI and optimization methods for structural engineering and steel construction.</div>
+              <p class="sub">PhD candidate at Politecnico di Milano.</p>
+              <p class="cap">Illustrative render</p>
+            </div>
+          </div>
+        </div>
+        <figcaption><b>Desktop hero, 1440.</b> Full-bleed macro, statement over image. Strong first frame, but it says “laser” before it says “AI and optimization”.</figcaption>
+      </figure>
+      <figure class="mobile">
+        <div class="mock B m">
+          <div class="nav"><b>Murat Güven</b><span class="menu">Menu</span></div>
+          <div class="over">
+            <div class="stmt">I develop AI and optimization methods for structural engineering and steel construction.</div>
+          </div>
+          <div class="vis"><img class="r" alt="Macro cut front cropped for a phone" data-frame='{"style":"macro","width":780,"height":700,"progress":0.62,"camera":{"relPos":[0.36,0.1,-0.2],"relTarget":[-0.02,0.05,0],"fov":44}}'></div>
+          <p class="cap">Illustrative render</p>
+        </div>
+        <figcaption><b>Mobile hero, 390.</b> Dark first screen; heavy media to make it work.</figcaption>
+      </figure>
+    </div>
+    <div class="frames2">
+      <figure>
+        <div class="mock laserB">
+          <img class="r" alt="Very close macro of the cut front under the nozzle, with a little melt below the web" data-frame='{"style":"macro","width":1200,"height":700,"progress":0.66,"camera":{"relPos":[0.3,0.07,-0.16],"relTarget":[0,0.03,0],"fov":40}}'>
+          <div class="prog"><i></i><small>contour</small></div>
+          <div class="chap"><h4>Following the contour</h4><p>Illustrative render. No process parameters shown.</p></div>
+        </div>
+        <figcaption><b>Laser keyframe: contour travel.</b> Path-progress line synchronized with the head.</figcaption>
+      </figure>
+      <figure>
+        <div class="mock sci sciB">
+          <div>
+            <h4>Material can be designed</h4>
+            <p>MSc research: topology optimization of nonlinear elastic microstructures. Published in <i>Finite Elements in Analysis and Design</i> 260 (2026).</p>
+            <span class="btn">Run simplified linear-elastic demo</span>
+          </div>
+          <div>
+            <div class="seq">
+              <div><img src="assets/thesis/fig7.16_p74_0.png" alt="Initial design"><small>initial</small></div>
+              <div><img src="assets/thesis/npr_iter010.png" alt="Iteration 10"><small>iteration 10</small></div>
+              <div><img src="assets/thesis/npr_iter050.png" alt="Iteration 50"><small>iteration 50</small></div>
+              <div><img src="assets/thesis/fig7.16_p74_1.png" alt="Final, iteration 250"><small>final (250)</small></div>
+            </div>
+            <p class="prov">Recorded states, negative Poisson’s ratio target. Source: MSc thesis, İzmir Institute of Technology, 2023.</p>
+          </div>
+        </div>
+        <figcaption><b>Science keyframe.</b> The same states on a dark stage. Light thesis images fight the dark world; this is where B is weakest.</figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <!-- C -->
+  <section class="direction" aria-labelledby="c-h">
+    <div class="dir-head">
+      <div><p class="letter">Direction C</p><h2 id="c-h">Computational Atlas</h2></div>
+      <p class="muted">Bright and exact. Structural members, toolpaths and recorded optimization states appear as an annotated atlas of linework. Strongest on substance, quieter on emotion.</p>
+    </div>
+    <div class="frames">
+      <figure>
+        <div class="mock C">
+          <div class="nav"><b>Murat Güven</b><span><span>Work</span><span>Publications</span><span>About</span><span>Contact</span><span class="cv">CV</span></span></div>
+          <div class="hero">
+            <div>
+              <div class="stmt">I develop AI and optimization methods for structural engineering and steel construction.</div>
+              <p class="sub">PhD candidate at Politecnico di Milano, working on decision support for how steel parts are cut.</p>
+              <div class="links"><u>Work</u><u>Publications</u><u>murat.guven@polimi.it</u></div>
+            </div>
+            <div class="atlas">
+              <img class="r" style="background:#fff" alt="Line drawing of the I-beam with the cutting head; the current contour traced in orange" data-frame='{"style":"linework","width":1100,"height":700,"progress":0.62,"camera":{"pos":[2.6,3.6,2.0],"target":[0,0,0],"fov":26}}'>
+              <span class="tag" style="left:6%;top:12%">finished opening</span>
+              <span class="tag" style="left:44%;top:72%">contour in progress</span>
+              <span class="tag" style="left:66%;top:30%">planned contour</span>
+              <div class="strip">
+                <div><img src="assets/thesis/fig7.16_p74_0.png" alt="Initial design"><small>initial</small></div>
+                <div><img src="assets/thesis/npr_iter010.png" alt="Iteration 10"><small>iteration 10</small></div>
+                <div><img src="assets/thesis/npr_iter050.png" alt="Iteration 50"><small>iteration 50</small></div>
+                <div><img src="assets/thesis/fig7.16_p74_1.png" alt="Final"><small>final (250)</small></div>
+              </div>
+              <p class="cap">Top: illustrative line render. Bottom: recorded states, MSc thesis, 2023.</p>
+            </div>
+          </div>
+        </div>
+        <figcaption><b>Desktop hero, 1440.</b> An atlas page: the hero already shows two kinds of work side by side.</figcaption>
+      </figure>
+      <figure class="mobile">
+        <div class="mock C m">
+          <div class="nav"><b>Murat Güven</b><span class="menu">Menu</span></div>
+          <div class="txt">
+            <div class="stmt">I develop AI and optimization methods for structural engineering and steel construction.</div>
+            <p class="sub">PhD candidate at Politecnico di Milano.</p>
+          </div>
+          <div class="vis"><img class="r" style="background:#fff" alt="Line drawing of the beam and head, cropped for a phone" data-frame='{"style":"linework","width":780,"height":620,"progress":0.62,"camera":{"pos":[1.9,3.4,1.6],"target":[0,0,0],"fov":30}}'></div>
+          <p class="cap">Illustrative line render</p>
+        </div>
+        <figcaption><b>Mobile hero, 390.</b> Light and fast; linework survives small screens well.</figcaption>
+      </figure>
+    </div>
+    <div class="frames2">
+      <figure>
+        <div class="mock laserC">
+          <div>
+            <div class="chap"><h4>Laser cutting</h4></div>
+            <ol>
+              <li><b>1</b><span>Pierce inside the material to be removed</span></li>
+              <li><b>2</b><span>Lead-in onto the contour</span></li>
+              <li class="on"><b>3</b><span>Follow the contour</span></li>
+              <li><b>4</b><span>Close the profile</span></li>
+            </ol>
+            <p class="cap" style="margin-top:1.6cqw">Illustrative line render. No process parameters shown.</p>
+          </div>
+          <img class="r" style="background:#fff" alt="Near-plan line view of the web: lead-in and two thirds of the contour traced in orange" data-frame='{"style":"linework","width":1000,"height":640,"progress":0.62,"head":false,"camera":{"pos":[0.05,3.4,0.9],"target":[0,0,0],"fov":15}}'>
+        </div>
+        <figcaption><b>Laser keyframe: contour travel.</b> Diagrammatic. Clear, but not cinematic.</figcaption>
+      </figure>
+      <figure>
+        <div class="mock sci sciC">
+          <div>
+            <h4>Material can be designed</h4>
+            <p>MSc research: topology optimization of nonlinear elastic microstructures. Published in <i>Finite Elements in Analysis and Design</i> 260 (2026).</p>
+            <span class="btn">Run simplified linear-elastic demo</span>
+          </div>
+          <div>
+            <div class="seq">
+              <div><img src="assets/thesis/fig7.16_p74_0.png" alt="Initial design"><small>initial</small></div>
+              <div><img src="assets/thesis/npr_iter010.png" alt="Iteration 10"><small>iteration 10</small></div>
+              <div><img src="assets/thesis/npr_iter050.png" alt="Iteration 50"><small>iteration 50</small></div>
+              <div><img src="assets/thesis/fig7.16_p74_1.png" alt="Final, iteration 250"><small>final (250)</small></div>
+            </div>
+            <div class="axis"></div>
+            <p class="prov">Recorded states in their real order, negative Poisson’s ratio target, nonlinear. Spacing is not proportional to iteration count. Source: MSc thesis, İzmir Institute of Technology, 2023.</p>
+          </div>
+        </div>
+        <figcaption><b>Science keyframe.</b> Atlas plate with iteration labels as the primary reading.</figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <!-- Scoring -->
+  <section class="direction" aria-labelledby="s-h">
+    <h2 id="s-h">Independent scores</h2>
+    <p class="muted">Each direction scored on its own, 1 to 5, before any hybrid was considered. Ease of building is one criterion of five and never breaks a tie.</p>
+    <div class="scroll">
+      <table>
+        <thead><tr><th>Criterion</th><th>A. Steel / Light</th><th>B. Fabrication Cinema</th><th>C. Computational Atlas</th></tr></thead>
+        <tbody>
+          <tr><td>Visual originality</td><td class="n">3<small>Clean studio object; seen before in product sites</small></td><td class="n">4<small>Macro cut front is striking and specific</small></td><td class="n">4<small>Atlas of real states plus linework is unusual for a portfolio</small></td></tr>
+          <tr><td>Research relevance</td><td class="n">4<small>Steel and optimization both present</small></td><td class="n">2<small>Reads as laser fabrication, not research</small></td><td class="n">5<small>Shows two kinds of work in the first screen</small></td></tr>
+          <tr><td>First-screen comprehension (10 s, static)</td><td class="n">5<small>Statement dominant, object supports it</small></td><td class="n">2<small>Image competes with the statement</small></td><td class="n">4<small>Clear, slightly busy</small></td></tr>
+          <tr><td>Motion quality</td><td class="n">4<small>Drawing-to-steel and dark bay give a real arc</small></td><td class="n">5<small>Strongest camera and cut sequence</small></td><td class="n">3<small>Mostly diagrammatic transitions</small></td></tr>
+          <tr><td>Feasibility</td><td class="n">4<small>One lit scene plus light pages</small></td><td class="n">2<small>Heavy media; dark site hard on mobile</small></td><td class="n">4<small>Lines and images; light GPU load</small></td></tr>
+          <tr class="total"><td>Total (of 25)</td><td class="n">20</td><td class="n">15</td><td class="n">20</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="direction" aria-labelledby="h-h">
+    <h2 id="h-h">Hybrid tested as a fourth candidate</h2>
+    <p>A and C tie. The candidate hybrid takes A’s light identity and hero, C’s atlas treatment for the science and AI chapters, and B’s macro camera for the laser chapter only, inside A’s dark bay. Scored on the same criteria:</p>
+    <div class="scroll">
+      <table>
+        <thead><tr><th>Criterion</th><th>Hybrid A + C, with B’s laser sequence</th></tr></thead>
+        <tbody>
+          <tr><td>Visual originality</td><td class="n">4<small>Light gallery, one cinematic dark chapter, then atlas plates</small></td></tr>
+          <tr><td>Research relevance</td><td class="n">5<small>Science chapters keep C’s substance</small></td></tr>
+          <tr><td>First-screen comprehension</td><td class="n">5<small>A’s hero is unchanged</small></td></tr>
+          <tr><td>Motion quality</td><td class="n">5<small>B’s macro camera arrives once, at the centerpiece</small></td></tr>
+          <tr><td>Feasibility</td><td class="n">3<small>Three visual languages to hold together; one 3D scene shared</small></td></tr>
+          <tr class="total"><td>Total (of 25)</td><td class="n">22</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="muted">It beats the best single direction by 2 points, gaining on originality and motion and losing one point of feasibility. The risk is coherence: three looks have to read as one system. D2 has to prove that with the light section and the dark chapter on the same board.</p>
+  </section>
+
+  <section class="decision" aria-labelledby="d-h">
+    <h2 id="d-h">Recommendation and what the critique changed</h2>
+    <p>Take the hybrid into D2 and D3. If D2 cannot make the three looks feel like one system, fall back to A alone, which scored highest on first-screen comprehension.</p>
+    <ul class="changes">
+      <li><b>Bias check</b><span>Scored A, B and C independently first. The hybrid had to outscore the best single direction to be chosen.</span></li>
+      <li><b>Laser geometry</b><span>All laser frames are built from one model that follows the reference sheet: web horizontal, head between the flanges, pierce then lead-in, a localized cut front.</span></li>
+      <li><b>Recorded states</b><span>Science frames show only the four recorded states with their iteration labels; the 3×3 tile is captioned as a visual arrangement.</span></li>
+      <li><b>Labels</b><span>Every render is captioned “Illustrative render”, and no frame shows a process value.</span></li>
+      <li><b>Not yet shown</b><span>The laser-to-decision transition, the AI/EWSHM chapter and navigation behaviour belong to D2 and D3.</span></li>
+    </ul>
+  </section>
+</main>
+
+<script type="module">
+  import { renderAll } from "./lib/beam-scene.js";
+  renderAll();
+</script>
