@@ -12,7 +12,7 @@ const hasWebGL = () => {
 };
 const seg = (t: number, a: number, b: number) => Math.min(1, Math.max(0, (t - a) / (b - a)));
 const STILL = { t: 0.66, time: 0.37 };   // mid plasma cope: the frame shown without scroll motion
-const TEXT = [0.86, 0.93];               // the paragraph fades in as the finished beam settles into the frame
+const TEXT = [0.17, 0.24];               // the paragraph fades in once the band is dark and stays through the cutting
 
 // Screenshot hook: ?band=<scroll share>&bt=<spark seconds> renders exactly that frame, with no smoothing or loop;
 // window.__bandPaint(t, seconds) then renders any other frame (used to record a video frame by frame).
@@ -102,7 +102,7 @@ const LaserBand: React.FC = () => {
     <div
       ref={textRef}
       style={scroll ? { opacity: 0 } : undefined}
-      className={`relative max-w-[38ch] lg:max-w-[34ch] ${scroll ? "max-lg:-mx-4 max-lg:bg-bay/80 max-lg:px-4 max-lg:py-5" : ""}`}
+      className={`relative isolate max-w-[38ch] lg:max-w-[34ch] ${scroll ? "max-lg:-mx-4 max-lg:bg-bay/80 max-lg:px-4 max-lg:py-5 lg:before:pointer-events-none lg:before:absolute lg:before:inset-y-[-45vh] lg:before:left-[-50vw] lg:before:right-[-8rem] lg:before:-z-10 lg:before:bg-gradient-to-r lg:before:from-bay lg:before:via-bay/75 lg:before:to-transparent" : ""}`}
     >
       <h2 id="phd-h" className="sr-only">Current work</h2>
       <p className="lg:text-[1.25rem] lg:leading-[1.55]">{phdParagraph}</p>
@@ -110,7 +110,7 @@ const LaserBand: React.FC = () => {
   );
   // Scrolling: the paragraph lands over the last shot. Still or no WebGL: it sits above the image instead.
   return (
-    <section ref={sectionRef} aria-labelledby="phd-h" className={`relative bg-bay text-[#D5DCDF] ${scroll ? "h-[340vh]" : ""}`}>
+    <section ref={sectionRef} aria-labelledby="phd-h" className={`relative bg-bay text-[#D5DCDF] ${scroll ? "h-[600vh]" : ""}`}>
       {!scroll && <div className="mx-auto max-w-page px-4 py-16 sm:px-6 md:py-20">{text}</div>}
       {gl && (
         <div className={scroll ? "sticky top-0 h-screen overflow-hidden bg-canvas" : "relative h-[75vh] min-h-[28rem] overflow-hidden"}>

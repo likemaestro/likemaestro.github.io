@@ -32,8 +32,8 @@ const HOLES = [[0.05, 0.07], [0.05, 0], [0.05, -0.07]], RH = 0.011;
 const LIFT = 0.45;
 
 // ---- Timeline (scroll share).
-const LASER = [0.305, 0.52];
-const FLANGE = [0.565, 0.62], WEB = [0.627, 0.725];
+const LASER = [0.27, 0.46];
+const FLANGE = [0.505, 0.585], WEB = [0.595, 0.72];
 const holeSpan = (LASER[1] - LASER[0]) / HOLES.length;
 const holeDone = (k) => LASER[0] + holeSpan * (k + 0.95);
 const busyAt = (t) => t > LASER[0] - 0.005 && t < WEB[1] + 0.01;
@@ -199,7 +199,7 @@ void main() {
   gl_Position = projectionMatrix * modelViewMatrix * vec4(p, 1.0);
 }`,
     fragmentShader: `uniform vec3 uHot, uWarm; varying float vA; varying float vAge;
-void main() { gl_FragColor = vec4(mix(uHot, uWarm, vAge) * pow(1.0 - vAge, 1.6) * vA, 1.0); }`,
+void main() { gl_FragColor = vec4(mix(uHot, uWarm, vAge) * pow(clamp(1.0 - vAge, 0.0, 1.0), 1.6) * vA, 1.0); }`,
     blending: THREE.AdditiveBlending, transparent: true, depthWrite: false,
   });
   const s = new THREE.LineSegments(g, m);
@@ -222,13 +222,13 @@ function dotTexture() {
 // Camera keys: [target, position] in world space; close-ups are given in beam coordinates.
 const KEYS = [
   { t: 0.0, fov: 30, at: () => [CENTER, V(-9, 13.2, 25.8)] },
-  { t: 0.13, fov: 30, at: () => [CENTER, V(-6.6, 12, 27.6)] },
-  { t: 0.3, fov: 26, at: (w) => [w(0.07, 0, 0), w(-0.28, 0.1, -0.78)] },
-  { t: 0.52, fov: 26, at: (w) => [w(0.06, 0.01, 0), w(-0.2, 0.06, -0.74)] },
-  { t: 0.565, fov: 28, at: (w) => [w(0.08, 0.1, 0), w(-0.38, 0.42, -0.62)] },
-  { t: 0.73, fov: 28, at: (w) => [w(0.07, 0.09, 0), w(-0.3, 0.38, -0.66)] },
-  { t: 0.8, fov: 30, at: (w) => [w(0.4, 0, 0), w(-1.6, 1.0, -2.8)] },
-  { t: 0.92, fov: 30, at: () => [V(9, 3.4, 3), V(-16.2, 10.1, 22.2)] },
+  { t: 0.1, fov: 30, at: () => [CENTER, V(-6.6, 12, 27.6)] },
+  { t: 0.26, fov: 26, at: (w) => [w(0.07, 0, 0), w(-0.28, 0.1, -0.78)] },
+  { t: 0.46, fov: 26, at: (w) => [w(0.06, 0.01, 0), w(-0.2, 0.06, -0.74)] },
+  { t: 0.5, fov: 28, at: (w) => [w(0.08, 0.1, 0), w(-0.38, 0.42, -0.62)] },
+  { t: 0.76, fov: 28, at: (w) => [w(0.07, 0.09, 0), w(-0.3, 0.38, -0.66)] },
+  { t: 0.83, fov: 30, at: (w) => [w(0.4, 0, 0), w(-1.6, 1.0, -2.8)] },
+  { t: 0.94, fov: 30, at: () => [V(9, 3.4, 3), V(-16.2, 10.1, 22.2)] },
   { t: 1.0, fov: 30, at: () => [V(9, 3.4, 3), V(-17.2, 10.5, 21.2)] },
 ];
 
@@ -305,7 +305,7 @@ export function mount(canvas, { small = false } = {}) {
   // Visible plasma arc: a short jet that fades out toward the (unshown) torch.
   const arcCol = new THREE.Mesh(new THREE.CylinderGeometry(0.004, 0.002, 0.06, 16, 1, true), new THREE.ShaderMaterial({
     vertexShader: "varying float vY; void main() { vY = uv.y; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }",
-    fragmentShader: "varying float vY; void main() { float a = pow(1.0 - vY, 2.2); gl_FragColor = vec4(vec3(3.5, 4.2, 8.0) * a, 1.0); }",
+    fragmentShader: "varying float vY; void main() { float a = pow(clamp(1.0 - vY, 0.0, 1.0), 2.2); gl_FragColor = vec4(vec3(3.5, 4.2, 8.0) * a, 1.0); }",
     blending: THREE.AdditiveBlending, transparent: true, depthWrite: false, side: THREE.DoubleSide,
   }));
   const cutLight = new THREE.PointLight(0xffa060, 0, 0.5, 2);
@@ -354,9 +354,9 @@ export function mount(canvas, { small = false } = {}) {
     camera.fov = (2 * Math.atan(Math.tan(((A.fov + (B.fov - A.fov) * u) * Math.PI) / 360) * k) * 180) / Math.PI;
     camera.near = dist * 0.02; camera.far = dist * 40 + 60;
     scene.fog.near = dist * 1.6; scene.fog.far = dist * 1.6 + Math.max(4, dist * 6);
-    // In the last shot the frame moves right (wide) or up (tall) to leave room for the paragraph.
-    const o = ease(seg(t, 0.8, 0.92)), wide = w / h > 1.1;
-    camera.setViewOffset(w, h, wide ? -0.22 * o * w : 0, wide ? 0 : 0.16 * o * h, w, h);
+    // From the dive on, the subject moves right (wide) or up (tall) to leave room for the paragraph.
+    const wide = w / h > 1.1, o = ease(seg(t, 0.14, 0.24)), far = ease(seg(t, 0.83, 0.94));   // close-ups shift less than the last wide shot
+    camera.setViewOffset(w, h, wide ? -(0.1 * o + 0.12 * far) * w : 0, wide ? 0 : 0.16 * o * h, w, h);
     camera.aspect = w / h;
     camera.updateProjectionMatrix();
   }
@@ -410,14 +410,14 @@ export function mount(canvas, { small = false } = {}) {
     busy: busyAt,
     render(t, time = 0) {
       if (!w || !h) return;
-      placeBeam(beam, LIFT * (ease(seg(t, 0.16, 0.28)) - ease(seg(t, 0.82, 0.92))));
+      placeBeam(beam, LIFT * (ease(seg(t, 0.12, 0.24)) - ease(seg(t, 0.85, 0.94))));
       beam.updateMatrixWorld();
-      const r = seg(t, 0.18, 0.27);
+      const r = seg(t, 0.14, 0.23);
       if (r !== steelOn) setSteel(r);
-      const dark = ease(seg(t, 0.08, 0.22));   // the band enters on the page's light canvas and darkens during the dive
+      const dark = ease(seg(t, 0.05, 0.17));   // the band enters on the page's light canvas and darkens during the dive
       scene.background.copy(LIGHT).lerp(DARK, dark); scene.fog.color.copy(scene.background); lines.color.copy(INK).lerp(GREY, dark);
-      ghostMat.opacity = 0.85 * (1 - seg(t, 0.9, 0.95));
-      edgeMat.opacity = 0.3 * r + 0.45 * seg(t, 0.9, 0.95);   // once it lands, the made beam reads out of the model
+      ghostMat.opacity = 0.85 * (1 - seg(t, 0.92, 0.97));
+      edgeMat.opacity = 0.3 * r + 0.45 * seg(t, 0.92, 0.97);   // once it lands, the made beam reads out of the model
       slugs.forEach((s, i) => fall(s, V(HOLES[i][0], HOLES[i][1], 0), holeDone(i), t, 24, V(0, 0, -0.9), V(6, 0, 0)));
       fall(offcut, pivot, WEB[1], t, 14, V(-0.3, 0, -0.5), V(1, 0, 2));
       laserKerf.uniforms.uNow.value = plasmaKerf.uniforms.uNow.value = tint.uniforms.uNow.value = t;

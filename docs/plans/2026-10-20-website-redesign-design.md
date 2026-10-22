@@ -202,21 +202,22 @@ Rebuilt 2026-10-21: Murat liked the idea but not the first render (soft grey CG,
   - sparks leave the kerf on the side away from the torch;
   - plasma shows a wider kerf, a visible short arc and temper colours (blue → purple → straw) along the cut, while the laser leaves a clean cut;
   - no numbers or process labels on screen.
-- **Timeline** (share of the band's scroll; the band is 340vh with a sticky stage):
+- **Timeline** (share of the band's scroll; the band is 600vh with a sticky stage, slowed 2026-10-22 because 340vh scrolled too fast):
 
   | Share | Step |
   |---|---|
-  | 0–13 % | frame overview, ghost beam; the band enters on the light page canvas with ink lines and darkens to the bay over 8–22 %, so there is no hard colour edge after the hero |
-  | 13–30 % | dive; steel fades in (18–27 %) and rises out of the slot |
-  | 30.5–52 % | laser: three web bolt holes (pierce, lead-in, contour); each slug drops |
-  | 56.5–62 % | plasma across the top flange (arc from above) |
-  | 62.7–72.5 % | plasma down the web and round the cope corner; offcut drops |
-  | 72.5–92 % | finished part, then pull back; the beam settles into its slot (82–92 %) |
-  | 86–100 % | the PhD paragraph fades in over the dark side (frame shifted right on wide screens, up on tall ones) |
+  | 0–10 % | frame overview, ghost beam; the band enters on the light page canvas with ink lines and darkens to the bay over 5–17 % |
+  | 10–26 % | dive; steel fades in (14–23 %) and rises out of the slot |
+  | 27–46 % | laser: three web bolt holes (pierce, lead-in, contour); each slug drops |
+  | 50.5–58.5 % | plasma across the top flange (short arc from above) |
+  | 59.5–72 % | plasma down the web and round the cope corner; offcut drops |
+  | 72–94 % | finished part, then pull back; the beam settles into its slot (85–94 %) |
 
+- **PhD paragraph:** fades in at 17–24 %, once the band is dark, and stays to the end, so it reads during the cutting (Murat, 2026-10-22). Wide screens shift the subject right (10 % of the width in close-ups, 22 % in the last wide shot) with a bay scrim behind the text; tall screens shift it up and set the text on a translucent bay panel.
 - **The only visible text:** the PhD paragraph (`phdParagraph`, a one-sentence research statement chosen by Murat 2026-10-22) and the caption "Illustrative render" (always on, bottom right). The section has a visually hidden h2.
 - **Rendering:**
   - three.js loads through `import()` when the band is within 40 % of a viewport.
+  - Shader `pow()` bases are clamped: a slightly negative base gives NaN on real GPUs, and bloom spreads one NaN pixel into a black rectangle (seen on Murat's machine, 2026-10-22; software rendering hid it).
   - Bloom: UnrealBloomPass, threshold 1.0, so only hot elements bloom. The page background stays exact because there is no tone mapping.
   - MSAA: 4 samples on desktop, 2 on phones. Particles are halved on phones; DPR is capped at 1.75 on desktop and 1.5 on phones.
   - Scroll is eased with a time-based filter (τ = 0.12 s).
