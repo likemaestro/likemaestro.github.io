@@ -8,6 +8,12 @@ const os = require("os");
 const path = require("path");
 
 const N = 96;
+// Hand-picked after looking at every converged design (2026-10-22): the most intricate, varied cells. They still go
+// through the checks below. Other targets try k x 7919 in order. The first seed of each list is the default design.
+const PICKS = {
+  bulk: [213813, 87109, 324679, 340517, 356355, 245489, 110866, 221732, 79190, 205894, 71271, 372193],
+  auxetic: [293003, 7919, 87109, 118785, 79190, 221732, 245489, 364274, 95028, 23757, 324679, 332598, 63352],
+};
 const root = path.resolve(__dirname, "..");
 
 // Solid phase (density > 0.5) as one connected piece on the periodic cell: no floating islands.
@@ -34,10 +40,12 @@ const kappa = (C) => (C[0] + C[4] + 2 * C[1]) / 4;   // 2D bulk modulus from the
 // is distinct from the others (and, for the auxetic target, clearly negative in Poisson's ratio).
 function vet(solver, obj) {
   const { createRun } = require(solver);
-  const CANDIDATES = 40, KEEP = 16, pool = [], keys = new Set();
+  const KEEP = 16, pool = [], keys = new Set();
+  const candidates = PICKS[obj] ?? Array.from({ length: 40 }, (_, k) => (k + 1) * 7919);
   let cell = null;
-  for (let k = 1; k <= CANDIDATES && pool.length < KEEP; k++) {
-    const seed = k * 7919, run = createRun(obj, { n: N, seed });
+  for (const seed of candidates) {
+    if (pool.length >= KEEP) break;
+    const run = createRun(obj, { n: N, seed });
     const hist = { E1: [], G12: [], nu12: [], K: [] };
     let it;
     do {

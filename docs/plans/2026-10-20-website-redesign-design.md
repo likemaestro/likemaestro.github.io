@@ -138,22 +138,23 @@ No caption: Murat removed it (2026-10-21). For the record, the demo is simplifie
 - **Initial design:** volume fraction 0.4, plus a 0.25 cosine perturbation (cos 4πx + cos 4πy) and a central void of radius 0.15.
 - **Targets:**
 
-  | Button | Objective | Result at n = 32 |
+  | Button | Objective | Default design (first pool seed, n = 96) |
   |---|---|---|
-  | Axial | maximize C₁₁ + C₂₂ | grid; 43 iterations; E₁ = 0.233, ν₁₂ = 0.11 |
-  | Shear | maximize C₃₃ | diamond; 82 iterations; G₁₂ = 0.104 |
-  | Bulk | maximize C₁₁ + C₂₂ + 2C₁₂ (= 4κ under equibiaxial strain) | rounded holes in a continuous matrix; κ ≈ 96 % of the Hashin–Shtrikman bound |
-  | Auxetic | minimize C₁₂ − w (C₁₁ + C₂₂), with w = max(0.8^k, 0.02) | re-entrant cell; 127 iterations; ν₁₂ = −0.37 |
+  | Axial | maximize C₁₁ + C₂₂ | grid; 112 iterations; E₁ = 0.235, ν₁₂ = 0.11 |
+  | Shear | maximize C₃₃ | diagonal bars; 104 iterations; G₁₂ = 0.104 |
+  | Bulk | maximize C₁₁ + C₂₂ + 2C₁₂ (= 4κ under equibiaxial strain) | fine foam of rounded holes; 140 iterations; κ = 93 % of the Hashin–Shtrikman bound |
+  | Auxetic | minimize C₁₂ − w (C₁₁ + C₂₂), with w = max(0.8^k, 0.02) | re-entrant web; 123 iterations; ν₁₂ = −0.66 |
 
-- **Bulk target:** v3.0 left it out because, from the default start, it looked like a duplicate of the axial grid. With random starts it gives the classic bulk-modulus designs instead: rounded holes in a continuous matrix, distinct from the axial grid, reaching 88–97 % (16-seed pool, measured 2026-10-21; median 95 %) of the 2D Hashin–Shtrikman upper bound κ_HS = f κ_s μ_s / ((1 − f) κ_s + μ_s). From the default start at n = 24 it stalls on a symmetric grey saddle; at the site's n = 32 it converges cleanly, and the tests check bulk at n = 32.
-- **Random starts:** each live run draws a seed from a vetted pool (`seeds` in `src/lab/precomputed.ts`: 14 axial, 16 shear and 16 auxetic). The seed sets a D4-symmetrized sum of six random periodic modes on top of the central void, so every run grows a different design. A seed joins the pool only if its run:
+- **Bulk target:** v3.0 left it out because, from the default start, it looked like a duplicate of the axial grid. With random starts it gives the classic bulk-modulus designs instead: rounded holes in a continuous matrix, distinct from the axial grid, reaching 93–98 % (the hand-picked pool at n = 96, measured 2026-10-22; median 95 %); auxetic ν₁₂ from −0.73 to −0.51 of the 2D Hashin–Shtrikman upper bound κ_HS = f κ_s μ_s / ((1 − f) κ_s + μ_s). From the default start at n = 24 it stalls on a symmetric grey saddle; at n = 32 it converges cleanly, and the tests check bulk at n = 32.
+- **Random starts:** each live run draws a seed from a vetted pool (`seeds` in `src/lab/precomputed.ts`: 16 axial, 16 shear, 12 bulk, 13 auxetic). The seed sets a D4-symmetrized sum of ten random periodic modes, up to wavenumber 5, on top of the central void, so every run grows a different design. A seed joins the pool only if its run:
   - converges before the iteration cap;
   - has a grey fraction under 5 %;
   - has a solid phase that is one connected piece on the periodic cell;
   - is distinct from the others;
   - for auxetic, reaches ν₁₂ < −0.2.
 
-  Without a seed, the default symmetric start is used: the precomputed fallback and the tests.
+  Bulk and auxetic pools are hand-picked (`PICKS` in `scripts/precompute-cells.js`) from 48 rendered candidates each, for the most intricate and varied cells (Murat asked for better designs); they still pass every check above. Axial and shear take the first 16 seeds that pass.
+  The precomputed design shown before a run (and on phones until Run is pressed) is the first seed of each pool. Without a seed, the default symmetric start is used; only the tests use it.
 - **Typeset math under the lattice (MathML, native, no library):** the objective (for example min over ρ of C₁₂ᴴ − w (C₁₁ᴴ + C₂₂ᴴ), subject to V ≤ 0.40), and the live homogenized tensor Cᴴ/E as a 3 × 3 matrix. Entries the objective uses are in `ink`; the rest are dimmed to `ink-2`.
 - **Readouts:**
   - E₁ = 1/S₁₁, G₁₂ = C₃₃, ν₁₂ = −S₁₂/S₁₁ and κ = (C₁₁ + C₂₂ + 2C₁₂)/4, relative to the solid material;
@@ -170,15 +171,15 @@ No caption: Murat removed it (2026-10-21). For the record, the demo is simplifie
 | Running | Pause is always available (WCAG 2.2.2). Pausing is automatic when the hero leaves the viewport or the tab is hidden, and the run resumes on return |
 | Worker error | Falls back to the precomputed result, and Run live is hidden |
 
-- **Worker pacing:** at least 40 ms per iteration, so that a run stays readable (about 2–6 s per target).
+- **Worker pacing:** at least 40 ms per iteration. At n = 96 the solve takes longer than that anyway: a run lasts about 11–17 s in Chrome on this laptop (100–160 iterations at about 110 ms).
 - **Run ids:** each run carries an id, so frames from a cancelled run are dropped.
-- **Precomputed results:** `npm run precompute` runs the same solver in Node and writes `src/lab/precomputed.ts` (11 KB: densities in base64 plus the history).
-- **Mesh:** n = 32 on every device, so the live and precomputed results agree.
+- **Precomputed results:** `npm run precompute` runs the same solver in Node and writes `src/lab/precomputed.ts` (76 KB: densities in base64 plus the history; 3 KB more in the gzipped bundle than at n = 48).
+- **Mesh:** n = 96 on every device, so the live and precomputed results agree. In the 5 × 5 lattice one element is about one screen pixel, so a finer mesh would not show.
 
 **Benchmarks (Node 24.14.1, this Windows laptop):**
-- about 30 ms per iteration at n = 32;
-- full runs take 1.2 s (axial), 2.4 s (shear) and 3.6 s (auxetic);
-- n = 40 takes 3.7–7 s, which is too slow.
+- full periodic solve: about 30 ms per iteration at n = 32 and 165 ms at n = 48;
+- quarter-cell solve: 7 ms at n = 48, 17 ms at n = 64 and 75 ms at n = 96 (Node); about 110 ms at n = 96 in headless Chrome;
+- n = 128 would take about 3× longer for no visible gain.
 
 Still to do: a browser and phone benchmark on real hardware. The preview pane throttles timers, so it gives no usable numbers.
 

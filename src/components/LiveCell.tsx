@@ -322,10 +322,8 @@ const LiveCell: React.FC = () => {
         </div>
         <div className="min-w-0 max-md:order-1">
           <p className="t-small mb-1.5 text-ink-2">Convergence</p>
-          <div className="md:flex md:items-center md:gap-4">
-            <div className="math sm md:shrink-0" dangerouslySetInnerHTML={{ __html: quantity(T.track, r) }} />
-            <div className="mt-2 flex md:mt-0 md:min-w-0 md:flex-1"><Trace data={r.hist} reference={reference} live={live} /></div>
-          </div>
+          <div className="math sm" dangerouslySetInnerHTML={{ __html: quantity(T.track, r) }} />
+          <div className="mt-2 flex"><Trace data={r.hist} reference={reference} live={live} /></div>
           <p className="t-small mt-1 flex flex-wrap gap-x-3 text-ink-2" aria-hidden="true">
             <span>{progress}</span>
             {r.seed !== undefined && <span>Seed {r.seed}</span>}
