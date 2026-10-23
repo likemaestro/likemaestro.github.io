@@ -35,3 +35,8 @@ test("the simulated record shows both of its modes", () => {
   // and nothing else: no ripple on the broad 2.2 Hz peak counts as a mode
   expect(fs).toHaveLength(2);
 });
+
+test("a flat record, as rounding leaves a weak vibration, has no peaks", () => {
+  const t = jittered(10);
+  expect(analyse(t, t.map(() => 9.8)).peaks).toHaveLength(0);
+});

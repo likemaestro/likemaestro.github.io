@@ -1,18 +1,20 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import ToolShell from "../ToolShell";
-import { analyse, simulated, variance } from "./signal";
+import { analyse, rate, simulated, variance } from "./signal";
 import { download } from "../../lab/export";
 
 interface Record_ { t: number[]; x: number[]; y: number[]; z: number[]; source: "phone" | "file" | "simulated"; name?: string }
 type Phase = "idle" | "countdown" | "recording";
 const LENGTHS = [10, 20, 60];
 
-/** Pick the axis that moved most, and analyse it. */
+/** Pick the axis that moved most, and analyse it. `levels` counts distinct raw readings on that axis: browsers round
+ *  motion data (Chrome to 0.1 m/s²), so a very weak vibration arrives as two or three values. */
 function result(r: Record_) {
   const axes = (["x", "y", "z"] as const).map((k) => ({ k, a: analyse(r.t, r[k]) }));
   const best = axes.reduce((p, q) => (variance(q.a.signal) > variance(p.a.signal) ? q : p));
-  return { axis: best.k, ...best.a };
+  return { axis: best.k, levels: new Set(r[best.k]).size, ...best.a };
 }
+const NO_DATA = "No motion data arrived. The browser may block motion sensors: allow them for this site in the browser’s settings, or open the page in Chrome. You can also upload a CSV from a sensor app.";
 
 /** Plain polyline chart of y against x, with optional marked x positions. */
 const Chart: React.FC<{ y: ArrayLike<number>; x0: number; dx: number; xLabel: string; ticks: number[]; marks?: { x: number; main: boolean }[]; label: string }> = ({ y, x0, dx, xLabel, ticks, marks, label }) => {
@@ -56,7 +58,8 @@ const Vibrometer: React.FC = () => {
   const [length, setLength] = useState(20);
   const [elapsed, setElapsed] = useState(0);
   const [problem, setProblem] = useState("");
-  const bufRef = useRef<{ t: number[]; x: number[]; y: number[]; z: number[] }>({ t: [], x: [], y: [], z: [] });
+  const [samples, setSamples] = useState(0);
+  const bufRef = useRef<{ t: number[]; r: number[]; x: number[]; y: number[]; z: number[] }>({ t: [], r: [], x: [], y: [], z: [] });
   const stopRef = useRef<() => void>(() => {});
   useEffect(() => () => stopRef.current(), []);
 
@@ -64,14 +67,15 @@ const Vibrometer: React.FC = () => {
   const main = res.peaks[0];
 
   const record = () => {
-    bufRef.current = { t: [], x: [], y: [], z: [] };
+    bufRef.current = { t: [], r: [], x: [], y: [], z: [] };
     const buf = bufRef.current;
     let lock: { release: () => Promise<void> } | undefined;
     (navigator as Navigator & { wakeLock?: { request: (t: "screen") => Promise<{ release: () => Promise<void> }> } }).wakeLock?.request("screen").then((l) => { lock = l; }).catch(() => {});
     const onMotion = (e: DeviceMotionEvent) => {
       const a = e.accelerationIncludingGravity;
       if (!a || a.x === null || a.y === null || a.z === null) return;
-      buf.t.push(e.timeStamp / 1000); buf.x.push(a.x); buf.y.push(a.y!); buf.z.push(a.z!);
+      // the event's own time where the browser gives one, and the time it reached the page as a fallback
+      buf.t.push(e.timeStamp / 1000); buf.r.push(performance.now() / 1000); buf.x.push(a.x); buf.y.push(a.y!); buf.z.push(a.z!);
     };
     const t0 = performance.now();
     let timers: number[] = [];
@@ -83,22 +87,23 @@ const Vibrometer: React.FC = () => {
       stopRef.current = () => {};
       setPhase("idle");
       if (!done) return;
-      if (buf.t.length < 64) { setProblem("No motion data arrived. This device or browser doesn’t share its accelerometer; the simulated example shows instead."); return; }
-      setRec({ ...buf, source: "phone" });
+      if (buf.t.length < 64) { setProblem(NO_DATA); return; }
+      const fs = rate(buf.t), t = fs > 5 && fs < 2000 ? buf.t : buf.r;
+      setRec({ t, x: buf.x, y: buf.y, z: buf.z, source: "phone" });
     };
     window.addEventListener("devicemotion", onMotion);
     setPhase("recording");
     timers.push(window.setInterval(() => {
       const s = (performance.now() - t0) / 1000;
-      setElapsed(s);
-      if (s > 1.5 && buf.t.length === 0) { stop(false); setProblem("No motion data arrived. This device or browser doesn’t share its accelerometer; the simulated example shows instead."); }
+      setElapsed(s); setSamples(buf.t.length);
+      if (s > 3 && buf.t.length === 0) { stop(false); setProblem(NO_DATA); }
       else if (s >= length) stop(true);
     }, 100));
     stopRef.current = () => stop(false);
   };
 
   const start = () => {
-    setProblem("");
+    setProblem(""); setSamples(0);
     const go = () => {
       setPhase("countdown"); setCount(3);
       let c = 3;
@@ -108,9 +113,11 @@ const Vibrometer: React.FC = () => {
     const DME = (window as unknown as { DeviceMotionEvent?: { requestPermission?: () => Promise<string> } }).DeviceMotionEvent;
     if (!DME) { setProblem("This browser has no motion sensor access. Open the page on a phone, or upload a CSV."); return; }
     // iOS asks for motion permission; the request has to come straight from the tap.
-    if (typeof DME.requestPermission === "function") {
-      DME.requestPermission().then((s) => (s === "granted" ? go() : setProblem("Motion access was declined. Allow it in the browser’s settings to measure, or upload a CSV."))).catch(() => setProblem("Motion access isn’t available here. Upload a CSV instead."));
-    } else go();
+    try {
+      if (typeof DME.requestPermission === "function") {
+        DME.requestPermission().then((s) => (s === "granted" ? go() : setProblem("Motion access was declined. Allow it in the browser’s settings to measure, or upload a CSV."))).catch(() => setProblem("Motion access isn’t available here. Upload a CSV instead."));
+      } else go();
+    } catch (e) { setProblem(`The browser refused to start the sensor (${(e as Error).message}). Upload a CSV instead.`); }
   };
 
   const onFile = (f: File | undefined) => {
@@ -136,7 +143,7 @@ const Vibrometer: React.FC = () => {
         <p>The highest peak above 0.5 Hz is the main frequency, refined between frequency bins. Smartphone accelerometers have been checked against reference sensors on shaking tables and a bridge (Feng et al. 2015).</p>
       </>}
       limits={<>
-        <p>Browsers deliver about 60 to 100 samples a second, so only frequencies below half that rate show. Phone sensors are uncalibrated and noisy: frequencies are more reliable than amplitudes. A reading is indicative, not a structural assessment.</p>
+        <p>Browsers deliver about 60 to 100 samples a second, so only frequencies below half that rate show, and they round the readings (Chrome to 0.1 m/s²), so only clear vibrations register. Phone sensors are uncalibrated and noisy: frequencies are more reliable than amplitudes. A reading is indicative, not a structural assessment.</p>
         <p>Nothing leaves your device: the recording stays in this page until you export it.</p>
       </>}
     >
@@ -145,6 +152,8 @@ const Vibrometer: React.FC = () => {
           <button type="button" onClick={busy ? () => stopRef.current() : start} className="btn btn-solid h-14 text-[1.0625rem]">
             {phase === "countdown" ? `Starting in ${count}… (tap to cancel)` : phase === "recording" ? `Recording ${Math.min(length, Math.floor(elapsed))} / ${length} s (tap to stop)` : "Start measuring"}
           </button>
+          {phase === "recording" && <p className="t-data -mt-2 text-ink-2">{samples} samples{elapsed > 1 && samples ? `, about ${Math.round(samples / elapsed)} a second` : ""}</p>}
+          {problem && <p className="t-small -mt-2 text-ink" role="alert">{problem}</p>}
           <div role="group" aria-label="Record length" className="flex rounded-[2px] border border-ink">
             {LENGTHS.map((s, i) => (
               <button key={s} type="button" aria-pressed={length === s} disabled={busy} onClick={() => setLength(s)}
@@ -161,11 +170,11 @@ const Vibrometer: React.FC = () => {
           <label className="t-small text-ink-2">Or analyse a CSV (time in s, then one or three acceleration columns)
             <input type="file" accept=".csv,.txt,text/csv,text/plain" onChange={(e) => onFile(e.target.files?.[0])} className="t-small mt-2 block w-full text-ink file:mr-3 file:cursor-pointer file:rounded-[2px] file:border file:border-ink file:bg-transparent file:px-3 file:py-1.5 file:text-ink" />
           </label>
-          {problem && <p className="t-small text-ink" role="alert">{problem}</p>}
         </div>
 
         <div className="min-w-0" aria-live="polite">
           <p className="t-small text-ink-2">{sourceText}</p>
+          {rec.source !== "simulated" && res.levels <= 3 && <p className="t-small mt-1 text-ink">The phone saw almost no motion: the browser rounds readings (to 0.1 m/s² in Chrome), so weaker vibrations don’t show. Make the structure move more, for example jump once on a footbridge.</p>}
           <div className="mt-3 flex flex-wrap items-baseline gap-x-6 gap-y-2">
             <p className="t-h2">{main ? `${main.f.toFixed(2)} Hz` : "No clear peak"}</p>
             <p className="t-data text-ink-2">
