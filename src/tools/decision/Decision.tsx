@@ -240,8 +240,9 @@ const Decision: React.FC = () => {
               <Tip label="TOPSIS">Ranks by closeness to an ideal option made of the best value on every criterion, against an anti-ideal made of the worst. 1 would be the ideal itself.</Tip>
             </h2>
             {res ? <ol className="mt-3 flex flex-col">
+              <li className="t-small grid grid-cols-[1.25rem_minmax(0,1fr)_5rem] gap-2 pb-1 text-ink-2" aria-hidden="true"><span /><span /><span className="text-right">Closeness</span></li>
               {byTopsis.map((i, r) => (
-                <li key={i} className="grid grid-cols-[1.25rem_minmax(0,1fr)_3.5rem] items-center gap-2 border-t border-rule py-2">
+                <li key={i} className="grid grid-cols-[1.25rem_minmax(0,1fr)_5rem] items-center gap-2 border-t border-rule py-2">
                   <span className="t-data text-ink-2">{r + 1}</span>
                   <span className="flex min-w-0 items-center gap-2"><Dot on={r === 0} /><span className="truncate">{t.alts[i]}</span></span>
                   <span className="t-data text-right">{res.T[i].toFixed(3)}</span>
