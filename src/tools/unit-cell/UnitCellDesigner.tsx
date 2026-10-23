@@ -200,7 +200,9 @@ const UnitCellDesigner: React.FC = () => {
     out.getContext("2d")!.drawImage(tmp, 0, Math.round((H - tmp.height) / 2));
     out.toBlob((b) => b && download(`${base}-wallpaper.png`, b, "image/png"), "image/png");
   };
-  const panelSize = `${(panel.nx * panel.cell + 2 * panel.frame)} × ${(panel.ny * panel.cell + 2 * panel.frame)} mm`;
+  // The frame is cut to whole elements, so the size shown is the size of the file.
+  const mesh = Math.round(Math.sqrt(rhoRef.current.length)), frameMm = (Math.round(panel.frame / (panel.cell / mesh)) * panel.cell) / mesh;
+  const panelSize = `${+(panel.nx * panel.cell + 2 * frameMm).toFixed(2)} × ${+(panel.ny * panel.cell + 2 * frameMm).toFixed(2)} mm`;
   const num = (v: string, lo: number, hi: number, d: number) => { const x = Number(v); return Number.isFinite(x) ? Math.min(hi, Math.max(lo, x)) : d; };
 
   const reference = t === "auxetic" ? 0 : t === "bulk" ? kappaHS(res.vol) : undefined;
