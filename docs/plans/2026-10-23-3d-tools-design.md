@@ -5,6 +5,7 @@
 - **Unbuild it:** the 3D flagship.
 - **The building's chord:** the AI piece.
 - **Why steel beams twist:** the steel teaching piece.
+- **Surrogate frame design:** the Gaussian process tool (added later the same day, section 5).
 
 Nothing is built yet. The tools spec's rules all apply (`2026-10-23-tools-wave1-design.md`):
 - ToolShell;
@@ -360,18 +361,141 @@ restraints stop it."
   - one χLT hand calculation;
   - section properties against the catalog.
 
-## 5. Build order
+## 5. Surrogate frame design (the Gaussian process tool)
+
+Murat's choice (2026-10-23): surrogate-assisted design, on a multi-storey frame, with the 3D structure first. It
+mirrors Murat's own workflow (GP surrogates in design optimization) without naming any project. There is no Bayesian
+optimization: the GP is trained on FE runs, a GA searches the GP, and FE verifies.
+
+**Pitch:** "Design a six-storey steel frame with a surrogate. Twenty-four FE runs teach a Gaussian process, a GA
+searches it in milliseconds, and FE checks the answer."
+**Group:** to decide, "Machine learning" or "Structures".
+
+### 5.1 Value proposition
+
+- **Positioning:** For structural engineers, students and researchers who hear "AI-assisted design" but have never
+  seen it work on a real structure, this is a 3D steel frame designed with a Gaussian process surrogate:
+  - a few FE analyses train it;
+  - a GA optimizes on it in milliseconds;
+  - FE verifies the result.
+  Unlike black-box AI claims and GP demos on toy functions, it shows the whole workflow (sampling, training,
+  uncertainty, optimization, verification) and counts the FE runs it saves.
+- **Job:** understand when and how a surrogate speeds up structural design, and when not to trust it.
+- **Pains:**
+  - FE inside an optimizer is too slow;
+  - AI looks like a black box;
+  - nobody shows how wrong the surrogate is.
+- **Gains:**
+  - accuracy shown as a leave-one-out plot;
+  - uncertainty shown on the members;
+  - the run count saved;
+  - the lesson of a verification that fails when the GP's mean is trusted blindly.
+- **Value:** practitioners ●●, learners ●●●, public ●, hiring ●●●.
+
+### 5.2 The structure and the "expensive model"
+
+- **Building:**
+  - 3 × 2 bays (6 m × 7.5 m), 6 storeys of 3.6 m;
+  - steel moment frames, HEB columns, IPE beams;
+  - wind on the long face; gravity from dead and imposed area loads.
+  - A braced-frame preset can come later.
+- **Design variables (catalog indices, as a designer picks them):**
+  - columns, storeys 1–3;
+  - columns, storeys 4–6;
+  - beams;
+  - optional: edge beams.
+- **FE:**
+  - a linear 3D frame model, 6 DOF per node (about 500 DOF), in a worker;
+  - wind from EN 1991-1-4, simplified to a peak velocity pressure set by a slider;
+  - combinations by EN 1990, 6.10;
+  - sway sensitivity αcr by Horne's method, with the EN 1993-1-1, 5.2.1 amplification when αcr < 10;
+  - member checks to EN 1993-1-1, simplified and labeled so.
+- **Outputs:**
+  - largest interstorey drift ratio under characteristic wind, against a limit of h/300 by default;
+  - utilization of each member group.
+  - Mass is exact and needs no GP.
+- **Cost:** one FE run takes tens of milliseconds here, measured and shown; a detailed commercial model takes minutes.
+  A GA on FE alone (about 2,000 runs) is offered as a baseline the visitor can run and cancel, so the cost is real on
+  their device.
+
+### 5.3 Workflow (the guided path)
+
+1. **Sample.** "Run 24 FE analyses": a Latin hypercube over the variables, N from 10 to 50. The runs appear as
+   thumbnails filling a strip, with the time each took.
+2. **Train.**
+   - One GP per output: Matérn 5/2 kernel, a length scale per variable, fitted by marginal likelihood.
+   - A leave-one-out plot (predicted against FE) and the largest error.
+3. **Explore.**
+   - Change the sizes. The 3D frame updates at once: members colored by predicted utilization, and the drift readout
+     as μ ± 2σ against the limit.
+   - Members whose band crosses 1 are hatched as "unsure", never by color alone.
+   - "Check with FE" runs the true analysis for this design and shows the GP's error.
+4. **Optimize.**
+   - A GA (reusing the truss tool's GA) minimizes mass subject to μ + kσ within the drift limit and every utilization.
+   - k is the "caution" slider: 0 trusts the mean; 2 is about 98 % one-sided.
+5. **Verify.**
+   - FE checks the GA's design.
+   - If it fails, or the GP was off by more than a tolerance, that run joins the training set, the GP retrains, and the
+     GA runs again (at most 10 rounds).
+   - The tally reads, for example, "Surrogate: 31 FE runs, 48.2 t" against "FE only: 2,000 runs, 47.6 t".
+6. **Carbon (optional):** the mass in kgCO2e with the shared carbon factors, a link to the carbon calculator.
+
+### 5.4 3D and layout
+
+- **3D view (main):**
+  - instanced members, faint floor plates, wind arrows on the windward face;
+  - utilization colors with labels; hatching for unsure members;
+  - for FE-checked designs, the deformed shape, exaggerated and labeled.
+- **Side panel (below the view on phones):**
+  - the design variables as section pickers;
+  - mass (exact);
+  - drift (μ ± 2σ against the limit);
+  - utilization per group;
+  - FE runs used;
+  - GP accuracy;
+  - the actions: Sample, Train, Optimize, Verify, Compare with FE only.
+- **Small 2D charts:** leave-one-out, the GA's convergence, and the verification rounds.
+- **URL:** the preset, N, the seed, k and the chosen design.
+
+### 5.5 Method, limits, tests
+
+- **Method:**
+  - surrogate-assisted evolutionary design (Jin 2011; Forrester et al. 2008);
+  - GP regression (Rasmussen and Williams 2006);
+  - Latin hypercube sampling (McKay et al. 1979);
+  - the GA (Deb et al. 2002);
+  - Eurocode loads and checks as listed.
+  - Related: GP surrogates for steel frame design under drift limits (Do, Ohsaki and Yamakawa, Kyoto, Eng. Struct.
+    2021); surrogates in structural design (Tseranidis et al. 2016).
+- **Limits:**
+  - linear analysis with αcr amplification;
+  - simplified member checks, no connection design;
+  - one wind direction;
+  - drift limits are guidance and National Annex values (h/300 by default, editable);
+  - an educational design, not a design tool.
+- **Tests:**
+  - the frame FE against a portal-frame hand calculation;
+  - αcr by Horne's method;
+  - the GP on a case with a known answer;
+  - the Latin hypercube's stratification;
+  - the constraint μ + kσ;
+  - the verification loop stops;
+  - the surrogate optimum lies within a tolerance of the FE-only optimum on the preset.
+- **Effort:** medium to large. The frame FE is new; the sections module, 3D kit and GA are reused.
+
+## 6. Build order
 
 | Step | What | Size | Why this order |
 |---|---|---|---|
 | 1 | Sections module and 3D kit | S | Everything uses them |
 | 2 | Why steel beams twist | S–M | The smallest tool; it proves the kit and the sections |
-| 3 | The building's chord | M | Adds audio and the autoencoder, which can be reused |
-| 4 | Unbuild it | L | The largest; uses the kit, the sections, the carbon factors and the GA |
+| 3 | Surrogate frame design | M–L | Murat's own workflow; reuses the kit, the sections and the GA |
+| 4 | The building's chord | M | Adds audio and the autoencoder |
+| — | Unbuild it | L | Dropped (`2026-10-23-tool-value-propositions.md`) |
 
 Each tool ships on its own, after the browser checks at 375, 1280 and 1700 px, a real phone, and Murat's OK.
 
-## 6. Open items for Murat
+## 7. Open items for Murat
 
 1. **Groups:** Life cycle (Unbuild it), Monitoring (chord), Structures (twist)?
 2. **Unbuild it:**
@@ -383,9 +507,9 @@ Each tool ships on its own, after the browser checks at 375, 1280 and 1700 px, a
    - A default height of 6 storeys?
    - Sound on after the first tap?
 4. **Twist:** S355 default, with the recommended Eurocode values?
-5. **Still open from earlier:**
+5. **Surrogate frame design:** group "Machine learning" or "Structures"? Moment frame by default?
+6. **Still open from earlier:**
    - the `/tools` line;
-   - the GP tool (the footbridge?);
    - when to build the carbon calculator;
    - the branch-history rewrite.
 
@@ -402,6 +526,14 @@ Checked by web search on 2026-10-23 unless marked "(from memory)".
 - DISRUPT 2 steel reuse project toolkit. ASBP, 2024.
 - EN 1993-1-1, 5.3.2 and 6.3.2.3; EN 15804; EN 15978 (standards; clause numbers from memory, to check against the
   current editions).
+- Do, Ohsaki and Yamakawa (2021). GP surrogates for robust design of steel frames under drift limits. Eng. Struct.
+  (Kyoto University repository).
+- Forrester, Sóbester and Keane (2008). Engineering design via surrogate modelling. Wiley.
+- Jin (2011). Surrogate-assisted evolutionary computation: recent advances and future challenges. Swarm Evol.
+  Comput. 1(2), 61–70. DOI 10.1016/j.swevo.2011.05.001.
+- McKay, Beckman and Conover (1979). Technometrics 21(2), 239–245.
+- Rasmussen and Williams (2006). Gaussian processes for machine learning. MIT Press.
+- Tseranidis, Brown and Mueller (2016). Autom. Constr. 72, 279–293.
 - Hermann, Hunt and Neuhoff, eds. (2011). The sonification handbook. Logos. Chapters on audification (Dombois and
   Eckel) and parameter mapping (Grond and Berger).
 - Kramer (1991). AIChE J. 37(2), 233–243.

@@ -88,69 +88,20 @@
   substance.
 - **Verdict:** **Keep.** The AI and outreach piece.
 
-## 4. Gaussian process tool: structural engineering first
+## 4. Gaussian process tool: surrogate frame design (chosen)
 
-Murat (2026-10-23): "I'm a structural engineer. The focus firstly be that." The footbridge and the construction and
-architecture options (boreholes, the old building's concrete, the thermal model) are dropped. The rule applies to every
-tool: structural engineering first.
-
-**Council:**
-- **Reliability engineer:** "In structural engineering, a GP's main job is to stand in for the expensive solver in
-  reliability analysis (the 2025 review of Bayesian learning in structural dynamics; AK-MCS, EGRA)."
-- **Code committee member:** "β = 3.8 over 50 years for RC2 is what the Eurocode partial factors are built to deliver
-  (EN 1990). Few engineers have seen what that number means."
-- **Steel stability researcher:** "The European buckling curves came from more than 1,000 ECCS tests plus theory
-  (imperfection L/1000 plus residual stresses), later put in Ayrton–Perry form by Maquoi and Rondal."
-- **Hiring PI:** "A GP surrogate in a reliability problem is a structural engineer's GP, not a data scientist's."
-
-### Option A: How safe is safe? (recommended)
-
-- **Positioning:** For structural engineering students and engineers who use partial factors every day but have never
-  seen what they buy, it shows a Gaussian process surrogate estimating the probability of failure of a steel column
-  from a handful of model runs, and compares the reliability index β with the Eurocode target. Unlike textbook figures,
-  you place the runs, watch the surrogate learn the limit state, and check it against the truth.
-- **The problem:**
-  - a pinned steel column (HEB, S355);
-  - random yield strength, initial bow imperfection, permanent load and imposed load (distributions as in the JCSS
-    Probabilistic Model Code, to be checked);
-  - the "expensive model": the column's resistance with its imperfection (second-order, Ayrton–Perry first yield, the
-    basis of the European curves).
-  - In practice each run would be a nonlinear FE analysis; here the model is fast, so the GP can be checked against
-    the truth.
-- **Views:**
-  - The standard normal plane of the two dominant variables (resistance and load), with:
-    - the true limit state g = 0;
-    - the GP's limit state and its uncertainty band;
-    - Monte Carlo points, colored safe or failed;
-    - the design point and β (Hasofer–Lind).
-  - Readouts: Pf and β from Monte Carlo on the GP, against the truth, against the target 3.8.
-- **Interaction:**
-  - place runs by tapping, or use a plan (grid, random, Latin hypercube);
-  - change γM1, γG, γQ, or the load ratio, and see β move: what the partial factors buy;
-  - adaptive methods (AK-MCS) are named under Method, not implemented, since there is no optimizer.
+- **History:** Murat turned down the footbridge, the construction and architecture settings (boreholes, the old
+  building's concrete, the thermal model) and the structural reliability options. In the end Murat chose:
+  - surrogate-assisted design (a GP trained on FE runs, a GA on the GP, FE verification; no Bayesian optimization);
+  - a multi-storey frame;
+  - the 3D structure first.
+- **Positioning:** For structural engineers, students and researchers who hear "AI-assisted design" but have never
+  seen it work on a real structure, it is a 3D steel frame designed with a Gaussian process surrogate: a few FE
+  analyses train it, a GA optimizes on it in milliseconds, and FE verifies the result. Unlike black-box AI claims and
+  GP demos on toy functions, it shows the whole workflow and counts the FE runs it saves.
 - **Value:** practitioners ●●, learners ●●●, public ●, hiring ●●●.
-- **Says about Murat:** a GP surrogate used the way structural engineers use it; reliability and the Eurocode basis of
-  design; steel stability.
-- **Effort:** small to medium. A 2D GP, Monte Carlo, Ayrton–Perry.
-
-### Option B: From tests to the buckling curve
-
-- **Positioning:** For steel design students who use curves a–d without knowing where they came from, a GP fits
-  (virtual) column tests against slenderness, with a mean and a 5 % fractile, and lays them over the Eurocode curves.
-  It retells the ECCS story and design assisted by testing (EN 1990, Annex D).
-- **Value:** practitioners ●, learners ●●●, public ○, hiring ●●.
-- **Effort:** small.
-- **Caution:** it overlaps with "Why steel beams twist" (also stability and Eurocode curves).
-
-### Option C: Calibrate the model (static load test)
-
-- **Positioning:** For engineers meeting digital twins, a GP emulates an FE model of a steel beam with semi-rigid end
-  connections. From a measured midspan deflection under a known load, Bayesian calibration (Kennedy and O'Hagan 2001)
-  gives the connection stiffness with its uncertainty, and classifies it per EN 1993-1-8 (rigid, semi-rigid, pinned).
-- **Value:** practitioners ●●, learners ●●, public ○, hiring ●●●.
-- **Effort:** medium.
-
-**Recommendation:** A. It is the GP's main role in structural engineering, centered on the Eurocode safety level.
+- **Says about Murat:** surrogate-assisted design optimization, Murat's own method; steel frames; Eurocode checks.
+- **Full design:** `2026-10-23-3d-tools-design.md`, section 5.
 
 ## 5. Unbuild it
 
@@ -188,7 +139,7 @@ tool: structural engineering first.
 | Embodied carbon calculator | Practical: a defensible early estimate | M | Keep |
 | Why steel beams twist | Teaching: see LTB in one minute | S–M | Keep, build first |
 | The building's chord | Outreach and AI signal: hear monitoring | M | Keep |
-| GP: How safe is safe? | Teaching and signal: reliability with a GP surrogate | S–M | Proposed |
+| Surrogate frame design (GP) | Signal and teaching: surrogate-assisted design, Murat's own workflow | M–L | Chosen |
 | Unbuild it | Fun, but thin for its cost | L | Drop |
 | Design from reclaimed stock | Practical reuse | M | Only if Murat confirms it is clear of the PhD |
 
