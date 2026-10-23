@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import ToolShell from "../ToolShell";
+import ToolShell, { MICRO_PAPER } from "../ToolShell";
 import { useToolParams } from "../useToolParams";
 import { cells, phoneSeeds, seeds } from "../../lab/precomputed";
 import type { Objective } from "../../lab/unitcell";
@@ -212,10 +212,12 @@ const UnitCellDesigner: React.FC = () => {
     <ToolShell
       path="/tools/unit-cell"
       slug="unit-cell"
+      paper={MICRO_PAPER}
       methodRef={{ label: "Andreassen & Andreasen 2014", href: "https://doi.org/10.1016/j.commatsci.2013.09.006" }}
       method={<>
         <p>Energy-based homogenization of a periodic unit cell on a square mesh of bilinear elements, after Andreassen and Andreasen (2014). Base material E = 1, ν = 0.3, plane stress.</p>
         <p>Densities follow SIMP (p = 3) with a density filter and a Heaviside projection that sharpens during the run; MMA updates the design under the volume constraint. The cell keeps the square’s symmetries, so it tiles in both directions.</p>
+        <p>Because of those symmetries the stiffness is solved on a quarter of the cell. <a className="link" href={MICRO_PAPER} rel="noopener noreferrer">My paper</a> combines the same pieces, SIMP, MMA and a domain reduced by symmetry, for nonlinear elastic microstructures; this tool runs the linear case.</p>
       </>}
       limits={<>
         <p>Linear elastic, small strains, plane stress; stiffness in units of the base material’s E. A research demo, not a design check.</p>

@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import ToolShell from "../ToolShell";
+import ToolShell, { MICRO_PAPER } from "../ToolShell";
 import { drawLattice } from "../../lab/lattice";
 import { kappaHS, MathML, num, quantities, TARGETS } from "../../lab/readout";
 import type { Objective } from "../../lab/unitcell";
@@ -92,6 +92,7 @@ const PropertyMap: React.FC = () => {
     <ToolShell
       path="/tools/property-map"
       slug="property-map"
+      paper={MICRO_PAPER}
       methodRef={{ label: "Andreassen & Andreasen 2014", href: "https://doi.org/10.1016/j.commatsci.2013.09.006" }}
       method={<>
         <p>Each point is one optimized unit cell from the designer’s solver: 48 × 48 elements, run from a random start (seed) for each target at volume fractions 0.30, 0.40 and 0.50. Only runs that converged to a crisp design in one piece are kept.</p>

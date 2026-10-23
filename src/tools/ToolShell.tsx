@@ -5,6 +5,8 @@ import registry from "./pages.json";
 
 export const page = (path: string) => registry.pages.find((p) => p.path === path)!;
 const REPO = "https://github.com/likemaestro/likemaestro.github.io/tree/master/src/tools";
+/** Güven & Özdemir (2026), Finite Elements in Analysis and Design 260, 104599: the microstructure tools' related paper. */
+export const MICRO_PAPER = "https://doi.org/10.1016/j.finel.2026.104599";
 
 /** Copy text to the clipboard; resolves false where the browser refuses (the caller then shows the text). */
 async function copy(text: string) {
@@ -16,10 +18,11 @@ const ToolShell: React.FC<{
   path: string;
   slug: string;
   methodRef?: { label: string; href: string };
+  paper?: string;
   method: React.ReactNode;
   limits: React.ReactNode;
   children: React.ReactNode;
-}> = ({ path, slug, methodRef, method, limits, children }) => {
+}> = ({ path, slug, methodRef, paper, method, limits, children }) => {
   const p = page(path);
   const [note, setNote] = useState("");
   useEffect(() => { document.title = `${p.title} – Murat Güven`; return () => { document.title = "Murat Güven"; }; }, [p.title]);
@@ -46,6 +49,7 @@ const ToolShell: React.FC<{
             <div className="flex flex-wrap items-center gap-2 max-md:order-last">
               <button type="button" className="btn" onClick={async () => flash((await copy(window.location.href)) ? "Link copied" : "Copy the address bar instead")}>Copy link</button>
               <a className="btn" href="#cite">Cite</a>
+              {paper && <a className="btn" href={paper} rel="noopener noreferrer">My paper</a>}
               {methodRef && <a className="btn" href={methodRef.href} rel="noopener noreferrer">Method reference</a>}
               <a className="btn" href={`${REPO}/${slug}`} rel="noopener noreferrer">Code</a>
               <span className={note ? "t-small text-ink-2" : "sr-only"} role="status" aria-live="polite">{note}</span>
