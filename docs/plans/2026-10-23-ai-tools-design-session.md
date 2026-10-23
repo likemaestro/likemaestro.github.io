@@ -1,11 +1,12 @@
 # AI tools: design session
 
 2026-10-23. A brainstorming session with an imagined expert panel, run to decide which AI tools go on the site and how
-to design them. It follows `2026-10-23-ai-tool-brainstorm.md` and Murat's framing rule: every tool is a **research
-method** (a method Murat uses, on an example people can follow), an **explainer** (not research; for teaching and
-attention) or a **utility**, and says which.
+to design them. It follows `2026-10-23-ai-tool-brainstorm.md`. Rounds 1 and 2 used Murat's framing rule: every tool is a
+**research method** (a method Murat uses, on an example people can follow), an **explainer** (not research; for teaching
+and attention) or a **utility**, and says which. Round 3 (section 4) dropped that rule and simplified the picks.
 
 Murat's input for this session:
+- **Gaussian-process (GP) surrogates:** used for design optimization in current work, which the site does not name.
 - **EWSHM 2026:** Murat was a team member. The team built an autoencoder for bridge health monitoring (Audience Prize;
   already on the home page). Murat may show the autoencoder idea.
 
@@ -17,6 +18,7 @@ Murat's input for this session:
 | **Interactive-ML visualization researcher** (Hohman, Chau) | Studies what interactive articles do for readers | Interactive articles connect people and data, make systems playful, prompt self-reflection, personalize reading and reduce cognitive load (Hohman et al. 2020). "Ask the visitor to predict before you reveal." |
 | **Uncertainty-visualization researcher** (Hullman) | Knows how people read uncertainty | "Show the GP as animated draws, not only a shaded band. People judge outcomes from draws better than from error bars" (Hullman et al. 2015). |
 | **GP and Bayesian-optimization methodologist** | Keeps the method honest | "Show the acquisition function, fit hyperparameters by marginal likelihood (Rasmussen and Williams 2006), and treat the constraint with its own GP (Gardner et al. 2014). Never peek at the truth before the budget is spent." |
+| **Structural dynamicist** | Owns the physics of the structural examples | "Keep the ranges realistic and label a synthetic record as synthetic." |
 | **SHM researcher** (Worden and Farrar school) | Owns the physics of tool 2 | "Temperature, not damage, moves the frequencies most. The Z24 bridge got stiffer when it froze (Peeters and De Roeck 2001). Auto-associative networks were used against exactly this in 2002 (Sohn, Worden and Farrar). Always show a statistical baseline, false alarms and missed detections." |
 | **Deep-learning skeptic** | Stops overclaiming | "Autoencoders can reconstruct some anomalies well too, so a low error is not proof of health (arXiv 2501.13864). Show where yours fails. A 2-D bottleneck lets people see what it learned." |
 | **Murat's EWSHM teammates** | Their project, their data | "Show the idea, not our model or our data. Credit the team." |
@@ -38,127 +40,136 @@ Checked 2026-10-23 by web search. Hacker News for community projects (Reddit blo
 
 ## 3. How to do better: the differentiators
 
+1. **A real engineering problem**, not a toy function: a structure, a bridge through the seasons.
 2. **Predict, then reveal:** a budget, a hidden truth, a score. This is the self-reflection affordance (Hohman et al.
    2020) and the answer to the devil's advocate.
 3. **An honest baseline next to the AI:** the autoencoder against Mahalanobis distance and PCA; expected improvement
    against the visitor and against random sampling.
 4. **Uncertainty as draws**, animated, with the band (Hullman et al. 2015).
 5. **A guided path, then free play** (Victor 2011): three short steps, each showing one phenomenon, then all controls.
+6. **The phone as an instrument:** the vibrometer's motion code becomes a shake table (tool 3) and a data source
+   (tool 2).
 7. **Reproducible and citable:** every setting is in the URL; Method, Assumptions and limits, and Cite as on every tool.
 8. **Tiny, fast and private:** no ML framework, no server, all in a worker; works offline once loaded.
 9. **Labeled:** "Research method" or "Explainer", so nobody mistakes a demo for research.
+10. **Linked:** the shake table leads to the surrogate tool; the vibrometer leads to the anomaly tool; the home page's
+    EWSHM row leads to the anomaly tool.
 
-## 4. Candidates and choice
+## 4. Round 3: Murat's feedback (2026-10-23)
 
-| # | Tool | Kind | Research link | Shareable | Teaches | New vs. section 2 | Effort | Reuse |
-|---|---|---|---|---|---|---|---|---|
-| 2 | Bridge anomaly lab: an autoencoder that learns the seasons | Research method | EWSHM 2026 | ●●● | ●●● | ●●● | medium | vibrometer signal code, worker |
-| 4 | Where AI fails: a small network vs. the Eurocode buckling curve | Explainer | Workshops | ●● | ●●● | ● | low | — |
-| 5 | Steer the GA: the visitor picks parents in the truss tool (after StructureFIT) | Research method | GA in the PhD | ●● | ●● | ●● | medium | truss tool |
+Round 3 replaces the picks and designs of rounds 1 and 2. Sections 1–3 stay as the session record.
 
-**Recommendation:**
-- **Build 2 first.** It is the most novel and the most visual. It is ready to start, since the EWSHM project is
-  already public on the home page.
-- **Later or never:** 4 and 5.
+- **Too strict:** there are no "Research method / Explainer / Utility" labels. They are all interactive tools; the
+  `/tools` line says that some of them are methods from Murat's research.
+- **Grounded, not narrow:** a tool can sit in a topic Murat knows without being the exact research. The sketchpad belongs
+  to the microstructure work.
+- **Gaussian process surrogates:** yes. **Bayesian optimization:** no; it is not Murat's work.
+- **Autoencoder:** yes, as a concept. No monitoring scenario is needed.
+- **Current projects:** never named, never hinted at.
+- **Conceptual and simple:** the bridge anomaly lab and the shake table were too much.
+- **Purpose:** show existing knowledge, for demonstration and teaching. A hiring reader should see that Murat
+  understands the method; a researcher should see good outreach. The site does not do new research.
 
-## 5. How to include them
+## 5. The plan
 
-- **Groups:**
-  - Monitoring: vibrometer, Bridge anomaly lab.
-  - The breadcrumb follows, e.g. "Tools / Monitoring / Bridge anomaly lab".
-- **Labels:** a tag on each `/tools` row and a sentence under each tool's line, as proposed in the brainstorm.
-- **Featured carousel:** add tool 2, then tool 3, when they ship.
-- **Home page:**
-  - the EWSHM row gets a link ("Try the autoencoder idea");
-- **A short write-up per AI tool:** a "How it works" section, a few hundred words. Writing, more than tools, is what
-  brings contacts (Ask HN, "What has your personal website done for you?").
-- **Contact:** one line at the end of each tool: "Questions, or want to use this in teaching? Email me." It serves
-  Murat's goal of people getting in touch.
-- **Sharing:**
-  - per-tool Open Graph images (`postbuild` already writes per-page tags);
-  - the URL carries the result ("the autoencoder caught it in three days", as a link).
+### The `/tools` line, options
 
-## 6. Designs
+1. "Some of the methods I use in my research, as interactive tools, and a few others. They run in your browser;
+   nothing you draw, measure or upload leaves your device."
+2. "Methods from my research and teaching, as interactive tools. They run in your browser; …"
+3. "Interactive tools on the methods I work with. They run in your browser; …"
 
-### Tool 2: Bridge anomaly lab (build first)
+### A new group: Machine learning
 
-**Story, three guided steps, then free play:**
-1. "A bridge's frequencies follow the weather." A year of three natural frequencies, colored by air temperature, and
-   a frost spell where they jump.
-2. "Train on summer only." The autoencoder learns from June to August, and the first frost raises an alarm: a false
-   alarm. This is the Z24 lesson.
-3. "Train on a full year." The autoencoder learns the seasons. Then a 2 % stiffness loss in March is caught, while
-   the frost no longer is.
+- It holds the Gaussian process surrogate and the autoencoder.
+- The breadcrumb reads, e.g., "Tools / Machine learning / Autoencoder".
 
-**Views, one screen on desktop, stacked on phones:**
-- **Timeline:** frequencies over time; the training window as a shaded band you drag; the damage date as a handle
-  you drag.
-- **Network:** 3 inputs → 8 → **2** → 8 → 3 outputs. Hovering a time point lights its activations.
-- **Latent plane:** the 2-D bottleneck.
-  - Training points form a curve colored by temperature, so the network has learned the seasons.
-  - Damaged points leave the curve.
-  - Optional: shade the plane by reconstruction error, which shows the skeptic's point that some off-curve regions
-    still reconstruct well.
-- **Health indicator:**
-  - reconstruction error over time, with the threshold at the 99th percentile of training errors (said plainly: about
-    1 % false alarms by construction);
-  - Mahalanobis squared distance and linear PCA beside it, the baselines;
-  - readouts: detection delay, false alarms per month.
+### Gaussian process surrogate
+
+**The idea in one line:** a cheap model learns an expensive one from a few runs, and says how sure it is.
+
+**Interaction:**
+1. Draw a curve: the "expensive model". Or pick a preset. The curve then fades out.
+2. Tap to "run" the model at a point, or place n points by a plan: grid, random or Latin hypercube.
+3. The GP shows its mean, a 95 % band and a few animated sample curves. The band narrows near the runs.
+4. "Show the truth" brings back the drawn curve and the error.
 
 **Controls:**
-- damage date and size;
-- frost on or off;
-- a sensor fault: drift, spikes or stuck;
-- the training window;
-- noise;
-- seed;
-- retrain.
+- kernel: squared exponential or Matérn 5/2;
+- length scale and noise, set by hand or by "Fit" (marginal likelihood);
+- number of points;
+- Clear.
 
-**Data:**
-- Default: synthetic, seeded, in the URL. Three modes with a temperature-dependent stiffness, stiffening below 0 °C,
-  plus traffic and noise.
-- Optional "real data" tab: the KW51 railway bridge, with tracked frequencies before, during and after a retrofit
-  (Maes and Lombaert; Zenodo 10.5281/zenodo.3745914).
-  - Its license is CC BY-NC-SA 4.0, so a derived subset must keep that license and the attribution. A personal,
-    non-commercial site fits.
+**Readouts:** runs used, RMSE against the drawn curve, log marginal likelihood.
 
-**Method text:** a small dense autoencoder, trained by Adam in a worker. "The EWSHM team's model was an
-attention-based multi-modal autoencoder on real monitoring data; this page neither uses nor reproduces it."
+**Later, if wanted:** two inputs, shown as a map of the mean and a map of the uncertainty.
 
-**Limits:**
-- frequencies are given, not identified from accelerations;
-- one synthetic bridge;
-- the threshold choice drives the false-alarm rate.
+**Method:** GP regression (Rasmussen and Williams 2006, ch. 2); Latin hypercube sampling (McKay et al. 1979).
+Inspired by Distill's "A Visual Exploration of Gaussian Processes" (Görtler et al. 2019).
 
-**Credits:**
-- method references: Sohn, Worden and Farrar 2002; Worden, Manson and Fieller 2000; Avci et al. 2021;
-- "Inspired by Anomagram (Cloudera Fast Forward)."
+**What is new against existing GP demos:**
+- you draw the truth, so the surrogate's error is visible;
+- sampling plans;
+- built for phones.
 
-**Tech:** about 300 lines of TypeScript (MLP, backpropagation, Adam, seeded generator) in a worker; canvas plots.
+**Effort:** small. A GP with Cholesky on up to about 50 points in TypeScript, and a canvas.
 
-**Tests:**
-- gradients against finite differences, as the solver tests do;
-- the generator is reproducible by seed;
-- a trained network reconstructs its training data within a tolerance;
-- the threshold logic.
+### Autoencoder
 
-## 7. Devil's advocate, and answers
+**The idea in one line:** squeeze data through a narrow middle and rebuild it; what cannot be rebuilt is unusual.
 
-- **"One more GP demo."** Only the engineering problem, the constraint and the reveal justify tool 1. Without them,
-  don't build it.
-- **"Synthetic data proves nothing."** It is a teaching tool, and synthetic data is the only way to know the truth.
-  The KW51 tab shows real behavior.
-- **"Shaking a phone is a gimmick."** It is the hook. The explainer leads to the research-method tool.
-- **"Too many tools dilute the site."** Ship tool 2 polished before starting tool 3.
-- **"A 99th-percentile threshold has false alarms by design."** Say so on the page and show the rate.
+**Interaction:**
+1. Draw points in a plane. Or pick a preset: arc, S-curve, ring, two clusters.
+2. Train. A 2 → 8 → 1 → 8 → 2 network trains live, and each point's reconstruction slides onto a curve: the shape the
+   network learned. PCA's line sits beside it, since a linear autoencoder learns the same subspace (Baldi and Hornik
+   1989).
+3. Tap anywhere. The point and its reconstruction appear, linked. The background shades by reconstruction error, and a
+   point past the threshold is flagged as unusual.
 
-## 8. Decisions for Murat
+**Controls:**
+- bottleneck 1 or 2 (with 2 the network just copies, which shows why the bottleneck matters);
+- hidden width;
+- activation: tanh or linear;
+- train, pause, reset;
+- noise.
 
-1. **First build:** tool 2 (recommended), or tools 3 and 1?
-3. **Tool 2 data:** synthetic only, or also the KW51 tab (CC BY-NC-SA 4.0)?
-4. **Tool 2 credit:** name the EWSHM teammates, or "team project, EWSHM 2026"?
-5. **Labels:** the kinds and wording from the brainstorm, still open.
-6. **Contact:** a contact line at the end of each tool?
+**Readouts:** the loss curve, the threshold (e.g. the 99th percentile of training error), the share of points flagged.
+
+**Monitoring, in one line of Method:** "In structural health monitoring, an autoencoder trained on healthy data flags
+measurements it cannot rebuild (Sohn et al. 2002)." There is no monitoring scenario.
+
+**Method:** Kramer 1991; Hinton and Salakhutdinov 2006; Baldi and Hornik 1989. Inspired by Anomagram and TensorFlow
+Playground.
+
+**What is new against existing demos:**
+- data you draw;
+- the learned curve, visible;
+- PCA beside it;
+- an anomaly map;
+- trains in seconds without an ML framework.
+
+**Effort:** small to medium. An MLP with Adam in TypeScript, in a worker, about 250 lines; a canvas.
+
+### Existing tools
+
+- **Cell sketchpad:** stays as it is; part of the microstructure work.
+- **Phone vibrometer:** stays; FFT and monitoring. It is the site's structural health monitoring demonstration.
+
+### Parked
+
+- Bayesian optimization;
+- anything that names or hints at current projects;
+- the bridge anomaly lab;
+- the shake table;
+- "Where AI fails";
+- steering the GA.
+
+## 6. Decisions for Murat
+
+1. The `/tools` line: option 1, 2 or 3?
+2. Group name: "Machine learning" or "AI"?
+3. Build order: the GP surrogate first, or the autoencoder?
+4. A contact line at the end of each tool?
 
 ## References
 
@@ -167,6 +178,8 @@ Checked by web search, 2026-10-23, unless marked.
 - Agnihotri and Batra (2020). Exploring Bayesian optimization. Distill. DOI 10.23915/distill.00026.
 - Avci, Abdeljaber, Kiranyaz, Hussein, Gabbouj and Inman (2021). A review of vibration-based damage detection in civil
   structures. Mech. Syst. Signal Process., 107077. DOI 10.1016/j.ymssp.2020.107077.
+- Baldi and Hornik (1989). Neural networks and principal component analysis: learning from examples without local
+  minima. Neural Netw. 2(1), 53–58.
 - Bertucci and Endert (2024). VAE Explainer: supplement learning variational autoencoders with interactive
   visualization. arXiv 2409.09011.
 - Dibia. Anomagram: anomaly detection with autoencoders in the browser. anomagram.fastforwardlabs.com;
@@ -175,17 +188,25 @@ Checked by web search, 2026-10-23, unless marked.
   PMLR 32, 937–945.
 - Görtler, Kehlbeck and Deussen (2019). A visual exploration of Gaussian processes. Distill.
   DOI 10.23915/distill.00017.
+- Hinton and Salakhutdinov (2006). Reducing the dimensionality of data with neural networks. Science 313(5786),
+  504–507. DOI 10.1126/science.1127647.
 - Hohman, Conlen, Heer and Chau (2020). Communicating with interactive articles. Distill. DOI 10.23915/distill.00028.
 - Hullman, Resnick and Adar (2015). Hypothetical outcome plots outperform error bars and violin plots for inferences
   about reliability of variable ordering. PLOS ONE 10(11). DOI 10.1371/journal.pone.0142444.
 - Jones, Schonlau and Welch (1998). Efficient global optimization of expensive black-box functions. J. Global Optim. 13,
   455–492.
+- Kramer (1991). Nonlinear principal component analysis using autoassociative neural networks. AIChE J. 37(2),
+  233–243. DOI 10.1002/aic.690370209.
 - Maes and Lombaert (2020). Monitoring data for railway bridge KW51 in Leuven, Belgium, before, during, and after
   retrofitting. Zenodo, DOI 10.5281/zenodo.3745914, CC BY-NC-SA 4.0. Paper: J. Bridge Eng. 26(3), 2021.
+- McKay, Beckman and Conover (1979). A comparison of three methods for selecting values of input variables in the
+  analysis of output from a computer code. Technometrics 21(2), 239–245. DOI 10.2307/1268522.
 - Peeters and De Roeck (2001). One-year monitoring of the Z24-Bridge: environmental effects versus damage events.
   Earthq. Eng. Struct. Dyn. 30(2). (Journal details from memory; the Z24 campaign and its temperature findings are
   confirmed by the SIMCES project record.)
 - Rasmussen and Williams (2006). Gaussian processes for machine learning. MIT Press. gaussianprocess.org/gpml.
+- Smilkov, Carter, Sculley, Viégas and Wattenberg (2017). Direct-manipulation visualization of deep networks.
+  arXiv 1708.03788.
 - Sohn, Worden and Farrar (2002). Statistical damage classification under changing environmental and operational
   conditions. J. Intell. Mater. Syst. Struct. 13(9), 561–574.
 - Tseranidis, Brown and Mueller (2016). Data-driven approximation algorithms for rapid performance evaluation and

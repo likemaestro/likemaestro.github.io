@@ -15,6 +15,10 @@ Revised the same day under Murat's framing rule (below); the first round's ideas
 
 ## Framing rule (Murat, 2026-10-23)
 
+> **Relaxed later the same day:** no labels; every tool is an interactive tool, and the `/tools` line says some are
+> methods from the research. No Bayesian optimization, and current projects are never named. The current plan is in
+> `2026-10-23-ai-tools-design-session.md`, sections 4–6.
+
 A tool must never suggest research Murat does not do. So there is no LLM tool: Murat does not work on LLMs. Every tool is
 one of three kinds, and says which:
 
@@ -46,6 +50,8 @@ Under the rule, the AI tool uses an AI method that Murat actually uses. Two qual
 
 ### A. Surrogate-assisted design optimization with a Gaussian process (recommended)
 
+- **Why:** Murat uses Gaussian-process surrogates for design optimization in current work, which the site does not
+  name.
 - **The page:**
   - A design problem with a "true" model treated as expensive, with a budget of, say, 15 evaluations.
   - Samples go into a GP. The page shows its mean and 95 % band, as a curve for one variable and a map for two.
@@ -55,7 +61,9 @@ Under the rule, the AI tool uses an AI method that Murat actually uses. Two qual
     optimum, and the evaluations used.
   - Controls show GP know-how: kernel (squared exponential, Matérn 5/2), length scales, noise, and the leave-one-out
     error.
+  - Constraints: a probability-of-feasibility term.
 - **Example, to choose:**
+  - **(a)** Removed: too close to unnamed current work.
   - **(b) Neutral, microstructures.** A re-entrant honeycomb (rib angle, thickness) evaluated by the quarter-cell
     solver.
   - **(c) Neutral, structures.** Two section sizes of the truss: mass against deflection.
@@ -138,6 +146,7 @@ Batra's Exploring Bayesian Optimization (Distill, 2020)." No code from these pro
 
 1. The classification table: kinds, wording, and whether the vibrometer is an explainer.
 2. Tag names: "Research method", "Explainer", "Utility"?
+3. ~~Which example for A?~~ Superseded: the GP tool is conceptual (design session, section 5).
 4. ~~B: may the site cite the EWSHM project?~~ Yes (Murat, 2026-10-23): Murat was a team member and may show the
    autoencoder idea. Designs continue in `2026-10-23-ai-tools-design-session.md`.
 5. Back button: up one level to the group, or to the top of `/tools` as now?
