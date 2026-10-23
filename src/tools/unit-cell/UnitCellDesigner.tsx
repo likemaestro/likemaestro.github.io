@@ -244,7 +244,7 @@ const UnitCellDesigner: React.FC = () => {
         </div>
 
         {/* Readout */}
-        <div className="flex min-w-0 flex-col gap-5 md:col-span-2 md:grid md:grid-cols-3 xl:col-span-1 xl:grid-cols-2 xl:grid-rows-[auto_auto_1fr] xl:gap-x-8 xl:gap-y-7 xl:[&_math]:!text-[0.9375rem]">
+        <div className="flex min-w-0 flex-col gap-5 md:col-span-2 md:grid md:grid-cols-3 xl:col-span-1 xl:grid-cols-2 xl:content-between xl:gap-x-8 xl:gap-y-7 xl:[&_math]:!text-[0.9375rem]">
           <div className="min-w-0">
             <p className="t-small mb-1.5 text-ink-2">Objective</p>
             <div className="math sm flex flex-col gap-1 overflow-x-auto overflow-y-hidden">
@@ -260,11 +260,11 @@ const UnitCellDesigner: React.FC = () => {
             <p className="t-small mb-1.5 text-ink-2">Properties</p>
             <div className="math sm flex flex-col gap-1 xl:grid xl:grid-cols-2 xl:gap-x-8">{lines.map((h, i) => <MathML key={i} html={h} />)}</div>
           </div>
-          {/* Convergence: under the properties; side by side a plot across the readout filling the height left, ending
-              level with the lattice's bottom */}
-          <div className="min-w-0 md:col-start-3 xl:col-span-2 xl:col-start-1 xl:flex xl:flex-col">
+          {/* Convergence: under the properties; side by side a modest plot across the readout, its three rows spread
+              over the lattice's height so the last ends level with the lattice's bottom */}
+          <div className="min-w-0 md:col-start-3 xl:col-span-2 xl:col-start-1">
             <p className="t-small mb-2 hidden text-ink-2 xl:block">Convergence</p>
-            <div className="flex xl:min-h-[4rem] xl:flex-1"><Trace data={res.hist} reference={reference} live={live} className="h-9 xl:h-auto" /></div>
+            <div className="flex"><Trace data={res.hist} reference={reference} live={live} className="h-9 xl:h-[clamp(4rem,14svh,7rem)]" /></div>
             <p className="t-small mt-1 flex flex-wrap gap-x-3 text-ink-2">
               <span>Seed {seed}</span>
               {done && res.grey !== undefined && <span>Grey {(res.grey * 100).toFixed(1)} %</span>}
