@@ -231,3 +231,10 @@ Murat asked for a genetic algorithm tool with three objectives on a structural p
   parameters and the selected design live in the URL.
 - **Numbers:** the bridge at 80 × 150 runs in about 0.9 s of computation; animated at one generation per frame.
   Hypervolume reaches about 0.85 (seed 7).
+- **Choosing a design (MCDM):** weights on the three objectives rank the front by TOPSIS or VIKOR
+  (`src/tools/mcdm.ts`, Opricovic & Tzeng 2004, DOI 10.1016/S0377-2217(03)00020-1, checked with Crossref); moving a
+  weight selects the best design, ties go to the lighter one. With no design in the link, the selection is the best for
+  the current weights (equal by default). Population and generations moved into the collapsed "Algorithm" group.
+- **Next:** a standalone MCDM tool reusing `mcdm.ts`, with the methods Murat uses in the PhD: TOPSIS, VIKOR, AHP
+  (Saaty 1990, DOI 10.1016/0377-2217(90)90057-I) and SMAA-2 (Lahdelma & Salminen 2001, DOI 10.1287/opre.49.3.444.11220).
+  Neutral examples only: never the laser/plasma case, partner data or unpublished results.

@@ -5,6 +5,7 @@ import { useToolParams } from "../useToolParams";
 import { Field, Segmented } from "../controls";
 import { MathML, Trace } from "../../lab/readout";
 import { download } from "../../lab/export";
+import { normalize, rank, type Method } from "../mcdm";
 import { createNSGA2, hv3, paretoSet, type Ind } from "./ga";
 import { analyse, bounds, genes, LAYOUTS, SECTIONS, type Analysis, type Layout } from "./truss";
 
@@ -18,7 +19,13 @@ const SPEC = {
   etac: { kind: "num", min: 1, max: 30, step: 1, def: 3 },
   etam: { kind: "num", min: 1, max: 30, step: 1, def: 3 },
   seed: { kind: "num", min: 1, max: 999999, step: 1, def: 7 },
+  mcdm: { kind: "enum", values: ["topsis", "vikor"], def: "topsis" },
+  wm: { kind: "num", min: 0, max: 1, step: 0.05, def: 0.5 },
+  wd: { kind: "num", min: 0, max: 1, step: 0.05, def: 0.5 },
+  ws: { kind: "num", min: 0, max: 1, step: 0.05, def: 0.5 },
 } as const;
+const WEIGHTS = ["wm", "wd", "ws"] as const;
+const METHOD_NAME: Record<Method, string> = { topsis: "TOPSIS", vikor: "VIKOR" };
 const REDUCED = typeof window !== "undefined" && !!window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
 type Mode = "running" | "paused" | "done";
@@ -36,13 +43,6 @@ function ticks(lo: number, hi: number, n = 5) {
   const out: number[] = [];
   for (let v = Math.ceil(lo / step) * step; v <= hi + 1e-9; v += step) out.push(Number(v.toPrecision(12)));
   return out;
-}
-/** The front design closest to the ideal mass and deflection, each scaled to the front's own range: the bend of the
- *  trade-off curve. */
-function knee(F: Ind[]) {
-  const lo = [0, 1].map((k) => Math.min(...F.map((p) => p.f[k]))), hi = [0, 1].map((k) => Math.max(...F.map((p) => p.f[k])));
-  const d = (p: Ind) => [0, 1].reduce((s, k) => s + ((p.f[k] - lo[k]) / (hi[k] - lo[k] || 1)) ** 2, 0);
-  return F.reduce((a, b) => (d(b) < d(a) ? b : a));
 }
 // utilization as a grey: 0 → steel, 1 → ink (the site keeps orange for the selected mark)
 const grey = (u: number) => {
@@ -225,9 +225,25 @@ const TrussSizing: React.FC = () => {
     const r = analyse(L, x, p.load * 1e3);
     return { x, f: [r.mass, r.deflection, r.distinct], cv: r.cv, rank: 0, crowd: 0 } as Ind;
   }, [sp, L, p.load]);
-  const sel = useMemo(() => (linked ? front.find((q) => key(q.x) === key(linked.x)) ?? linked : front.length ? knee(front) : undefined), [front, linked]);
+
+  // multi-criteria choice on the front: moving a weight or the method selects the best design for them
+  const method = p.mcdm as Method, weights = WEIGHTS.map((k) => p[k]);
+  const byMass = useMemo(() => [...front].sort((a, b) => a.f[0] - b.f[0]), [front]);   // ties go to the lighter design
+  const decided = useMemo(() => (byMass.length ? byMass[rank(byMass.map((q) => q.f), weights, method).i] : undefined), [byMass, method, ...weights]);   // eslint-disable-line react-hooks/exhaustive-deps
+  // the selected design: the one in the link, else the best for the weights
+  const sel = useMemo(() => (linked ? front.find((q) => key(q.x) === key(linked.x)) ?? linked : decided), [front, linked, decided]);
   const pick = (q: Ind) => setSp((prev) => { const next = new URLSearchParams(prev); next.set("sel", key(q.x)); return next; }, { replace: true });
   const detail = useMemo(() => (sel ? analyse(L, sel.x, p.load * 1e3) : null), [L, sel, p.load]);
+  const choose = (patch: Partial<Record<"mcdm" | (typeof WEIGHTS)[number], string>>) => {
+    const w = WEIGHTS.map((k) => Number(patch[k] ?? p[k])), m = (patch.mcdm ?? method) as Method;
+    const best = byMass.length ? byMass[rank(byMass.map((q) => q.f), w, m).i] : undefined;
+    setSp((prev) => {
+      const next = new URLSearchParams(prev);
+      Object.entries(patch).forEach(([k, v]) => v !== undefined && next.set(k, v));
+      if (best) next.set("sel", key(best.x));
+      return next;
+    }, { replace: true });
+  };
   const hv = snap?.hv[snap.hv.length - 1] ?? 0;
   const span = lengthOf(L);
   const status = !snap ? "" : `Generation ${snap.gen} of ${p.gens} · ${snap.evaluations.toLocaleString("en")} designs analysed · ${front.length} on the front`;
@@ -257,6 +273,7 @@ const TrussSizing: React.FC = () => {
       method={<>
         <p>Each member gets a hot-finished circular hollow section from a list of 16, in S355 steel. A linear-elastic analysis of the pin-jointed truss gives the member forces and deflections, and each member is checked to EN 1993-1-1: yielding in tension, flexural buckling in compression (curve a, pinned ends, γ<sub>M0</sub> = γ<sub>M1</sub> = 1.0).</p>
         <p>NSGA-II (Deb et al. 2002) searches the three objectives at once. Constrained domination ranks every design that passes the checks above every design that fails, and failing ones by how far they fail. Children come from binary tournaments, simulated binary crossover and polynomial mutation, rounded to the list; repeated designs are retried. The first population includes the 16 designs that use one size throughout, so the one-section end of the front is there from the start.</p>
+        <p>To pick one design from the front, the weights rank it by TOPSIS (closeness to the ideal design) or VIKOR (a compromise of group utility and the worst single criterion, v = 0.5), both on the three objectives as costs (<a className="link" href="https://doi.org/10.1016/S0377-2217(03)00020-1" rel="noopener noreferrer">Opricovic and Tzeng 2004</a>).</p>
         <p>Hypervolume measures the front: the share of the box from the lightest to the heaviest design, the stiffest to the most flexible, and 1 to {Math.min(genes(L), SECTIONS.length) + 1} sections, that the front dominates. NSGA-II keeps a spread rather than the largest volume, so it can dip slightly between generations.</p>
       </>}
       limits={<>
@@ -271,17 +288,6 @@ const TrussSizing: React.FC = () => {
         <div className="flex min-w-0 flex-col gap-4 max-md:order-2">
           <Field label="Truss"><Segmented label="Truss layout" value={p.layout} onChange={(v) => set({ layout: v })} options={[{ v: "bridge", text: "Bridge" }, { v: "cantilever", text: "10-bar" }]} /></Field>
           {slider("load", "Load per arrow", (v) => `${v} kN`)}
-          {slider("pop", "Population", String)}
-          {slider("gens", "Generations", String)}
-          <details className="group">
-            <summary className="t-small cursor-pointer text-ink-2 hover:text-ink">Operators</summary>
-            <div className="mt-3 flex flex-col gap-4">
-              {slider("pc", "Crossover probability", (v) => v.toFixed(2))}
-              {slider("mut", "Mutated sizes per child", (v) => v.toFixed(1))}
-              {slider("etac", "Crossover index ηc", String)}
-              {slider("etam", "Mutation index ηm", String)}
-            </div>
-          </details>
           <Field label="Seed" htmlFor="ts-seed">
             <div className="flex gap-2">
               <input id="ts-seed" type="number" inputMode="numeric" min={1} value={p.seed} onChange={(e) => e.target.value && set({ seed: e.target.value })}
@@ -290,7 +296,27 @@ const TrussSizing: React.FC = () => {
             </div>
           </Field>
           <button type="button" onClick={toggle} className="btn btn-solid self-start">{mode === "running" ? "Pause" : mode === "paused" ? "Resume" : "Run again"}</button>
-          <div className="mt-4 min-w-0 border-t border-rule pt-5">
+          <div className="mt-4 flex min-w-0 flex-col gap-4 border-t border-rule pt-5">
+            <Field label="Choose with weights"><Segmented label="Decision method" value={method} onChange={(v) => choose({ mcdm: v })} options={[{ v: "topsis", text: "TOPSIS" }, { v: "vikor", text: "VIKOR" }]} /></Field>
+            {([["wm", "Steel mass"], ["wd", "Deflection"], ["ws", "Different sections"]] as const).map(([k, label], j) => (
+              <Field key={k} label={label} value={`${Math.round(normalize(weights)[j] * 100)} %`} htmlFor={`ts-${k}`}>
+                <input id={`ts-${k}`} type="range" min={0} max={1} step={0.05} value={p[k]} onChange={(e) => choose({ [k]: e.target.value } as Partial<Record<(typeof WEIGHTS)[number], string>>)} className="w-full accent-ink" />
+              </Field>
+            ))}
+            <p className="t-small text-ink-2">Moving a weight selects the best design on the front for those weights.</p>
+          </div>
+          <details className="group border-t border-rule pt-5">
+            <summary className="t-small cursor-pointer text-ink-2 hover:text-ink">Algorithm</summary>
+            <div className="mt-3 flex flex-col gap-4">
+              {slider("pop", "Population", String)}
+              {slider("gens", "Generations", String)}
+              {slider("pc", "Crossover probability", (v) => v.toFixed(2))}
+              {slider("mut", "Mutated sizes per child", (v) => v.toFixed(1))}
+              {slider("etac", "Crossover index ηc", String)}
+              {slider("etam", "Mutation index ηm", String)}
+            </div>
+          </details>
+          <div className="min-w-0 border-t border-rule pt-5">
             <p className="t-small mb-1.5 text-ink-2">Objectives</p>
             <div className="math sm flex flex-col gap-1 overflow-x-auto overflow-y-hidden">
               <MathML html={FORMULATION} />
@@ -327,7 +353,7 @@ const TrussSizing: React.FC = () => {
           <p className="sr-only" role="status" aria-live="polite">{mode === "done" ? `Done: ${front.length} designs on the front.` : ""}</p>
 
           {sel && detail && <div className="mt-5 border-t border-rule pt-4">
-            <p className="t-small text-ink-2">Selected design{!linked ? ", the bend of the current front" : !front.includes(sel) ? ", not on the current front" : ""}</p>
+            <p className="t-small text-ink-2">Selected design{decided === sel ? `, best by ${METHOD_NAME[method]} for the weights` : !front.includes(sel) ? ", not on the current front" : ""}</p>
             <dl className="mt-2 grid grid-cols-2 gap-x-8 gap-y-3 sm:grid-cols-3 lg:grid-cols-[repeat(4,auto)_minmax(10rem,1fr)]">
               {([["Steel", kg(sel.f[0])], ["Deflection", `${mm(sel.f[1])}, length / ${Math.round(span / sel.f[1])}`], ["Sections", `${sel.f[2]} different`], ["Utilization", `${Math.max(...detail.util).toFixed(2)} highest`]] as const).map(([k, v]) => (
                 <div key={k} className="min-w-0"><dt className="t-small text-ink-2">{k}</dt><dd className="t-data mt-0.5">{v}</dd></div>
