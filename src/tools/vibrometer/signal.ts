@@ -72,6 +72,7 @@ export function spectrum(x: Float64Array, fs: number) {
 export function peaks(amp: Float64Array, df: number, fmin = 0.5, count = 3, win = 0.3, floor = 0.1) {
   const w = Math.max(1, Math.round(win / df)), cand: { f: number; a: number }[] = [];
   for (let k = Math.max(1, Math.ceil(fmin / df)); k < amp.length - 1; k++) {
+    if (!(amp[k] > 0)) continue;   // a flat record (e.g. readings rounded to one value) has no peaks
     let top = true;
     for (let j = Math.max(0, k - w); j <= Math.min(amp.length - 1, k + w) && top; j++) if (amp[j] > amp[k]) top = false;
     if (!top) continue;

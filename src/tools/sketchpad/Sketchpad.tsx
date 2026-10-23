@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
-import ToolShell from "../ToolShell";
+import ToolShell, { MICRO_PAPER } from "../ToolShell";
 import { cells } from "../../lab/precomputed";
 import { createSketchWorker } from "../../lab/createWorker";
 import type { SketchOut } from "../../lab/sketch.worker";
@@ -177,10 +177,11 @@ const Sketchpad: React.FC = () => {
     <ToolShell
       path="/tools/sketchpad"
       slug="sketchpad"
+      paper={MICRO_PAPER}
       methodRef={{ label: "Andreassen & Andreasen 2014", href: "https://doi.org/10.1016/j.commatsci.2013.09.006" }}
       method={<>
         <p>The drawing is one periodic unit cell of 48 × 48 bilinear elements, each solid (E = 1, ν = 0.3) or void (E = 10⁻⁹), in plane stress. Energy-based homogenization after Andreassen and Andreasen (2014) gives its effective stiffness.</p>
-        <p>Kaleidoscope and mirror drawings are solved on a quarter of the cell, which gives the same result faster.</p>
+        <p>Kaleidoscope and mirror drawings are solved on a quarter of the cell, which gives the same result faster. <a className="link" href={MICRO_PAPER} rel="noopener noreferrer">My paper</a> also uses symmetry to reduce the domain, there for nonlinear elastic microstructures.</p>
       </>}
       limits={<>
         <p>Linear elastic, small strains, plane stress; stiffness in units of the solid’s E.</p>

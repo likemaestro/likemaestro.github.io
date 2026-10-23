@@ -19,12 +19,14 @@ module.exports = {
       maxWidth: { page: "85rem" },   // 1360 px at the base size, wider with the root size on large screens
       animation: {
         "fade-in-down": "fade-in-down 0.5s ease-out",
+        featured: "featured 4.5s linear both",   // the featured tools' progress bar; ToolsIndex sets the duration
       },
       keyframes: {
         "fade-in-down": {
           "0%": { opacity: "0", transform: "translateY(-20px)" },
           "100%": { opacity: "1", transform: "translateY(0)" },
         },
+        featured: { "0%": { transform: "scaleX(0)" }, "100%": { transform: "scaleX(1)" } },
       },
     },
   },

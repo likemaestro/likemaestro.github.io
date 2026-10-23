@@ -210,3 +210,31 @@ Departures from the design above, and numbers measured while building it.
 - **References:**
   - Andreassen and Andreasen (2014), DOI 10.1016/j.commatsci.2013.09.006, verified with Crossref.
   - Feng et al. (2015), DOI 10.3390/s150202980, verified by web search.
+
+## Truss sizing (added 2026-10-23)
+
+Murat asked for a genetic algorithm tool with three objectives on a structural problem.
+
+- **Problem:** each member of a steel truss takes a hot-finished CHS from a list of 16 (S355; area and second moment from
+  nominal D and t, all class 1 in compression). Objectives: steel mass, largest nodal deflection, number of different
+  sections. Constraint: EN 1993-1-1 member resistance (tension yield; flexural buckling, curve a, pinned ends,
+  γM0 = γM1 = 1.0).
+- **Layouts:** an X-braced bridge truss (6 × 3 m panels, 3 m deep, 31 members, mirrored pairs share a size, 16 variables)
+  and the classic 10-bar cantilever layout with 5 m bays. Both are statically indeterminate, so sizes change the forces.
+- **Algorithm:** NSGA-II (Deb et al. 2002, DOI 10.1109/4235.996017, checked with Crossref): constrained domination, SBX and
+  polynomial mutation rounded to integers, duplicate children retried. The first population includes the 16 one-size
+  designs; without them the front never reached one or two sections. Hypervolume (exact, sliced along the integer third
+  objective) is normalized by fixed per-layout bounds, so it compares across runs.
+- **Page:** the Pareto front is the main view (mass against deflection; the selected design's section-count level filled
+  and joined). The selected truss, drawn to scale with tubes at true diameter and coloured by utilization, sits as a
+  thumbnail in the chart's top-right corner; clicking it swaps the two views (Murat's request). Settings, operator
+  parameters and the selected design live in the URL.
+- **Numbers:** the bridge at 80 × 150 runs in about 0.9 s of computation; animated at one generation per frame.
+  Hypervolume reaches about 0.85 (seed 7).
+- **Choosing a design (MCDM):** weights on the three objectives rank the front by TOPSIS or VIKOR
+  (`src/tools/mcdm.ts`, Opricovic & Tzeng 2004, DOI 10.1016/S0377-2217(03)00020-1, checked with Crossref); moving a
+  weight selects the best design, ties go to the lighter one. With no design in the link, the selection is the best for
+  the current weights (equal by default). Population and generations moved into the collapsed "Algorithm" group.
+- **Next:** a standalone MCDM tool reusing `mcdm.ts`, with the methods Murat uses in the PhD: TOPSIS, VIKOR, AHP
+  (Saaty 1990, DOI 10.1016/0377-2217(90)90057-I) and SMAA-2 (Lahdelma & Salminen 2001, DOI 10.1287/opre.49.3.444.11220).
+  Neutral examples only: never the laser/plasma case, partner data or unpublished results.

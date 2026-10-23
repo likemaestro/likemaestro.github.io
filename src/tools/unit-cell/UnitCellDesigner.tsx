@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import ToolShell from "../ToolShell";
+import ToolShell, { MICRO_PAPER } from "../ToolShell";
 import { useToolParams } from "../useToolParams";
+import { Field, Segmented } from "../controls";
 import { cells, phoneSeeds, seeds } from "../../lab/precomputed";
 import type { Objective } from "../../lab/unitcell";
 import type { WorkerOut } from "../../lab/unitcell.worker";
@@ -27,28 +28,6 @@ const defaultSeed = (t: Objective, n: number) => (n === 48 ? phoneSeeds : seeds)
 
 type Mode = "precomputed" | "ready" | "running" | "paused" | "converged";
 interface Result { iter: number; vol: number; C: number[]; hist: number[]; grey?: number; whole?: boolean }
-
-const Field: React.FC<{ label: string; value?: string; children: React.ReactNode; htmlFor?: string }> = ({ label, value, children, htmlFor }) => (
-  <div className="min-w-0">
-    <div className="flex items-baseline justify-between gap-2">
-      <label htmlFor={htmlFor} className="t-small text-ink-2">{label}</label>
-      {value && <output htmlFor={htmlFor} className="t-data">{value}</output>}
-    </div>
-    <div className="mt-1.5">{children}</div>
-  </div>
-);
-
-const Segmented: React.FC<{ label: string; options: { v: string; text: string }[]; value: string; onChange: (v: string) => void; cols?: number }> = ({ label, options, value, onChange, cols }) => (
-  <div role="group" aria-label={label} className={`grid rounded-[2px] border border-ink ${cols === 2 ? "grid-cols-2" : "grid-flow-col auto-cols-fr"}`}>
-    {options.map((o, i) => (
-      <button key={o.v} type="button" aria-pressed={value === o.v} onClick={() => onChange(o.v)}
-        className={`t-data min-h-[2.25rem] px-2 transition-colors duration-150 [@media(pointer:coarse)]:min-h-[44px] ${i && (cols !== 2 || i % 2) ? "border-l border-rule" : ""} ${cols === 2 && i >= 2 ? "border-t border-rule" : ""} ${
-          value === o.v ? "bg-ink font-[600] text-canvas" : "text-ink-2 hover:bg-wash hover:text-ink"}`}>
-        {o.text}
-      </button>
-    ))}
-  </div>
-);
 
 const UnitCellDesigner: React.FC = () => {
   const { values: p, clamped, set } = useToolParams(SPEC);
@@ -212,10 +191,12 @@ const UnitCellDesigner: React.FC = () => {
     <ToolShell
       path="/tools/unit-cell"
       slug="unit-cell"
+      paper={MICRO_PAPER}
       methodRef={{ label: "Andreassen & Andreasen 2014", href: "https://doi.org/10.1016/j.commatsci.2013.09.006" }}
       method={<>
         <p>Energy-based homogenization of a periodic unit cell on a square mesh of bilinear elements, after Andreassen and Andreasen (2014). Base material E = 1, ν = 0.3, plane stress.</p>
         <p>Densities follow SIMP (p = 3) with a density filter and a Heaviside projection that sharpens during the run; MMA updates the design under the volume constraint. The cell keeps the square’s symmetries, so it tiles in both directions.</p>
+        <p>Because of those symmetries the stiffness is solved on a quarter of the cell. <a className="link" href={MICRO_PAPER} rel="noopener noreferrer">My paper</a> combines the same pieces, SIMP, MMA and a domain reduced by symmetry, for nonlinear elastic microstructures; this tool runs the linear case.</p>
       </>}
       limits={<>
         <p>Linear elastic, small strains, plane stress; stiffness in units of the base material’s E. A research demo, not a design check.</p>

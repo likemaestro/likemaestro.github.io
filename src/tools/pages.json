@@ -10,8 +10,7 @@
       "path": "/tools/unit-cell",
       "title": "Unit-cell designer",
       "line": "Design a periodic microstructure for a target stiffness, then export it for cutting or printing.",
-      "group": "Microstructures",
-      "featured": true
+      "group": "Microstructures"
     },
     {
       "path": "/tools/sketchpad",
@@ -24,6 +23,12 @@
       "title": "Property map",
       "line": "Hundreds of optimized unit cells on one chart of stiffness against Poisson’s ratio. Pick one to see it.",
       "group": "Microstructures"
+    },
+    {
+      "path": "/tools/truss-sizing",
+      "title": "Truss sizing",
+      "line": "A genetic algorithm sizes every member of a steel truss, trading steel mass against deflection and the number of different sections.",
+      "group": "Structures"
     },
     {
       "path": "/tools/vibrometer",
