@@ -41,8 +41,8 @@ const App: React.FC = () => (
       <Route path="/tools/truss-sizing" element={<TrussSizing />} />
       <Route path="/tools/decision" element={<Decision />} />
       <Route path="/tools/vibrometer" element={<Vibrometer />} />
-      <Route path="/tools/WorldMap" element={<WorldMap />} />
-      <Route path="/tools/gauge-tool" element={<Gauge />} />
+      <Route path="/tools/world-map" element={<WorldMap />} />
+      <Route path="/tools/gauge" element={<Gauge />} />
       <Route path="/tools/cutt-ia" element={<CUTTIA />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

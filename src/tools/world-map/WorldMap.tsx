@@ -131,7 +131,7 @@ const WorldMap: React.FC = () => {
   const label = `World map, ${PROJ[p.proj].text} projection, ${picked.filter((n) => names.has(n)).length} countries highlighted: ${picked.filter((n) => names.has(n)).join(", ") || "none"}.`;
 
   return (
-    <ToolShell path="/tools/WorldMap" slug="world-map">
+    <ToolShell path="/tools/world-map" slug="world-map">
       {clamped.length > 0 && <p className="t-small mb-4 text-ink-2">Some link settings weren’t valid and have been reset: {clamped.join(", ")}.</p>}
       <div className="grid gap-x-12 gap-y-10 md:grid-cols-[17rem_minmax(0,1fr)]">
         <div className="flex min-w-0 flex-col gap-5">

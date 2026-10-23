@@ -43,13 +43,13 @@
       "group": "Monitoring"
     },
     {
-      "path": "/tools/WorldMap",
+      "path": "/tools/world-map",
       "title": "World map generator",
       "line": "A world map with the countries you pick highlighted and labelled, in your projection and colours, ready as SVG or PNG.",
       "group": "Other tools"
     },
     {
-      "path": "/tools/gauge-tool",
+      "path": "/tools/gauge",
       "title": "Gauge",
       "line": "A dial for one value on a colour scale, with your own range, title and unit, ready as SVG or PNG.",
       "group": "Other tools"

@@ -72,7 +72,7 @@ const Gauge: React.FC = () => {
 
   return (
     <ToolShell
-      path="/tools/gauge-tool"
+      path="/tools/gauge"
       slug="gauge"
     >
       {clamped.length > 0 && <p className="t-small mb-4 text-ink-2">Some link settings were out of range and have been adjusted: {clamped.join(", ")}.</p>}
