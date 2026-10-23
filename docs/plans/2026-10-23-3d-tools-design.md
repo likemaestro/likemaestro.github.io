@@ -1,8 +1,8 @@
 # 3D tools: design
 
-2026-10-23. Detailed designs for the three tools Murat chose in the design session (round 9,
+2026-10-23. Detailed designs for the tools Murat chose in the design session (round 9,
 `2026-10-23-ai-tools-design-session.md`):
-- **Unbuild it:** the 3D flagship.
+- **Unbuild it:** dropped later the same day; kept as a record.
 - **The building's chord:** the AI piece.
 - **Why steel beams twist:** the steel teaching piece.
 - **Surrogate frame design:** the Gaussian process tool (added later the same day, section 5).
