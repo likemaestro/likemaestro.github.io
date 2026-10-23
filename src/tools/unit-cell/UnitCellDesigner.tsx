@@ -205,7 +205,7 @@ const UnitCellDesigner: React.FC = () => {
       </>}
     >
       {clamped.length > 0 && <p className="t-small mb-4 text-ink-2">Some link settings were out of range and have been adjusted: {clamped.join(", ")}.</p>}
-      <div className="grid gap-x-8 gap-y-8 md:grid-cols-[14rem_minmax(0,1fr)] xl:grid-cols-[14rem_minmax(0,1fr)_17rem]">
+      <div className="grid gap-x-8 gap-y-8 md:grid-cols-[14rem_minmax(0,1fr)] xl:grid-cols-[20rem_minmax(0,1fr)_24rem] xl:gap-x-12">
         {/* Controls */}
         <div className="flex min-w-0 flex-col gap-4">
           <Field label="Target"><Segmented label="Optimization target" cols={2} value={t} onChange={(v) => set({ target: v, seed: defaultSeed(v as Objective, n) })} options={TARGETS.map((x) => ({ v: x.id, text: x.label }))} /></Field>
@@ -228,19 +228,23 @@ const UnitCellDesigner: React.FC = () => {
           {!supported && <p className="t-small text-ink-2">This browser can’t run the solver, so it shows a design computed in advance.</p>}
         </div>
 
-        {/* Lattice: first on phones, sized from the viewport height on larger screens so the tool fits the first screen */}
+        {/* Lattice: first on phones, sized from the viewport height on larger screens so the tool fits the first screen.
+            The status and the tiling sit above it, spanning exactly its width. Side by side (xl) the wider controls and
+            readout take up the width the lattice leaves. */}
         <div className="min-w-0 max-md:order-first">
-          <div className="mb-3 flex items-center justify-between gap-3">
-            <p className="t-small text-ink-2" aria-hidden="true">{status}</p>
-            <div className="w-36"><Segmented label="Tiles" value={String(tiles)} onChange={(v) => set({ tiles: v })} options={["1", "3", "5"].map((v) => ({ v, text: `${v} × ${v}` }))} /></div>
+          <div className="mx-auto w-full md:max-w-[max(18rem,min(100%,calc(100svh-19.5rem)))]">
+            <div className="mb-3 flex items-center justify-between gap-3">
+              <p className="t-small text-ink-2" aria-hidden="true">{status}</p>
+              <div className="w-36"><Segmented label="Tiles" value={String(tiles)} onChange={(v) => set({ tiles: v })} options={["1", "3", "5"].map((v) => ({ v, text: `${v} × ${v}` }))} /></div>
+            </div>
+            <canvas ref={canvasRef} role="img" aria-label={label} className="block aspect-square w-full" />
+            {retryNote && <p className="t-small mt-2 text-ink-2">{retryNote}</p>}
           </div>
-          <canvas ref={canvasRef} role="img" aria-label={label} className="mx-auto block aspect-square w-full md:max-w-[max(18rem,min(100%,calc(100svh-19.5rem)))]" />
-          {retryNote && <p className="t-small mt-2 text-ink-2">{retryNote}</p>}
           <p className="sr-only" role="status" aria-live="polite">{mode === "running" ? "Computing in your browser" : status}</p>
         </div>
 
         {/* Readout */}
-        <div className="flex min-w-0 flex-col gap-5 md:col-span-2 md:grid md:grid-cols-3 xl:col-span-1 xl:flex">
+        <div className="flex min-w-0 flex-col gap-5 md:col-span-2 md:grid md:grid-cols-3 xl:col-span-1 xl:flex xl:[&_math]:!text-[1rem]">
           <div className="min-w-0">
             <p className="t-small mb-1.5 text-ink-2">Objective</p>
             <div className="math sm flex flex-col gap-1 overflow-x-auto overflow-y-hidden">
@@ -255,7 +259,7 @@ const UnitCellDesigner: React.FC = () => {
           <div className="min-w-0">
             <p className="t-small mb-1.5 text-ink-2">Properties</p>
             <div className="math sm flex flex-col gap-1">{lines.map((h, i) => <MathML key={i} html={h} />)}</div>
-            <div className="mt-3 flex"><Trace data={res.hist} reference={reference} live={live} /></div>
+            <div className="mt-3 flex"><Trace data={res.hist} reference={reference} live={live} className="h-9 xl:h-32" /></div>
             <p className="t-small mt-1 flex flex-wrap gap-x-3 text-ink-2">
               <span>Seed {seed}</span>
               {done && res.grey !== undefined && <span>Grey {(res.grey * 100).toFixed(1)} %</span>}

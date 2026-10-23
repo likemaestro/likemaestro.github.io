@@ -58,9 +58,10 @@ export function quantities(C: ArrayLike<number>, vol: number): Quantities {
 }
 
 // Convergence of the target quantity: a slim line with a dashed physical reference and the live end point, no axes.
-export const Trace: React.FC<{ data: number[]; reference?: number; live: boolean }> = ({ data, reference, live }) => {
+/** A convergence line; 2.25rem tall unless `className` sizes it (the strokes keep their width at any size). */
+export const Trace: React.FC<{ data: number[]; reference?: number; live: boolean; className?: string }> = ({ data, reference, live, className = "h-9" }) => {
   const W = 600, H = 36;
-  if (data.length < 2) return <div className="h-9 min-w-0 flex-1" aria-hidden="true" />;
+  if (data.length < 2) return <div className={`${className} min-w-0 flex-1`} aria-hidden="true" />;
   const ref = reference !== undefined && Number.isFinite(reference) ? reference : undefined;
   let lo = Math.min(...data, ref ?? Infinity), hi = Math.max(...data, ref ?? -Infinity);
   if (hi - lo < 1e-9) { lo -= 1; hi += 1; }
@@ -68,7 +69,7 @@ export const Trace: React.FC<{ data: number[]; reference?: number; live: boolean
   const y = (v: number) => H - 3 - ((v - lo) / (hi - lo)) * (H - 6);
   const last = data.length - 1;
   return (
-    <div className="relative h-9 min-w-0 flex-1" aria-hidden="true">
+    <div className={`relative ${className} min-w-0 flex-1`} aria-hidden="true">
       <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" className="absolute inset-0 h-full w-full overflow-visible">
         {ref !== undefined && <line x1={0} x2={W} y1={y(ref)} y2={y(ref)} stroke="#819199" strokeDasharray="4 4" vectorEffect="non-scaling-stroke" />}
         <polyline points={data.map((v, i) => `${x(i).toFixed(1)},${y(v).toFixed(1)}`).join(" ")} fill="none" stroke="#172027" strokeWidth="1.25" vectorEffect="non-scaling-stroke" />
