@@ -121,6 +121,39 @@
 - **Second, lighter:** idea 4 or 5, as a teaching tool for the workshops.
 - **Leave out:** a general chatbot.
 
+## Inspiration
+
+Found 2026-10-23. Reddit blocks the search tool's crawler, so these come from Hacker News ("Show HN", "Ask HN") and
+research groups. The rule: take the idea, credit it on the page, write our own code.
+
+| Source | What it does | What we take | Feeds idea |
+|---|---|---|---|
+| Google's Quick, Draw! (data for sketch-rnn, Ha and Eck 2017) | You draw; a network guesses what it is as you draw | The draw-and-the-AI-answers-at-once loop. Our twist: it predicts physics, and a solver checks it | 1 |
+| DTU TopOpt app (Aage et al. 2013) | Real-time topology optimization on phones | Precedent for the unit-cell designer; cite under Method | 1, 2 |
+| MIT Digital Structures: Tseranidis, Brown and Mueller 2016 | Surrogates for fast evaluation of civil structures | The case for surrogates in structural design; their error metrics | 1 |
+| MIT Digital Structures: Danhaive and Mueller 2021 | A conditional VAE; a 2-D latent space as the interface for design exploration | The design-space map, almost exactly; cite it | 3 |
+| MIT Digital Structures: StructureFIT, Mueller and Ochsendorf 2015 | Interactive evolutionary design: the designer steers the GA | Let the visitor steer the truss GA; a later idea | — |
+| TensorFlow Playground (Smilkov et al. 2017) | Train a small network in the browser, no code | The layout and controls of idea 5 | 5 |
+| Transformer Explainer (Cho et al. 2024) | A live GPT-2 in the browser; 125,000 users | Proof that a research group's in-browser model draws real use | 5 |
+| Karpathy's ConvNetJS demos | Networks trained in the browser, on a personal Stanford page | A personal page can host real ML; a small network needs no framework | 1, 5 |
+| Brendan Bycroft's LLM visualization | A 3D walk through a GPT, on a personal site | An optional "inside the network" panel showing the CNN's feature maps as you draw | 1 |
+| Neal Agarwal's Infinite Craft (neal.fun) | A playful LLM game; repeat queries are served from a cache | Cache the LLM: precompute answers, so the page stays static | 6a |
+| Bartosz Ciechanowski (ciechanow.ski) | Hand-written canvas and WebGL explainers | One deep, polished piece beats several shallow ones | all |
+
+Cautionary findings:
+
+- **In-browser chatbot (Show HN, item 40252569):** the Llama 3 model was over 4 GB; it ran on desktop Chrome and Edge
+  only and failed on Safari, iPhone and Linux; commenters reported cache errors and made-up answers. This supports
+  dropping a general chatbot.
+- **"Chat with my site" bots (SiteGPT, ChatClient):** generic products anyone can add, so they say nothing about
+  research skill.
+- **"Ask HN: What has your personal website done for you?":** jobs and collaborations mostly came from long-form
+  writing; tools came up less often. A short method write-up next to the tool ("How the sketchpad's AI was trained")
+  would help.
+
+Credit on the page: one "Inspired by" line under Method, as a citation, e.g. "The draw-and-predict interaction follows
+Google's Quick, Draw!; the design-space map follows Danhaive and Mueller (2021)." No code from these projects is used.
+
 ## Side finding
 
 - `/tools/cutt-ia` (`src/App.tsx`) frames https://cutt-ia.vercel.app/, which returned 404 on 2026-10-23. The page is
@@ -137,6 +170,8 @@
 
 Checked by web search, 2026-10-23. Figures quoted from abstracts.
 
+- Aage, Jørgensen, Andreasen and Sigmund (2013). Interactive topology optimization on hand-held devices. Struct.
+  Multidiscip. Optim. 47(1), 1–6.
 - Avci, Abdeljaber, Kiranyaz, Hussein, Gabbouj and Inman (2021). A review of vibration-based damage detection in civil
   structures: from traditional methods to machine learning and deep learning applications. Mech. Syst. Signal Process.,
   107077. DOI 10.1016/j.ymssp.2020.107077.
@@ -144,14 +179,21 @@ Checked by web search, 2026-10-23. Figures quoted from abstracts.
   deep learning. PNAS 119(1). DOI 10.1073/pnas.2111505119.
 - Carney et al. (2020). Teachable Machine: approachable web-based tool for exploring machine learning classification.
   CHI EA '20. DOI 10.1145/3334480.3382839.
+- Cho et al. (2024). Transformer Explainer: interactive learning of text-generative models. IEEE VIS 2024;
+  AAAI 39 (2025). arXiv 2408.04619.
+- Danhaive and Mueller (2021). Design subspace learning: structural design space exploration using
+  performance-conditioned generative modeling. Autom. Constr. 127. hdl 1721.1/145568.
 - Guo et al. (2025). Toward engineering AGI: benchmarking the engineering design capabilities of LLMs. NeurIPS Datasets
   and Benchmarks. arXiv 2509.16204.
+- Ha and Eck (2018). A neural representation of sketch drawings. ICLR. arXiv 1704.03477.
 - Jones, Schonlau and Welch (1998). Efficient global optimization of expensive black-box functions. J. Global Optim. 13,
   455–492.
 - Kollmann, Abueidda, Koric, Guleryuz and Sobh (2020). Deep learning for topology optimization of 2D metamaterials.
   Mater. Des. 196, 109098. DOI 10.1016/j.matdes.2020.109098.
 - Lakshminarayanan, Pritzel and Blundell (2017). Simple and scalable predictive uncertainty estimation using deep
   ensembles. NeurIPS. arXiv 1612.01474.
+- Mueller and Ochsendorf (2015). Combining structural performance and designer preferences in evolutionary design
+  space exploration. Autom. Constr. 52, 70–82. DOI 10.1016/j.autcon.2015.02.011.
 - Nakka, Harursampath and Ponnusami (2023). CNN surrogate encoding material properties in the microstructure image.
   Sci. Rep. 13, 9079.
 - Pitz and Pochiraju (2023). A neural network transformer model for composite microstructure homogenization.
@@ -163,5 +205,7 @@ Checked by web search, 2026-10-23. Figures quoted from abstracts.
   optimization. Proc. IEEE 104(1), 148–175.
 - Smilkov, Carter, Sculley, Viégas and Wattenberg (2017). Direct-manipulation visualization of deep networks.
   arXiv 1708.03788.
+- Tseranidis, Brown and Mueller (2016). Data-driven approximation algorithms for rapid performance evaluation and
+  optimization of civil structures. Autom. Constr. 72, 279–293.
 - Zheng et al. (2023). Unifying the design space and optimizing linear and nonlinear truss metamaterials by generative
   modeling. Nat. Commun. PMC10663604.
