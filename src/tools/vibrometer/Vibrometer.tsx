@@ -14,7 +14,11 @@ function result(r: Record_) {
   const best = axes.reduce((p, q) => (variance(q.a.signal) > variance(p.a.signal) ? q : p));
   return { axis: best.k, levels: new Set(r[best.k]).size, ...best.a };
 }
-const NO_DATA = "No motion data arrived. The browser may block motion sensors: allow them for this site in the browser’s settings, or open the page in Chrome. You can also upload a CSV from a sensor app.";
+// Firefox for Android supports motion events only in part, and on some phones sends none.
+const FIREFOX_ANDROID = typeof navigator !== "undefined" && /Android/.test(navigator.userAgent) && /Firefox\//.test(navigator.userAgent);
+const NO_DATA = FIREFOX_ANDROID
+  ? "Firefox didn’t send any motion data on this phone. Open the page in Chrome, or record with a sensor app and upload the CSV."
+  : "No motion data arrived. The browser may block motion sensors: allow them for this site in the browser’s settings, or open the page in Chrome. You can also upload a CSV from a sensor app.";
 
 /** Plain polyline chart of y against x, with optional marked x positions. */
 const Chart: React.FC<{ y: ArrayLike<number>; x0: number; dx: number; xLabel: string; ticks: number[]; marks?: { x: number; main: boolean }[]; label: string }> = ({ y, x0, dx, xLabel, ticks, marks, label }) => {
