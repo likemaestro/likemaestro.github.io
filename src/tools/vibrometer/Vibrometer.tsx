@@ -1,9 +1,9 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import ToolShell from "../ToolShell";
-import { analyse, rate, simulated, variance } from "./signal";
+import { analyse, rate, variance } from "./signal";
 import { download } from "../../lab/export";
 
-interface Record_ { t: number[]; x: number[]; y: number[]; z: number[]; source: "phone" | "file" | "simulated"; name?: string }
+interface Record_ { t: number[]; x: number[]; y: number[]; z: number[]; source: "phone" | "file"; name?: string; live?: boolean }
 type Phase = "idle" | "asking" | "countdown" | "recording";
 const LENGTHS = [10, 20, 60];
 
@@ -44,6 +44,8 @@ const Chart: React.FC<{ y: ArrayLike<number>; x0: number; dx: number; xLabel: st
     </svg>
   );
 };
+/** Where a chart will be, before there is anything to draw: no example data, so nothing reads as a measurement. */
+const Empty: React.FC<{ text: string }> = ({ text }) => <div className="t-small flex aspect-[640/180] w-full items-center justify-center border border-dashed border-rule px-4 text-center text-ink-2">{text}</div>;
 const niceTicks = (max: number) => { const step = [0.5, 1, 2, 5, 10, 20].find((s) => max / s <= 7) ?? 50; return Array.from({ length: Math.floor(max / step) + 1 }, (_, k) => Number((k * step).toFixed(2))); };
 
 function parseCSV(text: string, name: string): Record_ | string {
@@ -56,7 +58,7 @@ function parseCSV(text: string, name: string): Record_ | string {
 }
 
 const Vibrometer: React.FC = () => {
-  const [rec, setRec] = useState<Record_>(() => ({ ...simulated(), source: "simulated" }));
+  const [rec, setRec] = useState<Record_ | null>(null);   // nothing until a measurement or a file
   const [phase, setPhase] = useState<Phase>("idle");
   const [count, setCount] = useState(0);
   const [length, setLength] = useState(20);
@@ -67,8 +69,8 @@ const Vibrometer: React.FC = () => {
   const stopRef = useRef<() => void>(() => {});
   useEffect(() => () => stopRef.current(), []);
 
-  const res = useMemo(() => result(rec), [rec]);
-  const main = res.peaks[0];
+  const res = useMemo(() => (rec ? result(rec) : null), [rec]);
+  const main = res?.peaks[0];
 
   const record = () => {
     bufRef.current = { t: [], r: [], x: [], y: [], z: [] };
@@ -82,28 +84,35 @@ const Vibrometer: React.FC = () => {
       buf.t.push(e.timeStamp / 1000); buf.r.push(performance.now() / 1000); buf.x.push(a.x); buf.y.push(a.y!); buf.z.push(a.z!);
     };
     const t0 = performance.now();
-    let timers: number[] = [];
-    const stop = (done: boolean) => {
+    let timers: number[] = [], ticks = 0;
+    // a copy of what has come in so far, on the event times where they look sane and the arrival times otherwise
+    const snapshot = (live: boolean): Record_ => {
+      const fs = rate(buf.t), t = fs > 5 && fs < 2000 ? buf.t : buf.r;
+      return { t: t.slice(), x: buf.x.slice(), y: buf.y.slice(), z: buf.z.slice(), source: "phone", live };
+    };
+    const stop = (keep: boolean) => {
       window.removeEventListener("devicemotion", onMotion);
       timers.forEach((id) => window.clearInterval(id));
       timers = [];
       lock?.release().catch(() => {});
       stopRef.current = () => {};
       setPhase("idle");
-      if (!done) return;
-      if (buf.t.length < 64) { setProblem(NO_DATA); return; }
-      const fs = rate(buf.t), t = fs > 5 && fs < 2000 ? buf.t : buf.r;
-      setRec({ t, x: buf.x, y: buf.y, z: buf.z, source: "phone" });
+      if (!keep) return;
+      if (buf.t.length === 0) { setRec(null); setProblem(NO_DATA); return; }
+      if (buf.t.length < 64) { setRec(null); setProblem("Too short to analyse: let it record for a few seconds."); return; }
+      setRec(snapshot(false));
     };
     window.addEventListener("devicemotion", onMotion);
+    setRec(null);
     setPhase("recording");
     timers.push(window.setInterval(() => {
       const s = (performance.now() - t0) / 1000;
       setElapsed(s); setSamples(buf.t.length);
       if (s > 3 && buf.t.length === 0) { stop(false); setProblem(NO_DATA); }
       else if (s >= length) stop(true);
+      else if (++ticks % 5 === 0 && buf.t.length >= 64) setRec(snapshot(true));
     }, 100));
-    stopRef.current = () => stop(false);
+    stopRef.current = () => stop(true);
   };
 
   const start = () => {
@@ -131,13 +140,13 @@ const Vibrometer: React.FC = () => {
     f.text().then((s) => { const r = parseCSV(s, f.name); if (typeof r === "string") setProblem(r); else { setProblem(""); setRec(r); } });
   };
 
-  const fsTicks = niceTicks(res.fs / 2), tTicks = niceTicks(rec.t[rec.t.length - 1] - rec.t[0]);
-  const exportRecording = () => download("vibrometer-recording.csv", `# Phone vibrometer, ${window.location.href}\n# source: ${rec.source}\n# time_s,ax_m_s2,ay_m_s2,az_m_s2\n${rec.t.map((t, k) => `${(t - rec.t[0]).toFixed(4)},${rec.x[k]},${rec.y[k]},${rec.z[k]}`).join("\n")}\n`, "text/csv");
-  const exportSpectrum = () => download("vibrometer-spectrum.csv", `# Phone vibrometer, axis ${res.axis}, sampling ${res.fs.toFixed(2)} Hz, Hann window\n# frequency_hz,amplitude_m_s2\n${Array.from(res.amp, (a, k) => `${(k * res.df).toFixed(4)},${a.toExponential(4)}`).join("\n")}\n`, "text/csv");
+  const fsTicks = res ? niceTicks(res.fs / 2) : [], tTicks = rec ? niceTicks(rec.t[rec.t.length - 1] - rec.t[0]) : [];
+  const exportRecording = () => rec && download("vibrometer-recording.csv", `# Phone vibrometer, ${window.location.href}\n# source: ${rec.source}\n# time_s,ax_m_s2,ay_m_s2,az_m_s2\n${rec.t.map((t, k) => `${(t - rec.t[0]).toFixed(4)},${rec.x[k]},${rec.y[k]},${rec.z[k]}`).join("\n")}\n`, "text/csv");
+  const exportSpectrum = () => res && download("vibrometer-spectrum.csv", `# Phone vibrometer, axis ${res.axis}, sampling ${res.fs.toFixed(2)} Hz, Hann window\n# frequency_hz,amplitude_m_s2\n${Array.from(res.amp, (a, k) => `${(k * res.df).toFixed(4)},${a.toExponential(4)}`).join("\n")}\n`, "text/csv");
 
   const busy = phase !== "idle";
-  const sourceText = rec.source === "simulated" ? "Simulated example, not a measurement: two modes at 2.2 Hz and 6.8 Hz, struck twice, with noise."
-    : rec.source === "file" ? `From ${rec.name}.` : "Your measurement.";
+  const sourceText = !rec ? (phase === "recording" ? "Waiting for the first seconds of data…" : "No measurement yet. Start measuring, or upload a CSV.")
+    : rec.live ? "Recording: the result so far, updated every half second." : rec.source === "file" ? `From ${rec.name}.` : "Your measurement.";
 
   return (
     <ToolShell
@@ -153,8 +162,9 @@ const Vibrometer: React.FC = () => {
         <p>Nothing leaves your device: the recording stays in this page until you export it.</p>
       </>}
     >
-      <div className="grid gap-x-12 gap-y-10 md:grid-cols-[17rem_minmax(0,1fr)]">
-        <div className="flex min-w-0 flex-col gap-5">
+      {/* On phones the result comes straight after the controls, so it shows while the phone lies flat recording */}
+      <div className="grid gap-x-12 gap-y-10 md:grid-cols-[17rem_minmax(0,1fr)] md:grid-rows-[auto_1fr]">
+        <div className="flex min-w-0 flex-col gap-5 md:col-start-1 md:row-start-1">
           <button type="button" onClick={busy ? () => stopRef.current() : start} className="btn btn-solid h-14 text-[1.0625rem]">
             {phase === "asking" ? "Asking for motion access…" : phase === "countdown" ? `Starting in ${count}… (tap to cancel)` : phase === "recording" ? `Recording ${Math.min(length, Math.floor(elapsed))} / ${length} s (tap to stop)` : "Start measuring"}
           </button>
@@ -168,6 +178,8 @@ const Vibrometer: React.FC = () => {
               </button>
             ))}
           </div>
+        </div>
+        <div className="flex min-w-0 flex-col gap-5 max-md:order-last md:col-start-1 md:row-start-2">
           <ol className="t-small list-decimal space-y-1.5 pl-4 text-ink-2">
             <li>Lay the phone flat on the structure, screen up, where it can’t fall.</li>
             <li>Tap Start and take your hands off it.</li>
@@ -178,30 +190,31 @@ const Vibrometer: React.FC = () => {
           </label>
         </div>
 
-        <div className="min-w-0" aria-live="polite">
+        <div className="min-w-0 md:col-start-2 md:row-span-2 md:row-start-1" aria-live={rec?.live ? "off" : "polite"}>
           <p className="t-small text-ink-2">{sourceText}</p>
-          {rec.source !== "simulated" && res.levels <= 3 && <p className="t-small mt-1 text-ink">The phone saw almost no motion: the browser rounds readings (to 0.1 m/s² in Chrome), so weaker vibrations don’t show. Make the structure move more, for example jump once on a footbridge.</p>}
+          {rec && res && !rec.live && res.levels <= 3 && <p className="t-small mt-1 text-ink">The phone saw almost no motion: the browser rounds readings (to 0.1 m/s² in Chrome), so weaker vibrations don’t show. Make the structure move more, for example jump once on a footbridge.</p>}
           <div className="mt-3 flex flex-wrap items-baseline gap-x-6 gap-y-2">
-            <p className="t-h2">{main ? `${main.f.toFixed(2)} Hz` : "No clear peak"}</p>
-            <p className="t-data text-ink-2">
+            <p className={`t-h2 ${res ? "" : "text-ink-2"}`}>{!res ? "– Hz" : main ? `${main.f.toFixed(2)} Hz` : "No clear peak"}</p>
+            {res && <p className="t-data text-ink-2">
               {res.peaks.length > 1 && <>Next peaks {res.peaks.slice(1).map((p) => `${p.f.toFixed(2)} Hz`).join(", ")} · </>}
               sampling {res.fs.toFixed(0)} Hz · resolution {res.resolution.toFixed(3)} Hz · axis {res.axis}
-            </p>
+            </p>}
           </div>
           <div className="mt-5">
             <p className="t-small mb-1 text-ink-2">Spectrum, amplitude against frequency</p>
-            <Chart y={res.amp} x0={0} dx={res.df} xLabel="Hz" ticks={fsTicks} marks={res.peaks.map((p, i) => ({ x: p.f, main: i === 0 }))}
+            {res ? <Chart y={res.amp} x0={0} dx={res.df} xLabel="Hz" ticks={fsTicks} marks={res.peaks.map((p, i) => ({ x: p.f, main: i === 0 }))}
               label={`Spectrum up to ${(res.fs / 2).toFixed(0)} Hz. Main peak at ${main ? main.f.toFixed(2) : "none"} hertz.`} />
+              : <Empty text="The spectrum of your measurement appears here." />}
           </div>
           <div className="mt-5">
-            <p className="t-small mb-1 text-ink-2">Acceleration on axis {res.axis}, mean and drift removed</p>
-            <Chart y={res.signal} x0={0} dx={1 / res.fs} xLabel="s" ticks={tTicks} label="Acceleration over time" />
+            <p className="t-small mb-1 text-ink-2">Acceleration{res ? ` on axis ${res.axis}` : ""}, mean and drift removed</p>
+            {res ? <Chart y={res.signal} x0={0} dx={1 / res.fs} xLabel="s" ticks={tTicks} label="Acceleration over time" />
+              : <Empty text="The recorded acceleration appears here." />}
           </div>
-          <div className="mt-5 flex flex-wrap gap-2">
+          {rec && !rec.live && <div className="mt-5 flex flex-wrap gap-2">
             <button type="button" className="btn" onClick={exportRecording}>Recording CSV</button>
             <button type="button" className="btn" onClick={exportSpectrum}>Spectrum CSV</button>
-            {rec.source !== "simulated" && <button type="button" className="btn" onClick={() => setRec({ ...simulated(), source: "simulated" })}>Show the example</button>}
-          </div>
+          </div>}
         </div>
       </div>
     </ToolShell>

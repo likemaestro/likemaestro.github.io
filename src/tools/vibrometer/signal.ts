@@ -89,7 +89,7 @@ export function analyse(t: ArrayLike<number>, x: ArrayLike<number>) {
   return { fs, signal: u, ...s, peaks: peaks(s.amp, s.df, 0.5, 3, Math.max(0.3, 4 * s.resolution)) };
 }
 
-/** A simulated record (clearly labelled as such on the page): two damped modes, a little noise, uneven timestamps. */
+/** A simulated record for the tests: two damped modes, a little noise, uneven timestamps. */
 export function simulated(seconds = 20, f1 = 2.2, f2 = 6.8) {
   let s = 12345;
   const rnd = () => { s = (s * 16807) % 2147483647; return s / 2147483647; };
