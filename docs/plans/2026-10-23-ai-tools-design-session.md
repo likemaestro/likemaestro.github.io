@@ -327,6 +327,8 @@ it shows the simpler method first.
 
 ## 10. Round 7: something 3D (2026-10-23)
 
+> **Rejected by Murat** ("I didn't like it at all"). Round 8 replaces the options; the performance rules still apply.
+
 Murat: include something 3D, with three.js, fast enough to run everywhere.
 
 **Panel:**
@@ -394,12 +396,57 @@ additions to the GP and autoencoder tools.
   - one real phone;
   - targets: 60 fps desktop, at least 30 fps on a mid-range phone, 0 frames when idle.
 
+## 11. Round 8: the council again, something different (2026-10-23)
+
+Round 7's 3D ideas were calculators and add-ons. This round looks for 3D where the structure itself is the experience.
+
+**The council:**
+- **Interactive designer** (in the spirit of neal.fun and Ciechanowski): "Make a moment, not a form. One action, one
+  surprise, then let people play."
+- **Structural engineering educator:** "Show the load path. People never forget seeing material go where the force
+  goes."
+- **Architect and historian:** "Italy has the best story: Nervi's floors follow the stress lines (Halpern, Billington
+  and Adriaenssens 2013). Gaudí hung chains and flipped them."
+- **Computational designer:** "Flat steel sheet, laser cut, opening into a dome: auxetics make that real (Konaković et
+  al. 2016)."
+- **Topology optimization researcher:** "Murat's own field in 3D. DTU's 3D app is native (Aage et al. 2015), and I found
+  no live in-browser 3D version."
+- **Monitoring engineer:** "Frequencies are what a structure says. Let people hear them, and hear damage."
+- **ML researcher:** "If there is AI, the visitor must see it decide something."
+- **Graphics engineer:** "Coarse grids, workers, rendering on demand; all five fit in a phone's budget."
+- **Hiring PI:** "One piece that is unmistakably yours beats five that are clever."
+- **Devil's advocate:** "Hanging nets exist everywhere (Kangaroo, RhinoVAULT). Pick what nobody has on the web."
+
+**Concepts:**
+
+| # | Concept | The moment | Ties | New? | Effort |
+|---|---|---|---|---|---|
+| **1** | **Grow it: live 3D topology optimization** | Pick a scene (a bridge over a gap, a canopy, a tower in wind). Drag the supports and the loads on a 3D block, and watch material carve itself into the load path, as a smooth surface. Export STL | MSc and the 2026 paper, in 3D | No live in-browser 3D version found | medium: coarse voxels (about 30 × 15 × 15), a matrix-free CG solve in a worker, marching cubes (Liu and Tovar 2014) |
+| 2 | **Nervi's floor** | Place columns under a slab. The principal-moment lines grow into 3D ribs underneath, and the Gatti Wool Factory pattern sits beside them | Stress-aligned material (optimization intuition); Italian heritage; architecture | No web version found | small to medium: plate FE on a grid, streamline tracing |
+| 3 | **Flat to curved** | A laser-cut auxetic sheet opens from flat into a dome or a saddle. Export the cut pattern | Murat's auxetic cells; laser cutting; architecture | Research code exists, no web tool | high: deployment simulation |
+| 4 | Hang it, flip it | A hanging net (Hooke, Gaudí) flips into a compression shell, colored by force | Form finding; architecture | Common (Kangaroo, RhinoVAULT) | small |
+| 5 | **The building's chord** | A 3D frame plays its vibration modes as sound (shifted up into hearing). Tap it to ring it. Damage a column and the chord changes; an autoencoder trained on the healthy sound flags it | FFT, monitoring, the autoencoder, the vibrometer | No sonification demo found | small to medium: a small eigen-analysis, Web Audio, a small autoencoder |
+
+**Council vote:**
+- **Research identity:** 1.
+- **Wow:** 1, 3, 5.
+- **Architecture:** 2, 3, 4.
+- **Novelty:** 1, 5, 2.
+- **Ease:** 4, 2, 5.
+
+**Recommendation:**
+- 1 as the 3D flagship;
+- 5 as the AI piece, since it carries the autoencoder and the FFT work in a form nobody has;
+- 2 if an architecture piece is wanted.
+
 ## References
 
 Checked by web search, 2026-10-23, unless marked.
 
 - Al-Ketan and Abu Al-Rub (2019). Multifunctional mechanical metamaterials based on triply periodic minimal surface
   lattices. Adv. Eng. Mater. 21(10), 1900524. DOI 10.1002/adem.201900524.
+- Aage, Andreassen, Lazarov and Sigmund (2015). Interactive topology optimization on hand-held devices, 3D. Struct.
+  Multidiscip. Optim. 51 (as reported by DTU's app pages).
 - Agnihotri and Batra (2020). Exploring Bayesian optimization. Distill. DOI 10.23915/distill.00026.
 - Avci, Abdeljaber, Kiranyaz, Hussein, Gabbouj and Inman (2021). A review of vibration-based damage detection in civil
   structures. Mech. Syst. Signal Process., 107077. DOI 10.1016/j.ymssp.2020.107077.
@@ -426,6 +473,7 @@ Checked by web search, 2026-10-23, unless marked.
 - Görtler, Kehlbeck and Deussen (2019). A visual exploration of Gaussian processes. Distill.
   DOI 10.23915/distill.00017.
 - Henderson. Steel construction with trusses. New Steel Construction (SCI): span-to-depth ratios of 10 to 25.
+- Halpern, Billington and Adriaenssens (2013). The ribbed floor slab systems of Pier Luigi Nervi. J. IASS 54, 127–136.
 - Hinton and Salakhutdinov (2006). Reducing the dimensionality of data with neural networks. Science 313(5786),
   504–507. DOI 10.1126/science.1127647.
 - Hohman, Conlen, Heer and Chau (2020). Communicating with interactive articles. Distill. DOI 10.23915/distill.00028.
@@ -433,10 +481,14 @@ Checked by web search, 2026-10-23, unless marked.
   about reliability of variable ordering. PLOS ONE 10(11). DOI 10.1371/journal.pone.0142444.
 - Jones, Schonlau and Welch (1998). Efficient global optimization of expensive black-box functions. J. Global Optim. 13,
   455–492.
+- Konaković, Crane, Deng, Bouaziz, Piker and Pauly (2016). Beyond developable: computational design and fabrication
+  with auxetic materials. ACM Trans. Graph. 35(4). DOI 10.1145/2897824.2925944.
 - Kramer (1991). Nonlinear principal component analysis using autoassociative neural networks. AIChE J. 37(2),
   233–243. DOI 10.1002/aic.690370209.
 - Ly et al. (2022). Investigation on factors affecting early strength of high-performance concrete by Gaussian process
   regression. PLOS ONE.
+- Liu and Tovar (2014). An efficient 3D topology optimization code written in Matlab. Struct. Multidiscip. Optim.
+  50(6), 1175–1196. DOI 10.1007/s00158-014-1107-x.
 - Lorensen and Cline (1987). Marching cubes: a high resolution 3D surface construction algorithm. SIGGRAPH (from
   memory).
 - Maes and Lombaert (2020). Monitoring data for railway bridge KW51 in Leuven, Belgium, before, during, and after
