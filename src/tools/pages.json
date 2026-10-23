@@ -20,6 +20,12 @@
       "group": "Microstructures"
     },
     {
+      "path": "/tools/property-map",
+      "title": "Property map",
+      "line": "Hundreds of optimized unit cells on one chart of stiffness against Poisson's ratio. Pick one to see it.",
+      "group": "Microstructures"
+    },
+    {
       "path": "/tools/WorldMap",
       "title": "World map generator",
       "line": "Editorial world maps with your own colours, projection and highlighted countries.",

@@ -42,7 +42,8 @@
     "deploy": "gh-pages -d build",
     "postbuild": "node scripts/postbuild.js",
     "images": "node scripts/make-images.js",
-    "precompute": "node scripts/precompute-cells.js"
+    "precompute": "node scripts/precompute-cells.js",
+    "precompute-map": "node scripts/precompute-map.js"
   },
   "eslintConfig": {
     "extends": [
