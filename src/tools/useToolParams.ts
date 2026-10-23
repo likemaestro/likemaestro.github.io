@@ -4,7 +4,8 @@ import { useSearchParams } from "react-router-dom";
 // A tool's settings live in the query string, so a link reproduces them. Out-of-range values are clamped and reported.
 export type Field =
   | { kind: "enum"; values: readonly string[]; def: string }
-  | { kind: "num"; min: number; max: number; step: number; def: number };
+  | { kind: "num"; min: number; max: number; step: number; def: number }
+  | { kind: "text"; ok: (v: string) => boolean; def: string };
 
 const snap = (v: number, f: Extract<Field, { kind: "num" }>) => {
   const s = Math.round((Math.min(f.max, Math.max(f.min, v)) - f.min) / f.step) * f.step + f.min;
@@ -25,6 +26,7 @@ export function useToolParams<S extends Record<string, Field>>(spec: S) {
       let v: string | number = f.def;
       if (raw !== null) {
         if (f.kind === "enum") { if (f.values.includes(raw)) v = raw; else clamped.push(k); }
+        else if (f.kind === "text") { if (f.ok(raw)) v = raw; else clamped.push(k); }
         else { const x = Number(raw); if (Number.isFinite(x)) { v = snap(x, f); if (v !== x) clamped.push(k); } else clamped.push(k); }
       }
       (values as Record<string, string | number>)[k] = v;

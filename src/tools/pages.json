@@ -45,13 +45,13 @@
     {
       "path": "/tools/WorldMap",
       "title": "World map generator",
-      "line": "Editorial world maps with your own colours, projection and highlighted countries.",
+      "line": "A world map with the countries you pick highlighted and labelled, in your projection and colours, ready as SVG or PNG.",
       "group": "Other tools"
     },
     {
       "path": "/tools/gauge-tool",
       "title": "Gauge",
-      "line": "A gauge that shows a value on a colour scale.",
+      "line": "A dial for one value on a colour scale, with your own range, title and unit, ready as SVG or PNG.",
       "group": "Other tools"
     }
   ],

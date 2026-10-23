@@ -33,3 +33,20 @@ export function download(name: string, data: BlobPart, type: string) {
   document.body.appendChild(a); a.click(); a.remove();
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
+
+/** An SVG element in the page as a standalone file: the browser adds the namespace when it serializes. */
+export const svgText = (svg: SVGSVGElement) => `<?xml version="1.0" encoding="UTF-8"?>\n${new XMLSerializer().serializeToString(svg)}\n`;
+
+/** Rasterize SVG text at `scale` times its width and height and download it as a PNG. Fonts the page loaded are not
+ *  available to an SVG drawn as an image, so text falls back to the system fonts the SVG names after them. */
+export function downloadPNG(name: string, svg: string, w: number, h: number, scale = 3) {
+  const img = new Image(), url = URL.createObjectURL(new Blob([svg], { type: "image/svg+xml" }));
+  img.onload = () => {
+    const cv = document.createElement("canvas");
+    cv.width = Math.round(w * scale); cv.height = Math.round(h * scale);
+    cv.getContext("2d")!.drawImage(img, 0, 0, cv.width, cv.height);
+    URL.revokeObjectURL(url);
+    cv.toBlob((b) => b && download(name, b, "image/png"), "image/png");
+  };
+  img.src = url;
+}

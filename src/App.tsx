@@ -12,9 +12,9 @@ const PropertyMap = lazy(() => import("./tools/property-map/PropertyMap"));
 const Vibrometer = lazy(() => import("./tools/vibrometer/Vibrometer"));
 const TrussSizing = lazy(() => import("./tools/truss-sizing/TrussSizing"));
 const Decision = lazy(() => import("./tools/decision/Decision"));
-const GaugeTool = lazy(() => import("./components/tools/GaugeTool/GaugeTool"));
+const Gauge = lazy(() => import("./tools/gauge/Gauge"));
 const CUTTIA = lazy(() => import("./components/tools/CUTT-IA/CUTT-IA"));
-const WorldMap = lazy(() => import("./components/tools/WorldMap/WorldMap"));
+const WorldMap = lazy(() => import("./tools/world-map/WorldMap"));
 
 /** A new page opens at its top; back and forward keep the browser's scroll, and /#section links scroll themselves.
  *  Only a new path counts: the tools rewrite their query string whenever a setting moves. */
@@ -42,7 +42,7 @@ const App: React.FC = () => (
       <Route path="/tools/decision" element={<Decision />} />
       <Route path="/tools/vibrometer" element={<Vibrometer />} />
       <Route path="/tools/WorldMap" element={<WorldMap />} />
-      <Route path="/tools/gauge-tool" element={<GaugeTool />} />
+      <Route path="/tools/gauge-tool" element={<Gauge />} />
       <Route path="/tools/cutt-ia" element={<CUTTIA />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

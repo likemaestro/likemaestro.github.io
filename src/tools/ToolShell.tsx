@@ -30,8 +30,8 @@ const ToolShell: React.FC<{
   slug: string;
   methodRef?: { label: string; href: string };
   paper?: string;
-  method: React.ReactNode;
-  limits: React.ReactNode;
+  method?: React.ReactNode;   // utilities (the map, the gauge) have none, and then no method, limits or citation either
+  limits?: React.ReactNode;
   children: React.ReactNode;
 }> = ({ path, slug, methodRef, paper, method, limits, children }) => {
   const p = page(path);
@@ -64,7 +64,7 @@ const ToolShell: React.FC<{
 
           <div className="mt-8">{children}</div>
 
-          <div className="mt-16 grid gap-x-10 gap-y-10 border-t border-rule pt-10 md:grid-cols-3">
+          {method && <div className="mt-16 grid gap-x-10 gap-y-10 border-t border-rule pt-10 md:grid-cols-3">
             <section aria-labelledby="method-h" className="min-w-0">
               <h2 id="method-h" className="t-h3">Method</h2>
               <div className="mt-3 space-y-3 text-ink-2">{method}</div>
@@ -87,7 +87,7 @@ const ToolShell: React.FC<{
                 <span className={note ? "t-small text-ink-2" : "sr-only"} role="status" aria-live="polite">{note}</span>
               </div>
             </section>
-          </div>
+          </div>}
         </Wrap>
       </main>
       <SiteFooter />
