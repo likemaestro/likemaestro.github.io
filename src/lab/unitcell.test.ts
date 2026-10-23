@@ -27,6 +27,18 @@ test.each([8, 12])("the quarter-cell solve matches the full periodic one on a D4
   for (let p = 0; p < 6; p++) for (let e = 0; e < P.nel; e++) expect(Math.abs(sym.q[p][e] - full.q[p][e])).toBeLessThan(1e-10);
 });
 
+// The sketchpad's mirror mode: symmetric about both mid-lines but not the diagonals (C11 != C22).
+test.each([8, 12])("the quarter-cell solve matches the full one on a design with two mirror axes only (n = %i)", (n) => {
+  const P = createProblem({ n }), E = new Float64Array(P.nel), m = n / 2;
+  for (let e = 0; e < P.nel; e++) {
+    const x = e % n, y = (e - x) / n, qx = x < m ? x : n - 1 - x, qy = y < m ? y : n - 1 - y;
+    E[e] = 1e-3 + Math.abs(Math.sin((qx * 17 + qy * 5 + 1) * 78.233) * 43758.5453 % 1);
+  }
+  const full = homogenize(P, E), sym = homogenizeSym(P, E);
+  expect(Math.abs(full.C[0] - full.C[4])).toBeGreaterThan(1e-3);
+  for (let k = 0; k < 9; k++) expect(Math.abs(sym.C[k] - full.C[k])).toBeLessThan(1e-10);
+});
+
 test("opposite boundary nodes share their fluctuation DOFs (periodicity)", () => {
   const n = 6, P = createProblem({ n });
   for (let ey = 0; ey < n; ey++) {

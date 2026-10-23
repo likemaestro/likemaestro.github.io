@@ -7,6 +7,7 @@ import Home from "./components/Home";
 // list a new tool there too.
 const ToolsIndex = lazy(() => import("./tools/ToolsIndex"));
 const UnitCellDesigner = lazy(() => import("./tools/unit-cell/UnitCellDesigner"));
+const Sketchpad = lazy(() => import("./tools/sketchpad/Sketchpad"));
 const GaugeTool = lazy(() => import("./components/tools/GaugeTool/GaugeTool"));
 const CUTTIA = lazy(() => import("./components/tools/CUTT-IA/CUTT-IA"));
 const WorldMap = lazy(() => import("./components/tools/WorldMap/WorldMap"));
@@ -18,6 +19,7 @@ const App: React.FC = () => (
       <Route path="/publications" element={<Navigate to="/#publications" replace />} />
       <Route path="/tools" element={<ToolsIndex />} />
       <Route path="/tools/unit-cell" element={<UnitCellDesigner />} />
+      <Route path="/tools/sketchpad" element={<Sketchpad />} />
       <Route path="/tools/WorldMap" element={<WorldMap />} />
       <Route path="/tools/gauge-tool" element={<GaugeTool />} />
       <Route path="/tools/cutt-ia" element={<CUTTIA />} />

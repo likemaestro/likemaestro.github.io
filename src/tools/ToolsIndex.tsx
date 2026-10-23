@@ -28,11 +28,14 @@ const GLYPH: Record<string, React.ReactNode> = {
   "/tools/gauge-tool": <><path d="M8 32a16 16 0 0 1 32 0" /><path d="M24 32l8-10" /><circle cx="24" cy="32" r="1.6" fill="currentColor" /></>,
 };
 
+// Microstructure rows show a lattice of one of the precomputed designs.
+const LATTICE: Record<string, { rho: string }> = { "/tools/sketchpad": cells.shear, "/tools/property-map": cells.bulk };
+
 const Thumb: React.FC<{ path: string }> = ({ path }) =>
   GLYPH[path] ? (
     <svg viewBox="0 0 48 48" aria-hidden="true" className="block aspect-square w-full border border-rule text-ink" fill="none" stroke="currentColor" strokeWidth="1.25">{GLYPH[path]}</svg>
   ) : (
-    <Lattice rho={cells.bulk.rho} tiles={2} className="border border-rule" />
+    <Lattice rho={(LATTICE[path] ?? cells.bulk).rho} tiles={2} className="border border-rule" />
   );
 
 const ToolsIndex: React.FC = () => {
