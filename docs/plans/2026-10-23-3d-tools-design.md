@@ -86,6 +86,9 @@ Nothing is built yet. The tools spec's rules all apply (`2026-10-23-tools-wave1-
 
 ## 2. Unbuild it
 
+> **On hold, proposed for dropping** (`2026-10-23-tool-value-propositions.md`). Its value is thin for a large effort. The
+> GA and its fast stability rules are dropped in any case. The section stays as a record.
+
 **Pitch:** "Take a steel building apart so its steel can be used again, without it falling down."
 **Group:** Life cycle, with the carbon calculator: "Tools / Life cycle / Unbuild it".
 
