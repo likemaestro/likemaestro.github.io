@@ -41,7 +41,7 @@ const PropertyMap: React.FC = () => {
   const cellRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
-    fetch(`${process.env.PUBLIC_URL}/data/property-map.json`)
+    fetch(`${import.meta.env.BASE_URL}data/property-map.json`)
       .then((r) => (r.ok ? r.json() : Promise.reject(r.status)))
       .then((j: { n: number; designs: Raw[] }) => setData({
         n: j.n,
