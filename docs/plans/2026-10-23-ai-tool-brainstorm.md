@@ -1,6 +1,7 @@
 # AI tool: brainstorm
 
 2026-10-23. Murat wants an interactive tool that shows the AI side of the work. Brainstorm only; nothing is built yet.
+Revised the same day under Murat's framing rule (below); the first round's ideas are in this file's git history.
 
 ## The gap
 
@@ -11,148 +12,122 @@
   - "nothing leaves your device";
   - each tool is a lazy chunk, opens with an example, keeps its settings in the URL;
   - Method, Assumptions and limits, Cite under each tool.
-- The site already has what most AI demos lack: a trusted solver in the browser (homogenization in the worker, the truss
-  FE). An AI tool here can be checked against physics live, in front of the visitor.
 
-## Who should weigh in, and what they would say
+## Framing rule (Murat, 2026-10-23)
 
-- **A hiring PI in ML for mechanics:** "A chatbot wrapper tells me nothing. Show a model you trained on your own data,
-  its error on held-out designs, and where it breaks."
-- **A practicing steel engineer:** "I won't trust a black box. Show me when it's wrong, and keep the code check in the
-  loop."
-- **An architecture student from the workshops:** "Let me draw and see something happen at once. Explain the AI in one
-  line."
-- **An interactive-ML researcher:** direct manipulation and instant feedback teach ML better than text (TensorFlow
-  Playground, Smilkov et al. 2017; Teachable Machine, Carney et al. 2020).
-- **The site's engineer:** an in-browser LLM is a download of hundreds of MB to several GB and needs WebGPU; a small CNN
-  is well under a few MB and runs anywhere. The privacy promise holds either way, since both run locally.
-- **A skeptical reviewer:** LLMs are still weak at engineering design. The best model passed 34 % of ENGDESIGN tasks
-  (Guo et al. 2025), and ChatGPT's FE-exam results were weakest on calculation-heavy questions (Pursnani et al. 2023). A
-  confident wrong answer on a personal site costs more than having no chatbot.
+A tool must never suggest research Murat does not do. So there is no LLM tool: Murat does not work on LLMs. Every tool is
+one of three kinds, and says which:
 
-## Ideas
+- **Research method:** a method Murat uses, shown on an example people can follow. The example is not the research:
+  the truss sizing tool runs NSGA-II, which the PhD uses, but the PhD is not about trusses.
+- **Explainer:** a tool that makes an idea easy to see, for teaching and to draw people in. It is not research. The
+  sketchpad is one: you draw a cell and its stiffness is computed.
+- **Utility:** the world map and the gauge.
 
-### 1. AI vs. solver in the sketchpad (recommended)
+Proposed classification, to confirm:
 
-- A small CNN reads the 48 × 48 drawing and predicts E₁, E₂ and ν₁₂ on every brush move. The FE solve still runs on
-  stroke end. Both readings sit side by side, with the gap between them.
-- Five networks instead of one (a deep ensemble, Lakshminarayanan et al. 2017); their spread is the uncertainty. Draw
-  something unlike the training data and the spread widens: "The AI is unsure here; the solver is the reference."
-- A running score: "AI within 5 % of the solver on N of your last M drawings."
-- Optional: a saliency overlay showing which pixels drive the stiffness.
-- **Data and training:**
-  - the homogenization code labels tens of thousands of cells offline: the optimized pools, plus random and perturbed
-    drawings, plus their D4 copies;
-  - circular padding in the convolutions, so the network sees the cell as periodic;
-  - trained in PyTorch; weights exported as JSON or ONNX;
-  - inference in plain TypeScript in the worker (a few million multiply-adds per network, so milliseconds), or ONNX
-    Runtime Web. Five small networks are roughly 0.5–2 MB, fetched only by this page (estimate).
-- **Literature:** CNN surrogates for homogenization (Nakka et al. 2023; Pitz and Pochiraju 2023); CNNs for 2D
-  metamaterial topology optimization (Kollmann et al. 2020).
-- **Why first:**
-  - it reuses the sketchpad, the worker and the precompute pipeline;
-  - it ties the AI to the MSc and the FEAD paper;
-  - it is honest by construction, because the solver checks the AI live;
-  - it is already on the wave-3 list as "AI surrogate for homogenization".
-- **Effort:** medium; most of it is offline data and training.
-- **Risk:** poor accuracy on hand drawings far from the training data. Mixing random drawings into training and showing
-  the ensemble spread both address it.
+| Tool | Kind | Sentence on the page (draft) |
+|---|---|---|
+| Unit-cell designer | Research method | "Topology optimization of microstructures, the subject of my MSc and of my 2026 paper. This tool solves the linear elastic case; the research treats nonlinear elastic materials." |
+| Property map | Research method | "Designs found with the unit-cell designer's method." |
+| Cell sketchpad | Explainer | "An explainer, not my research: draw a cell and see its stiffness." |
+| Truss sizing | Research method | "NSGA-II, which I use in my PhD. The truss is an illustrative example." |
+| Multi-criteria choice | Research method | "TOPSIS, VIKOR, AHP and SMAA-2, which I use in my PhD. The examples are neutral." |
+| Phone vibrometer | Explainer (to confirm) | "An explainer, not my research: measure a natural frequency with a phone." |
+| World map, gauge | Utility | none |
 
-### 2. Inverse design: click a target, get a cell
+Where the kind shows:
+- on `/tools`, a small tag on each row;
+- on each tool page, the sentence under the one-line description.
 
-- On the property map, click any (ν₁₂, E₁) point, including empty regions. A conditional generator proposes three or
-  four cells, and the solver places each one where it actually lands, with an arrow from the target.
-- **Variant, "AI warm start":** the generated cell seeds the existing SIMP run, and the page shows the iterations with
-  and without it. The optimizer has the last word, so a poor guess costs time, not correctness.
-- **Literature:** Bastek et al. 2022 (PNAS); Zheng et al. 2023 (Nat. Commun.); Kollmann et al. 2020; Deep-DRAM
-  (arXiv 2212.12047).
-- The most research-like and visually striking of the set.
-- **Risk:** the 464 precomputed designs are far too few; it needs thousands of optimized cells (hours of precompute), and
-  generated cells can come out grey or disconnected.
-- **Effort:** high.
+## The AI tool
 
-### 3. Design-space map (latent explorer)
+Under the rule, the AI tool uses an AI method that Murat actually uses. Two qualify.
 
-- A 2-D map of a learned latent space of cells. Drag a cursor and the cell morphs continuously, its properties computed
-  live. It pairs with the property map: property space beside design space.
-- **Effort:** medium; it comes almost free once idea 2's model exists.
+### A. Surrogate-assisted design optimization with a Gaussian process (recommended)
 
-### 4. Beat the optimizer (human vs. Bayesian optimization)
+- **The page:**
+  - A design problem with a "true" model treated as expensive, with a budget of, say, 15 evaluations.
+  - Samples go into a GP. The page shows its mean and 95 % band, as a curve for one variable and a map for two.
+  - Expected improvement picks the next sample. The visitor can also click to sample by hand: "you vs. expected
+    improvement".
+  - When the budget is spent, the true surface appears beside the GP. The page reports the optimum found, the true
+    optimum, and the evaluations used.
+  - Controls show GP know-how: kernel (squared exponential, Matérn 5/2), length scales, noise, and the leave-one-out
+    error.
+- **Example, to choose:**
+  - **(b) Neutral, microstructures.** A re-entrant honeycomb (rib angle, thickness) evaluated by the quarter-cell
+    solver.
+  - **(c) Neutral, structures.** Two section sizes of the truss: mass against deflection.
+- **Literature:**
+  - GPs: Rasmussen and Williams 2006.
+  - Expected improvement (EGO): Jones et al. 1998; review: Shahriari et al. 2016.
+  - Surrogates in structural design: Tseranidis et al. 2016.
+- **Effort:** low to medium. A GP with Cholesky on at most about 50 points, and expected improvement maximized on a
+  grid, both run in the worker.
+- **Group:** Structures for (a) and (c); Microstructures for (b). A new "Design optimization" group is also possible.
 
-- A parametric cell, e.g. a re-entrant honeycomb with rib angle and thickness, evaluated live by the quarter-cell solver
-  in milliseconds. The task: "Find the most auxetic cell in ten tries."
-- The visitor and a Gaussian-process optimizer (expected improvement; Jones et al. 1998; Shahriari et al. 2016) each get
-  ten evaluations. At the end, the GP's mean and uncertainty appear beside the true surface.
-- Good for the workshops; it shows sample-efficient optimization, close to the optimization side of the research.
-- **Effort:** low to medium; a GP is a few hundred lines of TypeScript.
+### B. Anomaly detection with an autoencoder (second, to confirm)
 
-### 5. Train it yourself: where AI fails
-
-- TensorFlow-Playground-style, for structures. Train a tiny network in the browser on column buckling resistance (the EN
-  1993-1-1 curves) from slenderness and section data. Watch it fit, then drag the inputs outside the training range: the
-  network drifts while the Eurocode formula holds. One line: "AI interpolates; physics extrapolates."
-- Built for the AI workshops for architects and engineers.
-- **Literature:** Smilkov et al. 2017; Carney et al. 2020.
-- **Effort:** low to medium.
-
-### 6. LLM ideas (lower priority)
-
-- **6a. Check the chatbot.** Curated, dated LLM answers to engineering questions, in the spirit of the talk "ChatGPT as
-  an Engineering Assistant". The visitor judges right or wrong, then the site's own tools check. Fully static. It dates
-  as models change, so each answer needs its model and date.
-- **6b. Ask the tools in plain words.** An opt-in in-browser LLM (WebLLM, Ruan et al. 2024) turns "an auxetic cell at
-  35 % volume, 5 × 5 tiles" into a tool URL. Every tool already keeps its settings in the URL, so the model's output is
-  short and checkable, and the tool, not the model, does the computing. Cost: hundreds of MB to several GB to download,
-  WebGPU only, slow on phones.
-- **6c. Ask my thesis.** In-browser embeddings (Transformers.js) search the thesis and papers and return passages with
-  page numbers. No generated text, so no made-up answers.
-
-### 7. Damage detection playground (wave 3)
-
-- A synthetic footbridge. Stiffness loss at a chosen place shifts its frequencies, and a classifier trained on synthetic
-  cases points to the damaged zone. Visitors can enter frequencies measured with the vibrometer.
+- **Why:** the EWSHM 2026 team project (on the home page) used an autoencoder with a statistical baseline for bridge
+  health indicators.
+- **The page:**
+  - A synthetic year of bridge monitoring: a natural frequency that follows temperature, plus noise.
+  - Inject a stiffness loss or a sensor fault on a chosen date.
+  - A small autoencoder trains in the browser in seconds. Its reconstruction error crosses a threshold when something
+    changes.
+  - A statistical baseline (PCA or a control chart) runs beside it, so the AI is compared, not just shown.
+  - Optional: add frequencies measured with the vibrometer.
+- **Group:** Monitoring, next to the vibrometer.
+- **Limits:** synthetic data only, never the team's data. Citing the project needs the team's agreement.
 - **Literature:** Avci et al. 2021.
-- **Risk:** overclaiming SHM from a phone. Synthetic data only, said plainly.
 
-## Recommendation
+### Explainers (not research, labeled)
 
-- **Flagship:** idea 1. It is the only idea that is both real ML on Murat's own research data and checked live by
-  physics.
-- **Second, lighter:** idea 4 or 5, as a teaching tool for the workshops.
-- **Leave out:** a general chatbot.
+These are allowed for teaching and attention, as long as they are labeled.
+- **"Where AI fails"**, for the workshops. A small network trains on the EN 1993-1-1 buckling curves. Drag the inputs
+  past the training range: the network drifts while the formula holds.
+
+### Dropped under the rule
+
+- **LLM tools** (chatbot quiz, plain-language front door, thesis search): not Murat's research.
+- **CNN surrogate in the sketchpad, generative inverse design, latent design map:** deep learning on microstructures
+  is not Murat's research, and these tools would suggest it is.
 
 ## Inspiration
 
 Found 2026-10-23. Reddit blocks the search tool's crawler, so these come from Hacker News ("Show HN", "Ask HN") and
 research groups. The rule: take the idea, credit it on the page, write our own code.
 
-| Source | What it does | What we take | Feeds idea |
+| Source | What it does | What we take | For |
 |---|---|---|---|
-| Google's Quick, Draw! (data for sketch-rnn, Ha and Eck 2017) | You draw; a network guesses what it is as you draw | The draw-and-the-AI-answers-at-once loop. Our twist: it predicts physics, and a solver checks it | 1 |
-| DTU TopOpt app (Aage et al. 2013) | Real-time topology optimization on phones | Precedent for the unit-cell designer; cite under Method | 1, 2 |
-| MIT Digital Structures: Tseranidis, Brown and Mueller 2016 | Surrogates for fast evaluation of civil structures | The case for surrogates in structural design; their error metrics | 1 |
-| MIT Digital Structures: Danhaive and Mueller 2021 | A conditional VAE; a 2-D latent space as the interface for design exploration | The design-space map, almost exactly; cite it | 3 |
-| MIT Digital Structures: StructureFIT, Mueller and Ochsendorf 2015 | Interactive evolutionary design: the designer steers the GA | Let the visitor steer the truss GA; a later idea | — |
-| TensorFlow Playground (Smilkov et al. 2017) | Train a small network in the browser, no code | The layout and controls of idea 5 | 5 |
-| Transformer Explainer (Cho et al. 2024) | A live GPT-2 in the browser; 125,000 users | Proof that a research group's in-browser model draws real use | 5 |
-| Karpathy's ConvNetJS demos | Networks trained in the browser, on a personal Stanford page | A personal page can host real ML; a small network needs no framework | 1, 5 |
-| Brendan Bycroft's LLM visualization | A 3D walk through a GPT, on a personal site | An optional "inside the network" panel showing the CNN's feature maps as you draw | 1 |
-| Neal Agarwal's Infinite Craft (neal.fun) | A playful LLM game; repeat queries are served from a cache | Cache the LLM: precompute answers, so the page stays static | 6a |
+| Distill: A Visual Exploration of Gaussian Processes (Görtler et al. 2019) | An interactive GP explainer | Showing the GP as a band of possible functions that narrows where there is data | A |
+| Distill: Exploring Bayesian Optimization (Agnihotri and Batra 2020) | Interactive acquisition functions | The step-by-step sampling view. Our twist: an engineering problem with a constraint and a reveal of the true surface | A |
+| MIT Digital Structures: Tseranidis, Brown and Mueller 2016 | Surrogates for fast evaluation of civil structures | The case for surrogates in structural design; their error metrics | A |
+| DTU TopOpt app (Aage et al. 2013) | Real-time topology optimization on phones | Precedent for the unit-cell designer; cite under Method | Unit-cell designer |
+| MIT Digital Structures: StructureFIT (Mueller and Ochsendorf 2015) | Interactive evolutionary design: the designer steers the GA | Later: let the visitor steer the truss GA | Truss sizing |
+| TensorFlow Playground (Smilkov et al. 2017) | Train a small network in the browser, no code | Controls and layout | B, "Where AI fails" |
+| Karpathy's ConvNetJS demos | Networks trained in the browser, on a personal Stanford page | A small network needs no framework | B |
 | Bartosz Ciechanowski (ciechanow.ski) | Hand-written canvas and WebGL explainers | One deep, polished piece beats several shallow ones | all |
 
 Cautionary findings:
 
 - **In-browser chatbot (Show HN, item 40252569):** the Llama 3 model was over 4 GB; it ran on desktop Chrome and Edge
-  only and failed on Safari, iPhone and Linux; commenters reported cache errors and made-up answers. This supports
-  dropping a general chatbot.
+  only and failed on Safari, iPhone and Linux; commenters reported cache errors and made-up answers.
 - **"Chat with my site" bots (SiteGPT, ChatClient):** generic products anyone can add, so they say nothing about
   research skill.
 - **"Ask HN: What has your personal website done for you?":** jobs and collaborations mostly came from long-form
-  writing; tools came up less often. A short method write-up next to the tool ("How the sketchpad's AI was trained")
-  would help.
+  writing; tools came up less often. A short method write-up next to the tool would help.
 
-Credit on the page: one "Inspired by" line under Method, as a citation, e.g. "The draw-and-predict interaction follows
-Google's Quick, Draw!; the design-space map follows Danhaive and Mueller (2021)." No code from these projects is used.
+Credit on the page: one "Inspired by" line under Method, as a citation, e.g. "The sampling view follows Agnihotri and
+Batra's Exploring Bayesian Optimization (Distill, 2020)." No code from these projects is used.
+
+## Breadcrumb (done 2026-10-23)
+
+- Tool pages read "Tools / Group / Tool", e.g. "Tools / Microstructures / Unit-cell designer".
+- The group links to its section on `/tools` (`/tools#microstructures`, `#decision-support`, …), and `/tools` jumps to
+  that anchor.
+- The back button still goes to the top of `/tools`.
 
 ## Side finding
 
@@ -161,10 +136,10 @@ Google's Quick, Draw!; the design-space map follows Danhaive and Mueller (2021).
 
 ## Open items for Murat
 
-1. Which direction, or which pair.
-2. Is offline training in Python (PyTorch) fine, with the weights committed to this repository?
-3. For any LLM idea: is an opt-in download of hundreds of MB acceptable?
-4. Placement: a new "AI" group on `/tools`, or AI inside the existing tools (e.g. an AI readout in the sketchpad)?
+1. The classification table: kinds, wording, and whether the vibrometer is an explainer.
+2. Tag names: "Research method", "Explainer", "Utility"?
+4. B: may the site cite the EWSHM project with synthetic data? This needs the team's agreement.
+5. Back button: up one level to the group, or to the top of `/tools` as now?
 
 ## References
 
@@ -172,40 +147,20 @@ Checked by web search, 2026-10-23. Figures quoted from abstracts.
 
 - Aage, Jørgensen, Andreasen and Sigmund (2013). Interactive topology optimization on hand-held devices. Struct.
   Multidiscip. Optim. 47(1), 1–6.
+- Agnihotri and Batra (2020). Exploring Bayesian optimization. Distill. DOI 10.23915/distill.00026.
 - Avci, Abdeljaber, Kiranyaz, Hussein, Gabbouj and Inman (2021). A review of vibration-based damage detection in civil
   structures: from traditional methods to machine learning and deep learning applications. Mech. Syst. Signal Process.,
   107077. DOI 10.1016/j.ymssp.2020.107077.
-- Bastek, Kumar, Telgen, Glaesener and Kochmann (2022). Inverting the structure–property map of truss metamaterials by
-  deep learning. PNAS 119(1). DOI 10.1073/pnas.2111505119.
-- Carney et al. (2020). Teachable Machine: approachable web-based tool for exploring machine learning classification.
-  CHI EA '20. DOI 10.1145/3334480.3382839.
-- Cho et al. (2024). Transformer Explainer: interactive learning of text-generative models. IEEE VIS 2024;
-  AAAI 39 (2025). arXiv 2408.04619.
-- Danhaive and Mueller (2021). Design subspace learning: structural design space exploration using
-  performance-conditioned generative modeling. Autom. Constr. 127. hdl 1721.1/145568.
-- Guo et al. (2025). Toward engineering AGI: benchmarking the engineering design capabilities of LLMs. NeurIPS Datasets
-  and Benchmarks. arXiv 2509.16204.
-- Ha and Eck (2018). A neural representation of sketch drawings. ICLR. arXiv 1704.03477.
+- Görtler, Kehlbeck and Deussen (2019). A visual exploration of Gaussian processes. Distill.
+  DOI 10.23915/distill.00017.
 - Jones, Schonlau and Welch (1998). Efficient global optimization of expensive black-box functions. J. Global Optim. 13,
   455–492.
-- Kollmann, Abueidda, Koric, Guleryuz and Sobh (2020). Deep learning for topology optimization of 2D metamaterials.
-  Mater. Des. 196, 109098. DOI 10.1016/j.matdes.2020.109098.
-- Lakshminarayanan, Pritzel and Blundell (2017). Simple and scalable predictive uncertainty estimation using deep
-  ensembles. NeurIPS. arXiv 1612.01474.
 - Mueller and Ochsendorf (2015). Combining structural performance and designer preferences in evolutionary design
   space exploration. Autom. Constr. 52, 70–82. DOI 10.1016/j.autcon.2015.02.011.
-- Nakka, Harursampath and Ponnusami (2023). CNN surrogate encoding material properties in the microstructure image.
-  Sci. Rep. 13, 9079.
-- Pitz and Pochiraju (2023). A neural network transformer model for composite microstructure homogenization.
-  arXiv 2304.07877.
-- Pursnani, Sermet and Demir (2023). Performance of ChatGPT on the US Fundamentals of Engineering exam. Comput. Educ.
-  Artif. Intell. 5, 100183. DOI 10.1016/j.caeai.2023.100183.
-- Ruan et al. (2024). WebLLM: a high-performance in-browser LLM inference engine. arXiv 2412.15803.
+- Rasmussen and Williams (2006). Gaussian processes for machine learning. MIT Press. Free at gaussianprocess.org/gpml.
 - Shahriari, Swersky, Wang, Adams and de Freitas (2016). Taking the human out of the loop: a review of Bayesian
   optimization. Proc. IEEE 104(1), 148–175.
 - Smilkov, Carter, Sculley, Viégas and Wattenberg (2017). Direct-manipulation visualization of deep networks.
   arXiv 1708.03788.
 - Tseranidis, Brown and Mueller (2016). Data-driven approximation algorithms for rapid performance evaluation and
   optimization of civil structures. Autom. Constr. 72, 279–293.
-- Zheng et al. (2023). Unifying the design space and optimizing linear and nonlinear truss metamaterials by generative
-  modeling. Nat. Commun. PMC10663604.
