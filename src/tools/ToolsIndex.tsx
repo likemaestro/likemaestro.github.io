@@ -25,6 +25,7 @@ const Lattice: React.FC<{ rho: string; tiles: number; className?: string; label?
 // Small line drawings for the rows; the microstructure tools show their own lattice instead.
 const GLYPH: Record<string, React.ReactNode> = {
   "/tools/WorldMap": <><circle cx="24" cy="24" r="17" /><ellipse cx="24" cy="24" rx="7" ry="17" /><path d="M7 24h34M10 15h28M10 33h28" /></>,
+  "/tools/vibrometer": <path d="M4 24h6l3-9 4 18 4-24 4 28 4-20 3 12 3-5h9" />,
   "/tools/gauge-tool": <><path d="M8 32a16 16 0 0 1 32 0" /><path d="M24 32l8-10" /><circle cx="24" cy="32" r="1.6" fill="currentColor" /></>,
 };
 
