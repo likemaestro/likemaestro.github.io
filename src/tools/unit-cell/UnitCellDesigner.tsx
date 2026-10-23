@@ -141,7 +141,7 @@ const UnitCellDesigner: React.FC = () => {
         : mode === "ready" ? "Start design. Press Run."
           : mode === "converged" ? ((res.grey ?? 0) > 0.5 ? `Stayed grey (iteration ${res.iter}). Try another seed or the checked settings.`
             : res.iter >= 160 ? `Stopped at the iteration limit (${res.iter})` : `Converged at iteration ${res.iter}`)
-            : `Precomputed, converged at iteration ${res.iter}`;
+            : `Converged at iteration ${res.iter}`;
   const runText = mode === "running" ? "Pause" : mode === "paused" ? "Resume" : mode === "ready" ? "Run" : "Run again";
   const label = `${tiles} by ${tiles} tiling of a unit cell optimized for ${T.aria}. ${status}.`;
 
@@ -225,7 +225,7 @@ const UnitCellDesigner: React.FC = () => {
           </Field>
           {!vetted && <p className="t-small text-ink-2">Seeds are checked at V = 0.40 and filter radius 2. Other settings can end grey or in separate pieces; the checks below the result say which.</p>}
           {supported && <button type="button" onClick={toggle} className="btn btn-solid self-start">{runText}</button>}
-          {!supported && <p className="t-small text-ink-2">This browser can’t run the solver; the precomputed design shows instead.</p>}
+          {!supported && <p className="t-small text-ink-2">This browser can’t run the solver, so it shows a design computed in advance.</p>}
         </div>
 
         {/* Lattice: first on phones, sized from the viewport height on larger screens so the tool fits the first screen */}
