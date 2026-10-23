@@ -10,8 +10,7 @@
       "path": "/tools/unit-cell",
       "title": "Unit-cell designer",
       "line": "Design a periodic microstructure for a target stiffness, then export it for cutting or printing.",
-      "group": "Microstructures",
-      "featured": true
+      "group": "Microstructures"
     },
     {
       "path": "/tools/sketchpad",

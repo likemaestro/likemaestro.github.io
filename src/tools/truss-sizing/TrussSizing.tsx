@@ -289,9 +289,9 @@ const TrussSizing: React.FC = () => {
       </>}
     >
       {clamped.length > 0 && <p className="t-small mb-4 text-ink-2">Some link settings were out of range and have been adjusted: {clamped.join(", ")}.</p>}
-      {/* One framed workspace, ruled like a drawing sheet: toolbar, stage and weights, then a title block */}
-      <div className="border border-rule">
-        <div className="flex flex-wrap items-center gap-x-6 gap-y-3 px-4 py-3">
+      {/* Workspace, no frame: toolbar, stage and weights, then the selected design; thin rules divide them */}
+      <div>
+        <div className="flex flex-wrap items-center gap-x-6 gap-y-3 pb-4">
           <div className="w-44"><Segmented label="Truss layout" value={p.layout} onChange={(v) => set({ layout: v })} options={[{ v: "bridge", text: "Bridge" }, { v: "cantilever", text: "10-bar" }]} /></div>
           <div className="flex items-center gap-3">
             <label htmlFor="ts-load" className="t-small text-ink-2">Load per arrow</label>
@@ -310,7 +310,7 @@ const TrussSizing: React.FC = () => {
           </button>
           <button type="button" onClick={toggle} className="btn btn-solid ml-auto min-w-[6.5rem]">{mode === "running" ? "Pause" : mode === "paused" ? "Resume" : "Run again"}</button>
         </div>
-        {algo && <div id="ts-algo" className="grid gap-x-8 gap-y-4 border-t border-rule px-4 py-4 sm:grid-cols-3 xl:grid-cols-6">
+        {algo && <div id="ts-algo" className="grid gap-x-8 gap-y-4 border-t border-rule py-4 sm:grid-cols-3 xl:grid-cols-6">
           {slider("pop", "Population", String)}
           {slider("gens", "Generations", String)}
           {slider("pc", "Crossover probability", (v) => v.toFixed(2))}
@@ -321,7 +321,7 @@ const TrussSizing: React.FC = () => {
 
         <div className="grid border-t border-rule lg:grid-cols-[minmax(0,1fr)_19rem]">
           {/* Stage */}
-          <div className="min-w-0 px-4 py-3">
+          <div className="min-w-0 py-4 lg:pr-6">
             <div className="mb-3 flex flex-wrap items-center justify-between gap-x-6 gap-y-2">
               <div className="w-64"><Segmented label="View" value={view} onChange={(v) => setView(v as "front" | "truss")} options={[{ v: "front", text: "Pareto front" }, { v: "truss", text: "Selected truss" }]} /></div>
               <p className="t-small text-ink-2" aria-hidden="true">{status}</p>
@@ -332,7 +332,7 @@ const TrussSizing: React.FC = () => {
                 : sel && detail && <TrussSvg L={L} x={sel.x} r={detail} className="absolute inset-0 h-full w-full" />}
             </div>
             {view === "front"
-              ? <p className="t-small mt-2 text-ink-2">Filled: designs with {sel?.f[2] ?? "·"} different sections, like the selected one (orange). Arrow keys: ← → along the front, ↑ ↓ between section counts. Grey: other designs; hollow ones fail a member check.</p>
+              ? <p className="t-small mt-2 text-ink-2">Filled: designs with {sel ? `${sel.f[2]} different section${sel.f[2] === 1 ? "" : "s"}` : "as many different sections"}, like the selected one (orange). Arrow keys: ← → along the front, ↑ ↓ between section counts. Grey: other designs; hollow ones fail a member check.</p>
               : detail && <p className="t-small mt-2 flex flex-wrap items-center gap-x-5 gap-y-1 text-ink-2">
                   <span>Drawn to scale, tubes at their true diameter</span>
                   <span className="flex items-center gap-2">Utilization 0 <span className="inline-block h-2 w-16" style={{ background: `linear-gradient(90deg, ${grey(0)}, ${grey(1)})` }} /> 1</span>
@@ -343,7 +343,7 @@ const TrussSizing: React.FC = () => {
           </div>
 
           {/* Weights and formulation */}
-          <div className="flex min-w-0 flex-col gap-5 border-t border-rule px-4 py-4 lg:border-l lg:border-t-0">
+          <div className="flex min-w-0 flex-col gap-5 border-t border-rule py-4 lg:border-l lg:border-t-0 lg:pl-6">
             <div className="flex flex-col gap-4">
               <p className="t-small text-ink-2">Choose with weights</p>
               <Segmented label="Decision method" value={method} onChange={(v) => choose({ mcdm: v })} options={[{ v: "topsis", text: "TOPSIS" }, { v: "vikor", text: "VIKOR" }]} />
@@ -372,8 +372,8 @@ const TrussSizing: React.FC = () => {
         </div>
 
         {/* Title block: the selected design, with its key plan */}
-        {sel && detail && <dl className="grid grid-cols-2 gap-px border-t border-rule bg-rule sm:grid-cols-3 lg:grid-cols-[minmax(0,1.4fr)_repeat(4,minmax(0,1fr))_minmax(0,1.6fr)]">
-          <div className="min-w-0 bg-canvas px-4 py-3">
+        {sel && detail && <dl className="grid grid-cols-2 gap-x-6 gap-y-4 border-t border-rule py-4 sm:grid-cols-3 lg:grid-cols-[minmax(0,1.4fr)_repeat(4,minmax(0,1fr))_minmax(0,1.6fr)]">
+          <div className="min-w-0">
             <dt className="t-small text-ink-2">Selected design</dt>
             <dd className="mt-1">
               <button type="button" onClick={() => setView(view === "truss" ? "front" : "truss")} aria-label={view === "truss" ? "Show the Pareto front" : "Show the selected truss large"}
@@ -384,9 +384,9 @@ const TrussSizing: React.FC = () => {
             </dd>
           </div>
           {([["Steel", kg(sel.f[0])], ["Deflection", `${mm(sel.f[1])}, L / ${Math.round(span / sel.f[1])}`], ["Sections", `${sel.f[2]} different`], ["Utilization", `${Math.max(...detail.util).toFixed(2)} highest`]] as const).map(([k, v]) => (
-            <div key={k} className="min-w-0 bg-canvas px-4 py-3"><dt className="t-small text-ink-2">{k}</dt><dd className="t-data mt-1">{v}</dd></div>
+            <div key={k} className="min-w-0"><dt className="t-small text-ink-2">{k}</dt><dd className="t-data mt-1">{v}</dd></div>
           ))}
-          <div className="min-w-0 bg-canvas px-4 py-3 max-sm:col-span-2">
+          <div className="min-w-0 max-sm:col-span-2">
             <dt className="t-small text-ink-2">Hypervolume</dt>
             <dd className="t-data mt-1 flex items-center gap-3"><span>{hv.toFixed(3)}</span><Trace data={snap?.hv ?? []} live={mode === "running"} /></dd>
           </div>

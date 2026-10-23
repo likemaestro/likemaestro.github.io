@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import SiteHeader, { SiteFooter, Wrap } from "../components/SiteHeader";
 import { cells } from "../lab/precomputed";
@@ -32,7 +32,7 @@ const GLYPH: Record<string, React.ReactNode> = {
 };
 
 // Microstructure rows show a lattice of one of the precomputed designs.
-const LATTICE: Record<string, { rho: string }> = { "/tools/sketchpad": cells.shear };
+const LATTICE: Record<string, { rho: string }> = { "/tools/sketchpad": cells.shear, "/tools/unit-cell": cells.auxetic };
 
 const Thumb: React.FC<{ path: string }> = ({ path }) =>
   GLYPH[path] ? (
@@ -41,9 +41,111 @@ const Thumb: React.FC<{ path: string }> = ({ path }) =>
     <Lattice rho={(LATTICE[path] ?? cells.bulk).rho} tiles={2} className="border border-rule" />
   );
 
+// Pictures for the featured tools, each fitted to a 4:3 box.
+const Cells: React.FC<{ names: (keyof typeof cells)[]; tiles: number }> = ({ names, tiles }) => (
+  <div className={`grid aspect-square h-full gap-3 ${names.length > 1 ? "grid-cols-2" : ""}`}>
+    {names.map((k) => <Lattice key={k} rho={cells[k].rho} tiles={tiles} />)}
+  </div>
+);
+
+// The truss sizing tool's bridge: six square panels, X-braced, pinned and roller supports, a load at each inner joint.
+const tx = (i: number) => 22 + i * 26, TOP = 52, BOT = 78, JOINTS = [0, 1, 2, 3, 4, 5, 6];
+const BridgeArt = (
+  <svg viewBox="0 0 200 150" aria-hidden="true" className="h-full w-full" fill="none">
+    <g className="stroke-steel" strokeWidth="1.6">
+      {JOINTS.slice(1).map((i) => <path key={i} d={`M${tx(i - 1)} ${TOP}L${tx(i)} ${BOT}M${tx(i - 1)} ${BOT}L${tx(i)} ${TOP}`} />)}
+      {JOINTS.map((i) => <path key={i} d={`M${tx(i)} ${TOP}V${BOT}`} />)}
+    </g>
+    <g className="stroke-ink" strokeWidth="1.2">
+      <path d={`M${tx(0)} ${TOP}H${tx(6)}M${tx(0)} ${BOT}H${tx(6)}`} strokeWidth="2.4" />
+      {JOINTS.slice(1, 6).map((i) => <path key={i} d={`M${tx(i)} ${BOT + 5}V${BOT + 21}M${tx(i) - 3} ${BOT + 17}L${tx(i)} ${BOT + 21}L${tx(i) + 3} ${BOT + 17}`} />)}
+      <path d={`M${tx(0)} ${BOT}l-6 10h12zM${tx(0) - 9} ${BOT + 10}h18M${tx(6)} ${BOT}l-6 10h12zM${tx(6) - 9} ${BOT + 13}h18`} />
+      {JOINTS.flatMap((i) => [TOP, BOT].map((y) => <circle key={`${i}-${y}`} cx={tx(i)} cy={y} r="1.9" className="fill-canvas" strokeWidth="1.1" />))}
+    </g>
+  </svg>
+);
+
+// A free-decay record, what the vibrometer reads a frequency from, with its exponential envelope dashed.
+const decay = (f: (t: number) => number, n: number) => Array.from({ length: n + 1 }, (_, k) => `${(14 + (172 * k) / n).toFixed(1)},${(75 - 44 * f(k / n)).toFixed(1)}`).join(" ");
+const DecayArt = (
+  <svg viewBox="0 0 200 150" aria-hidden="true" className="h-full w-full" fill="none">
+    <path d="M14 75H186" className="stroke-rule" />
+    <g className="stroke-steel" strokeDasharray="2 3">
+      <polyline points={decay((t) => Math.exp(-3 * t), 40)} />
+      <polyline points={decay((t) => -Math.exp(-3 * t), 40)} />
+    </g>
+    <polyline points={decay((t) => Math.exp(-3 * t) * Math.sin(2 * Math.PI * 9 * t), 360)} className="stroke-ink" strokeWidth="1.4" strokeLinejoin="round" />
+  </svg>
+);
+
+const FEATURED = [
+  { path: "/tools/unit-cell", cta: "Open the designer", art: <Cells names={["auxetic"]} tiles={3} /> },
+  { path: "/tools/truss-sizing", cta: "Open truss sizing", art: BridgeArt },
+  { path: "/tools/property-map", cta: "Open the property map", art: <Cells names={["axial", "shear", "bulk", "auxetic"]} tiles={2} /> },
+  { path: "/tools/vibrometer", cta: "Open the vibrometer", art: DecayArt },
+].map((f) => ({ ...f, ...registry.pages.find((t) => t.path === f.path)! }));
+const SLIDE_MS = 7000;
+
+const Icon: React.FC<{ d: string }> = ({ d }) => <svg viewBox="0 0 16 16" aria-hidden="true" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.5"><path d={d} /></svg>;
+
+// One featured tool at a time. It moves on every SLIDE_MS while playing; pointing at it or focusing inside it holds
+// it, the button stops it, and with reduced motion it starts stopped. The active bar fills as the time runs.
+const Featured: React.FC = () => {
+  const [i, setI] = useState(0);
+  const [playing, setPlaying] = useState(() => !window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+  const [hover, setHover] = useState(false), [focus, setFocus] = useState(false);
+  const swipe = useRef<number | null>(null);
+  const running = playing && !hover && !focus, n = FEATURED.length;
+  const go = (d: number) => setI((k) => (k + d + n) % n);
+  const btn = "btn w-9 px-0 [@media(pointer:coarse)]:w-11";
+
+  return (
+    <section aria-roledescription="carousel" aria-label="Featured tools" className="mt-10 border-t border-rule pt-4"
+      onPointerEnter={(e) => e.pointerType === "mouse" && setHover(true)} onPointerLeave={() => setHover(false)}
+      onFocus={() => setFocus(true)} onBlur={(e) => !e.currentTarget.contains(e.relatedTarget as Node | null) && setFocus(false)}>
+      <div className="flex items-center gap-3">
+        <p className="t-small text-ink-2">Featured</p>
+        <button type="button" className={btn} onClick={() => setPlaying((v) => !v)} aria-label={playing ? "Stop the slide show" : "Start the slide show"}>
+          {playing ? <Icon d="M5.5 3.5v9M10.5 3.5v9" /> : <svg viewBox="0 0 16 16" aria-hidden="true" className="h-4 w-4" fill="currentColor"><path d="M5 3.2v9.6L12.6 8z" /></svg>}
+        </button>
+        <div className="flex">
+          {FEATURED.map((s, k) => (
+            <button key={s.path} type="button" onClick={() => setI(k)} aria-label={`${s.title}, ${k + 1} of ${n}`} aria-current={k === i ? "true" : undefined}
+              className="group px-1 py-4 [@media(pointer:coarse)]:py-5">
+              <span className="relative block h-0.5 w-6 overflow-hidden bg-rule group-hover:bg-steel sm:w-8">
+                {k === i && <span key={`${i}-${playing}`} onAnimationEnd={() => go(1)} className={`absolute inset-0 origin-left bg-ink ${playing ? "animate-featured" : ""}`}
+                  style={{ animationDuration: `${SLIDE_MS}ms`, animationPlayState: running ? "running" : "paused" }} />}
+              </span>
+            </button>
+          ))}
+        </div>
+        <div className="ml-auto flex gap-2">
+          <button type="button" className={btn} onClick={() => go(-1)} aria-label="Previous tool"><Icon d="M10 3.5 5.5 8l4.5 4.5" /></button>
+          <button type="button" className={btn} onClick={() => go(1)} aria-label="Next tool"><Icon d="M6 3.5 10.5 8 6 12.5" /></button>
+        </div>
+      </div>
+
+      <div className="mt-4 grid touch-pan-y" aria-live={running ? "off" : "polite"}
+        onPointerDown={(e) => { swipe.current = e.pointerType === "mouse" ? null : e.clientX; }}
+        onPointerUp={(e) => { const x0 = swipe.current; swipe.current = null; if (x0 !== null && Math.abs(e.clientX - x0) > 48) go(e.clientX < x0 ? 1 : -1); }}>
+        {FEATURED.map((s, k) => (
+          <article key={s.path} role="group" aria-roledescription="slide" aria-label={`${k + 1} of ${n}`}
+            className={`grid gap-x-12 gap-y-6 transition-[opacity,visibility] duration-300 [grid-area:1/1] motion-reduce:transition-none md:grid-cols-[minmax(0,26rem)_minmax(0,1fr)] md:items-center ${k === i ? "visible opacity-100" : "invisible opacity-0"}`}>
+            <Link to={s.path} tabIndex={-1} aria-hidden="true" className="flex aspect-[4/3] items-center justify-center">{s.art}</Link>
+            <div className="min-w-0">
+              <h2 className="t-h2"><Link to={s.path} className="hover:underline">{s.title}</Link></h2>
+              <p className="mt-3 max-w-[52ch] text-ink-2">{s.line}</p>
+              <div className="mt-6"><Link to={s.path} className="btn btn-solid">{s.cta}</Link></div>
+            </div>
+          </article>
+        ))}
+      </div>
+    </section>
+  );
+};
+
 const ToolsIndex: React.FC = () => {
   const p = page("/tools");
-  const featured = registry.pages.find((t) => "featured" in t && t.featured)!;
   useEffect(() => { document.title = `${p.title} – Murat Güven`; return () => { document.title = "Murat Güven"; }; }, [p.title]);
 
   return (
@@ -54,22 +156,10 @@ const ToolsIndex: React.FC = () => {
           <h1 className="t-h2">{p.title}</h1>
           <p className="mt-3 max-w-[60ch] text-ink-2">{p.line}</p>
 
-          <article className="mt-10 grid gap-x-12 gap-y-6 border-t border-rule pt-8 md:grid-cols-[minmax(0,24rem)_minmax(0,1fr)] md:items-center">
-            <Link to={featured.path} tabIndex={-1} aria-hidden="true" className="block">
-              <Lattice rho={cells.auxetic.rho} tiles={3} />
-            </Link>
-            <div className="min-w-0">
-              <p className="t-small text-ink-2">Featured</p>
-              <h2 className="t-h2 mt-1"><Link to={featured.path} className="hover:underline">{featured.title}</Link></h2>
-              <p className="mt-3 max-w-[52ch] text-ink-2">{featured.line}</p>
-              <div className="mt-6 flex flex-wrap gap-2">
-                <Link to={featured.path} className="btn btn-solid">Open the designer</Link>
-              </div>
-            </div>
-          </article>
+          <Featured />
 
           {GROUPS.map((g) => {
-            const rows = registry.pages.filter((t) => "group" in t && t.group === g && !("featured" in t && t.featured));
+            const rows = registry.pages.filter((t) => "group" in t && t.group === g);
             if (!rows.length) return null;
             return (
               <section key={g} aria-labelledby={`g-${g}`} className="mt-14">
