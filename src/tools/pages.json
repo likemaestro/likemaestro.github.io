@@ -31,6 +31,12 @@
       "group": "Structures"
     },
     {
+      "path": "/tools/beam-twist",
+      "title": "Why steel beams twist",
+      "line": "Load a steel beam and watch it swing sideways and twist: lateral-torsional buckling in 3D, with Mcr and the Eurocode resistance.",
+      "group": "Structures"
+    },
+    {
       "path": "/tools/decision",
       "title": "Multi-criteria choice",
       "line": "Rank a few options on several criteria with TOPSIS and VIKOR, weigh the criteria directly or by AHP, and see with SMAA-2 how the ranking holds when the weights are uncertain.",

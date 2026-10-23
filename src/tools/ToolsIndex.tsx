@@ -27,6 +27,7 @@ const GLYPH: Record<string, React.ReactNode> = {
   "/tools/world-map": <><circle cx="24" cy="24" r="17" /><ellipse cx="24" cy="24" rx="7" ry="17" /><path d="M7 24h34M10 15h28M10 33h28" /></>,
   "/tools/property-map": <><path d="M8 6v34h34" /><path d="M13 33l3-2M15 29l3-1M17 31l2-2M27 16l2 1M30 21l2 1M33 26l2 1M36 31l2 1" strokeWidth="2.4" strokeLinecap="round" /><path d="M24 6v34" strokeDasharray="2 2" /></>,
   "/tools/truss-sizing": <path d="M4 34h40M10 18h28M4 34l6-16M44 34l-6-16M17 18v16M24 18v16M31 18v16M10 18l7 16M17 18l7 16M38 18l-7 16M31 18l-7 16" />,
+  "/tools/beam-twist": <><path d="M6 16h36M6 32h36" strokeDasharray="2 2" /><path d="M6 16c10 9 26 9 36 0M6 32c10 3 26 3 36 0M6 13v22M42 13v22" /></>,
   "/tools/decision": <><path d="M6 10h36v28H6zM6 19h36M6 28h36M18 10v28M30 10v28" /><circle cx="12" cy="23.5" r="2" fill="currentColor" /></>,
   "/tools/vibrometer": <path d="M4 24h6l3-9 4 18 4-24 4 28 4-20 3 12 3-5h9" />,
   "/tools/gauge": <><path d="M8 32a16 16 0 0 1 32 0" /><path d="M24 32l8-10" /><circle cx="24" cy="32" r="1.6" fill="currentColor" /></>,

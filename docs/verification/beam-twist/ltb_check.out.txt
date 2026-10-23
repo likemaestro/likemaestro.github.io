@@ -1,0 +1,21 @@
+IPE 300 Iz It Iw 6037784.243992914 201184.95779439324 126332318257.75565 kappa 0.04535130689236054
+closed form uniform moment kNm 90.42572448590617
+moment centre Mcr =   90.4257 kNm  ratio 1.0000
+udl    top    Mcr =   78.7789 kNm  ratio 0.8712
+udl    centre Mcr =  102.2593 kNm  ratio 1.1309
+udl    bottom Mcr =  132.6360 kNm  ratio 1.4668
+point  top    Mcr =   89.1400 kNm  ratio 0.9858
+point  centre Mcr =  123.0636 kNm  ratio 1.3609
+point  bottom Mcr =  168.8936 kNm  ratio 1.8678
+sagging udl mode: max|u_top| = 0.0653540330107526  max|u_bot| = 0.018467638783927955 (compression flange should move more)
+udl centre, midspan top    restraint: Mcr = 335.9548
+udl centre, midspan bottom restraint: Mcr = 119.4016
+udl centre, midspan full   restraint: Mcr = 335.9548
+moment, midspan full restraint: 251.09100253292075  closed form at L/2: 251.09082848703736
+mesh udl top: n40 78.77886153673107 n80 78.77885316490227 diff % 1.0627000079921345e-05
+coupling sign +1: midspan top-flange restraint Mcr = 335.9548
+coupling sign -1: midspan top-flange restraint Mcr = 119.4016
+udl kappa=4.54e-02: ratio 1.1309 (SN003 kappa=0: 1.127)
+udl kappa=4.54e-08: ratio 1.1266 (SN003 kappa=0: 1.127)
+point kappa=4.54e-02: ratio 1.3609 (SN003 kappa=0: 1.348)
+point kappa=4.54e-08: ratio 1.3477 (SN003 kappa=0: 1.348)
