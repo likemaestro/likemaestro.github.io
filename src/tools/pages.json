@@ -31,6 +31,12 @@
       "group": "Structures"
     },
     {
+      "path": "/tools/decision",
+      "title": "Multi-criteria choice",
+      "line": "Rank a few options on several criteria with TOPSIS and VIKOR, weigh the criteria directly or by AHP, and see with SMAA-2 how the ranking holds when the weights are uncertain.",
+      "group": "Decision support"
+    },
+    {
       "path": "/tools/vibrometer",
       "title": "Phone vibrometer",
       "line": "Lay your phone on a desk, a floor or a footbridge and read its natural frequency.",

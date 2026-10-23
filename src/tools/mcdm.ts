@@ -75,12 +75,12 @@ export const RI = [0, 0, 0, 0.525, 0.881, 1.108, 1.247];
  *  consistency index and ratio, and the pair whose judgement departs most from the weights. */
 export function ahp(A: number[][]) {
   const n = A.length, mul = (w: number[]) => A.map((r) => r.reduce((s, a, j) => s + a * w[j], 0));
-  let w = new Array(n).fill(1 / n);
+  const w = new Array(n).fill(1 / n);
   for (let it = 0; it < 500; it++) {
-    const v = mul(w), t = v.reduce((a, b) => a + b, 0), next = v.map((x) => x / t);
-    const done = next.every((x, i) => Math.abs(x - w[i]) < 1e-14);
-    w = next;
-    if (done) break;
+    const v = mul(w), t = v.reduce((a, b) => a + b, 0);
+    let change = 0;
+    for (let i = 0; i < n; i++) { change = Math.max(change, Math.abs(v[i] / t - w[i])); w[i] = v[i] / t; }
+    if (change < 1e-14) break;
   }
   const Aw = mul(w), lambda = Aw.reduce((s, x, i) => s + x / w[i], 0) / n;
   const CI = n > 2 ? Math.max(0, (lambda - n) / (n - 1)) : 0, CR = n > 2 ? CI / RI[Math.min(n, RI.length - 1)] : 0;
