@@ -4,7 +4,7 @@ import { analyse, rate, simulated, variance } from "./signal";
 import { download } from "../../lab/export";
 
 interface Record_ { t: number[]; x: number[]; y: number[]; z: number[]; source: "phone" | "file" | "simulated"; name?: string }
-type Phase = "idle" | "countdown" | "recording";
+type Phase = "idle" | "asking" | "countdown" | "recording";
 const LENGTHS = [10, 20, 60];
 
 /** Pick the axis that moved most, and analyse it. `levels` counts distinct raw readings on that axis: browsers round
@@ -111,11 +111,13 @@ const Vibrometer: React.FC = () => {
       stopRef.current = () => { window.clearInterval(id); setPhase("idle"); };
     };
     const DME = (window as unknown as { DeviceMotionEvent?: { requestPermission?: () => Promise<string> } }).DeviceMotionEvent;
-    if (!DME) { setProblem("This browser has no motion sensor access. Open the page on a phone, or upload a CSV."); return; }
+    if (!DME) { setProblem("This browser doesn’t give web pages access to the motion sensors. Try Chrome, or upload a CSV from a sensor app."); return; }
     // iOS asks for motion permission; the request has to come straight from the tap.
     try {
       if (typeof DME.requestPermission === "function") {
-        DME.requestPermission().then((s) => (s === "granted" ? go() : setProblem("Motion access was declined. Allow it in the browser’s settings to measure, or upload a CSV."))).catch(() => setProblem("Motion access isn’t available here. Upload a CSV instead."));
+        setPhase("asking");
+        DME.requestPermission().then((s) => { setPhase("idle"); if (s === "granted") go(); else setProblem("Motion access was declined. Allow it in the browser’s settings to measure, or upload a CSV."); })
+          .catch(() => { setPhase("idle"); setProblem("Motion access isn’t available here. Upload a CSV instead."); });
       } else go();
     } catch (e) { setProblem(`The browser refused to start the sensor (${(e as Error).message}). Upload a CSV instead.`); }
   };
@@ -150,7 +152,7 @@ const Vibrometer: React.FC = () => {
       <div className="grid gap-x-12 gap-y-10 md:grid-cols-[17rem_minmax(0,1fr)]">
         <div className="flex min-w-0 flex-col gap-5">
           <button type="button" onClick={busy ? () => stopRef.current() : start} className="btn btn-solid h-14 text-[1.0625rem]">
-            {phase === "countdown" ? `Starting in ${count}… (tap to cancel)` : phase === "recording" ? `Recording ${Math.min(length, Math.floor(elapsed))} / ${length} s (tap to stop)` : "Start measuring"}
+            {phase === "asking" ? "Asking for motion access…" : phase === "countdown" ? `Starting in ${count}… (tap to cancel)` : phase === "recording" ? `Recording ${Math.min(length, Math.floor(elapsed))} / ${length} s (tap to stop)` : "Start measuring"}
           </button>
           {phase === "recording" && <p className="t-data -mt-2 text-ink-2">{samples} samples{elapsed > 1 && samples ? `, about ${Math.round(samples / elapsed)} a second` : ""}</p>}
           {problem && <p className="t-small -mt-2 text-ink" role="alert">{problem}</p>}

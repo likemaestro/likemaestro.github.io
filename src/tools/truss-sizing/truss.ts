@@ -71,7 +71,7 @@ export const LAYOUTS: Record<string, Layout> = { bridge: bridge(), cantilever: c
 export const genes = (L: Layout) => Math.max(...L.group) + 1;
 
 export interface Analysis {
-  mass: number; deflection: number; distinct: number;
+  mass: number; deflection: number; distinct: number;   // deflection: largest vertical displacement, mm
   N: number[];        // member forces, N, tension positive
   util: number[];     // N_Ed / N_Rd, buckling resistance for compression
   u: Float64Array;    // nodal displacements, mm
@@ -116,7 +116,7 @@ export function analyse(L: Layout, x: number[], P: number): Analysis {
     cv += Math.max(0, r - 1);
     mass += STEEL.rho * A * m.len;
   });
-  for (let k = 0; k < nn; k++) deflection = Math.max(deflection, Math.hypot(u[2 * k], u[2 * k + 1]));
+  for (let k = 0; k < nn; k++) deflection = Math.max(deflection, Math.abs(u[2 * k + 1]));   // vertical
   return { mass, deflection, distinct: new Set(x).size, N, util, u, cv };
 }
 

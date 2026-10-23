@@ -204,7 +204,14 @@ const TrussSizing: React.FC = () => {
   };
 
   const front = useMemo(() => (snap ? paretoSet(snap.pop) : []), [snap]);
-  const sel = useMemo(() => front.find((q) => key(q.x) === sp.get("sel")) ?? (front.length ? knee(front) : undefined), [front, sp]);
+  // the design named in the link (one base-36 size per variable), whether or not it is on the current front
+  const linked = useMemo(() => {
+    const raw = sp.get("sel") ?? "", x = Array.from(raw, (c) => parseInt(c, 36));
+    if (x.length !== genes(L) || x.some((v) => !(v >= 0 && v < SECTIONS.length))) return undefined;
+    const r = analyse(L, x, p.load * 1e3);
+    return { x, f: [r.mass, r.deflection, r.distinct], cv: r.cv, rank: 0, crowd: 0 } as Ind;
+  }, [sp, L, p.load]);
+  const sel = useMemo(() => (linked ? front.find((q) => key(q.x) === key(linked.x)) ?? linked : front.length ? knee(front) : undefined), [front, linked]);
   const pick = (q: Ind) => setSp((prev) => { const next = new URLSearchParams(prev); next.set("sel", key(q.x)); return next; }, { replace: true });
   const detail = useMemo(() => (sel ? analyse(L, sel.x, p.load * 1e3) : null), [L, sel, p.load]);
   const hv = snap?.hv[snap.hv.length - 1] ?? 0;
@@ -306,7 +313,7 @@ const TrussSizing: React.FC = () => {
         {/* Readout */}
         <div className="flex min-w-0 flex-col gap-6 max-md:order-2 md:col-span-2 md:grid md:grid-cols-3 xl:col-span-1 xl:flex">
           {sel && detail && <div className="min-w-0">
-            <p className="t-small mb-1.5 text-ink-2">Selected design{mode === "running" && !sp.get("sel") ? ", the bend of the current front" : ""}</p>
+            <p className="t-small mb-1.5 text-ink-2">Selected design{!linked ? ", the bend of the current front" : !front.includes(sel!) ? ", not on the current front" : ""}</p>
             <dl className="t-data grid grid-cols-[auto_1fr] gap-x-4 gap-y-1">
               <dt className="text-ink-2">Steel</dt><dd>{kg(sel.f[0])}</dd>
               <dt className="text-ink-2">Deflection</dt><dd>{mm(sel.f[1])} <span className="text-ink-2">(length / {Math.round(span / sel.f[1])})</span></dd>
@@ -324,7 +331,7 @@ const TrussSizing: React.FC = () => {
               <MathML html={FORMULATION} />
               <MathML html={SUBJECT} />
             </div>
-            <p className="t-small mt-2 text-ink-2">Steel mass m, largest deflection δ<sub>max</sub> and number of different sections n<sub>s</sub>; each of the n design variables takes a size from the list S.</p>
+            <p className="t-small mt-2 text-ink-2">Steel mass m, largest vertical deflection δ<sub>max</sub> and number of different sections n<sub>s</sub>; each of the n design variables takes a size from the list S.</p>
           </div>
         </div>
       </div>
