@@ -171,6 +171,62 @@ Playground.
 3. Build order: the GP surrogate first, or the autoencoder?
 4. A contact line at the end of each tool?
 
+## 7. Round 4: life cycle tools (2026-10-23)
+
+Murat has life cycle assessment (LCA) experience:
+- teaching assistant on "Life-Cycle Driven Structures";
+- guest lecturer in "Life Cycle Driven Design";
+- concApp (cost and embodied carbon);
+- environmental impact work as a research fellow.
+
+Murat asked for something useful, such as a calculator.
+
+**Panel:**
+- **Practicing structural engineer:** "A1–A5 as in the IStructE guide, kgCO2e per m², and a rating I can quote to a
+  client."
+- **LCA methodologist:**
+  - "State the system boundary and the modules, and report module D separately (EN 15978)."
+  - "Cite every factor. One number without a range misleads" (Robati et al. 2019).
+- **Data and licensing advisor:** "Embedding the ICE database in a tool needs Circular Ecology's Tools and Integration
+  Licence. ÖKOBAUDAT is free of charge and unrestricted, EN 15804+A2, CSV."
+- **Architecture student:** "Let me compare concrete, steel and timber in one minute."
+
+**What exists:**
+
+| Tool | What it is | Gap |
+|---|---|---|
+| IStructE / Elliott Wood Structural Carbon Tool v3 (2025) | Free Excel; EN 15978, EN 15804, RICS; SCORS, LETI and RIBA benchmarks; six options | Excel on a desktop only; one number, no range; no link to share |
+| EC3 (Building Transparency) | Free web tool; a large EPD database; procurement | Needs an account; specification, not early structural design |
+| BEAM Estimator (Builders for Climate Action) | Free; compares materials | Residential and North American |
+| Embodied Carbon PathFinder | Free, educational | Fixed British Columbia archetypes |
+
+**Ideas:**
+1. **Structural embodied carbon calculator** (recommended).
+   - Inputs: quantities per material (steel sections, rebar, concrete class, timber) and floor area.
+   - Results:
+     - A1–A3, plus A4 transport, A5 waste, and C, with D reported separately;
+     - kgCO2e and kgCO2e per m², with a SCORS band;
+     - up to three options side by side.
+   - Data and method:
+     - default factors from ÖKOBAUDAT; every factor editable and cited;
+     - the method of "How to calculate embodied carbon", 3rd edition (Gibbons, Orr and Arnold 2025).
+   - **Better than what exists:** in the browser and on a phone; a link that reproduces the result; CSV export; and a
+     range on every result, by Monte Carlo over the factors.
+2. **Steel option inside 1:** new steel by route (EAF or BOF) vs. reused sections (SCI P427). Ties to the steel work and
+   the Wiley book.
+3. **Whole-life timeline** (later, for teaching): modules A to C over 60 years, refurbish vs. rebuild, D apart.
+4. **Quick win:** truss sizing reports kgCO2e beside steel mass, with the steel route as a setting.
+
+**Avoid:** carbon of cutting or fabrication processes, which is too close to the PhD.
+
+**Group:** "Life cycle" (or "Sustainability"), e.g. "Tools / Life cycle / Embodied carbon".
+
+**Decisions for Murat:**
+1. Scope: the structure only (as SCORS), or the whole building?
+2. Region and data: European defaults from ÖKOBAUDAT and manufacturer EPDs?
+3. Group name?
+4. Which LCA work to name on the page: the course, concApp, the book?
+
 ## References
 
 Checked by web search, 2026-10-23, unless marked.
@@ -184,6 +240,7 @@ Checked by web search, 2026-10-23, unless marked.
   visualization. arXiv 2409.09011.
 - Dibia. Anomagram: anomaly detection with autoencoders in the browser. anomagram.fastforwardlabs.com;
   github.com/victordibia/anomagram.
+- Gibbons, Orr and Arnold (2025). How to calculate embodied carbon, 3rd ed. IStructE. Free PDF.
 - Gardner, Kusner, Xu, Weinberger and Cunningham (2014). Bayesian optimization with inequality constraints. ICML,
   PMLR 32, 937–945.
 - Görtler, Kehlbeck and Deussen (2019). A visual exploration of Gaussian processes. Distill.
@@ -207,6 +264,8 @@ Checked by web search, 2026-10-23, unless marked.
 - Rasmussen and Williams (2006). Gaussian processes for machine learning. MIT Press. gaussianprocess.org/gpml.
 - Smilkov, Carter, Sculley, Viégas and Wattenberg (2017). Direct-manipulation visualization of deep networks.
   arXiv 1708.03788.
+- Robati, Daly and Kokogiannakis (2019). Uncertainty analysis of whole-life embodied carbon of building materials,
+  Monte Carlo. J. Clean. Prod. (details from search snippets).
 - Sohn, Worden and Farrar (2002). Statistical damage classification under changing environmental and operational
   conditions. J. Intell. Mater. Syst. Struct. 13(9), 561–574.
 - Tseranidis, Brown and Mueller (2016). Data-driven approximation algorithms for rapid performance evaluation and
