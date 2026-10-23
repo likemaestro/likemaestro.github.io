@@ -205,7 +205,7 @@ const UnitCellDesigner: React.FC = () => {
       </>}
     >
       {clamped.length > 0 && <p className="t-small mb-4 text-ink-2">Some link settings were out of range and have been adjusted: {clamped.join(", ")}.</p>}
-      <div className="grid gap-x-8 gap-y-8 md:grid-cols-[14rem_minmax(0,1fr)] xl:grid-cols-[14rem_auto_minmax(0,1fr)] xl:gap-x-12">
+      <div className="grid gap-x-8 gap-y-8 md:grid-cols-[14rem_minmax(0,1fr)] xl:grid-cols-[18rem_minmax(0,1fr)_22rem] xl:gap-x-12">
         {/* Controls */}
         <div className="flex min-w-0 flex-col gap-4">
           <Field label="Target"><Segmented label="Optimization target" cols={2} value={t} onChange={(v) => set({ target: v, seed: defaultSeed(v as Objective, n) })} options={TARGETS.map((x) => ({ v: x.id, text: x.label }))} /></Field>
@@ -229,10 +229,10 @@ const UnitCellDesigner: React.FC = () => {
         </div>
 
         {/* Lattice: first on phones, sized from the viewport height on larger screens so the tool fits the first screen.
-            The status and the tiling sit above it, spanning exactly its width. Side by side (xl) the lattice sits next to
-            the controls and the readout takes the rest of the width, its blocks spread over the lattice's height. */}
+            The status and the tiling sit above it, spanning exactly its width. Side by side (xl) the lattice runs a little
+            past the first screen so it fills more of the width. */}
         <div className="min-w-0 max-md:order-first">
-          <div className="mx-auto w-full md:max-w-[max(18rem,min(100%,calc(100svh-19.5rem)))] xl:mx-0 xl:w-[clamp(18rem,calc(100svh-19.5rem),44rem)] xl:max-w-none">
+          <div className="mx-auto w-full md:max-w-[max(18rem,min(100%,calc(100svh-19.5rem)))] xl:max-w-[max(18rem,min(100%,calc(100svh-12rem)))]">
             <div className="mb-3 flex items-center justify-between gap-3">
               <p className="t-small text-ink-2" aria-hidden="true">{status}</p>
               <div className="w-36"><Segmented label="Tiles" value={String(tiles)} onChange={(v) => set({ tiles: v })} options={["1", "3", "5"].map((v) => ({ v, text: `${v} × ${v}` }))} /></div>
@@ -244,7 +244,7 @@ const UnitCellDesigner: React.FC = () => {
         </div>
 
         {/* Readout */}
-        <div className="flex min-w-0 flex-col gap-5 md:col-span-2 md:grid md:grid-cols-3 xl:col-span-1 xl:grid-cols-2 xl:content-between xl:gap-x-8 xl:gap-y-7 xl:[&_math]:!text-[0.9375rem]">
+        <div className="flex min-w-0 flex-col gap-5 md:col-span-2 md:grid md:grid-cols-3 xl:col-span-1 xl:flex xl:[&_math]:!text-[1rem]">
           <div className="min-w-0">
             <p className="t-small mb-1.5 text-ink-2">Objective</p>
             <div className="math sm flex flex-col gap-1 overflow-x-auto overflow-y-hidden">
@@ -256,15 +256,10 @@ const UnitCellDesigner: React.FC = () => {
             <p className="t-small mb-0.5 text-ink-2">Homogenized stiffness</p>
             <MathML className="math sm overflow-x-auto overflow-y-hidden" html={tensorMath(res.C, T.active)} />
           </div>
-          <div className="min-w-0 xl:col-span-2">
+          <div className="min-w-0">
             <p className="t-small mb-1.5 text-ink-2">Properties</p>
-            <div className="math sm flex flex-col gap-1 xl:grid xl:grid-cols-2 xl:gap-x-8">{lines.map((h, i) => <MathML key={i} html={h} />)}</div>
-          </div>
-          {/* Convergence: under the properties; side by side a modest plot across the readout, its three rows spread
-              over the lattice's height so the last ends level with the lattice's bottom */}
-          <div className="min-w-0 md:col-start-3 xl:col-span-2 xl:col-start-1">
-            <p className="t-small mb-2 hidden text-ink-2 xl:block">Convergence</p>
-            <div className="flex"><Trace data={res.hist} reference={reference} live={live} className="h-9 xl:h-[clamp(4rem,14svh,7rem)]" /></div>
+            <div className="math sm flex flex-col gap-1">{lines.map((h, i) => <MathML key={i} html={h} />)}</div>
+            <div className="mt-3 flex"><Trace data={res.hist} reference={reference} live={live} /></div>
             <p className="t-small mt-1 flex flex-wrap gap-x-3 text-ink-2">
               <span>Seed {seed}</span>
               {done && res.grey !== undefined && <span>Grey {(res.grey * 100).toFixed(1)} %</span>}
