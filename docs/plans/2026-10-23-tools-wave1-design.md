@@ -10,7 +10,7 @@ are listed at the end. Same visual system as the home page (spec: `2026-10-20-we
   - grouped rows (thumbnail, name, one line): Microstructures (property map, cell sketchpad), Monitoring (phone
     vibrometer), Other tools (world map generator, gauge).
 - **Header:** "Tools" joins the section links: Research, Publications, Tools, About, CV.
-- **Tool frame (`ToolShell`):** site header, breadcrumb "Tools / Name", title and one line, then an action row:
+- **Tool frame (`ToolShell`):** site header, breadcrumb "Tools / Group / Name" (since 2026-10-23; the group links to its section on `/tools`), title and one line, then an action row:
   - Copy link (the URL reproduces the result);
   - Cite (BibTeX `@software` entry; a Zenodo DOI later);
   - Method reference (the paper the method comes from; not "Paper", since Murat's papers don't describe these tools);

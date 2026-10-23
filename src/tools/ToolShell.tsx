@@ -4,6 +4,8 @@ import SiteHeader, { SiteFooter, Wrap } from "../components/SiteHeader";
 import registry from "./pages.json";
 
 export const page = (path: string) => registry.pages.find((p) => p.path === path)!;
+/** A group's anchor on /tools, e.g. "Decision support" -> "decision-support"; the breadcrumb links to it. */
+export const groupId = (group: string) => group.toLowerCase().replace(/\s+/g, "-");
 const REPO = "https://github.com/likemaestro/likemaestro.github.io/tree/master/src/tools";
 /** Güven & Özdemir (2026), Finite Elements in Analysis and Design 260, 104599: the microstructure tools' related paper. */
 export const MICRO_PAPER = "https://doi.org/10.1016/j.finel.2026.104599";
@@ -54,6 +56,10 @@ const ToolShell: React.FC<{
           <nav aria-label="Breadcrumb" className="t-data text-ink-2">
             <Link className="link" to="/tools">Tools</Link>
             <span aria-hidden="true"> / </span>
+            {p.group && <>
+              <Link className="link" to={`/tools#${groupId(p.group)}`}>{p.group}</Link>
+              <span aria-hidden="true"> / </span>
+            </>}
             <span aria-current="page">{p.title}</span>
           </nav>
           <h1 className="t-h2 relative mt-3 flex items-start gap-3">

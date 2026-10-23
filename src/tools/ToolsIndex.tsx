@@ -1,10 +1,10 @@
 import React, { useEffect, useRef, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import SiteHeader, { SiteFooter, Wrap } from "../components/SiteHeader";
 import { cells } from "../lab/precomputed";
 import { decode, drawLattice } from "../lab/lattice";
 import registry from "./pages.json";
-import { page } from "./ToolShell";
+import { groupId, page } from "./ToolShell";
 
 const GROUPS = ["Microstructures", "Structures", "Decision support", "Monitoring", "Other tools"];
 
@@ -148,7 +148,12 @@ const Featured: React.FC = () => {
 
 const ToolsIndex: React.FC = () => {
   const p = page("/tools");
+  const { hash } = useLocation();
   useEffect(() => { document.title = `${p.title} – Murat Güven`; return () => { document.title = "Murat Güven"; }; }, [p.title]);
+  // A tool's breadcrumb links to its group, e.g. /tools#microstructures: jump there, as the home page does.
+  useEffect(() => {
+    if (hash) document.getElementById(hash.slice(1))?.scrollIntoView({ behavior: "instant" as ScrollBehavior });
+  }, [hash]);
 
   return (
     <>
@@ -164,8 +169,8 @@ const ToolsIndex: React.FC = () => {
             const rows = registry.pages.filter((t) => "group" in t && t.group === g);
             if (!rows.length) return null;
             return (
-              <section key={g} aria-labelledby={`g-${g}`} className="mt-14">
-                <h2 id={`g-${g}`} className="t-h3">{g}</h2>
+              <section key={g} id={groupId(g)} aria-labelledby={`${groupId(g)}-h`} className="mt-14">
+                <h2 id={`${groupId(g)}-h`} className="t-h3">{g}</h2>
                 <ul className="mt-4 border-b border-rule">
                   {rows.map((t) => (
                     <li key={t.path} className="border-t border-rule">
