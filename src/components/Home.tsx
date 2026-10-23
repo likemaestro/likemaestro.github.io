@@ -47,7 +47,7 @@ const Home: React.FC = () => {
       <main id="main">
         <Wrap className="grid gap-y-12 pb-16 pt-10 md:pt-12 lg:pb-20 xl:grid-cols-[minmax(0,1fr)_auto] xl:gap-x-16">
           <div className="min-w-0">
-            {/* Side by side, the cap height (not the line box) starts level with the lab's buttons: Archivo sits 0.134em lower. */}
+            {/* Side by side, the cap height (not the line box) starts level with the lab’s buttons: Archivo sits 0.134em lower. */}
             <h1 className="t-display max-w-[22ch] xl:mt-[-0.134em]">I develop AI and computational methods for structural engineering and sustainable construction.</h1>
             <p className="mt-6 max-w-[46ch] text-ink-2">
               PhD candidate at Politecnico di Milano. My work spans optimization methods, BIM-integrated workflows and computational tools for steel fabrication.
@@ -73,14 +73,14 @@ const Home: React.FC = () => {
                   ))}
                 </ol>
                 <figcaption className="t-small mt-3 text-ink-2">
-                  Recorded optimization states for a negative Poisson's ratio target. Source: MSc thesis, İzmir Institute of Technology, 2023
+                  Recorded optimization states for a negative Poisson’s ratio target. Source: MSc thesis, İzmir Institute of Technology, 2023
                 </figcaption>
               </figure>
             }
           >
             <p>
               A domain reduction technique for topology optimization of periodic microstructures with nonlinear elastic material behaviour.
-              Published with İ. Özdemir in <a className="link text-ink" href="https://doi.org/10.1016/j.finel.2026.104599">Finite Elements in Analysis and Design</a>.
+              Published with İ. Özdemir in <a className="link text-ink" href="https://doi.org/10.1016/j.finel.2026.104599">Finite Elements in Analysis and Design</a>.
             </p>
           </WorkRow>
           <WorkRow meta="2026, team project" title="Bridge health indicators from monitoring data">

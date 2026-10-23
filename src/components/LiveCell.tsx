@@ -185,7 +185,7 @@ const LiveCell: React.FC = () => {
               type="button"
               aria-pressed={target === x.id}
               onClick={() => select(x.id)}
-              className={`t-data h-11 min-w-0 flex-1 px-1 transition-colors duration-150 md:h-8 md:flex-none md:px-2.5 md:text-[0.875rem] ${i ? "border-l border-rule" : ""} ${
+              className={`t-data h-11 min-w-0 flex-1 px-1 transition-colors duration-150 md:h-8 md:[@media(pointer:coarse)]:h-11 md:flex-none md:px-2.5 md:text-[0.875rem] ${i ? "border-l border-rule" : ""} ${
                 target === x.id ? "bg-ink font-[600] text-canvas" : "text-ink-2 hover:bg-[#EEF0EE] hover:text-ink"
               }`}
             >
@@ -194,7 +194,7 @@ const LiveCell: React.FC = () => {
           ))}
         </div>
         {supported && (
-          <button type="button" onClick={toggle} className="t-data inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-[2px] border border-ink transition-colors duration-150 hover:bg-[#EEF0EE] md:h-8 md:w-auto md:gap-1.5 md:pl-2 md:pr-2.5 md:text-[0.875rem]">
+          <button type="button" onClick={toggle} className="t-data inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-[2px] border border-ink transition-colors duration-150 hover:bg-[#EEF0EE] md:h-8 md:[@media(pointer:coarse)]:h-11 md:w-auto md:gap-1.5 md:pl-2 md:pr-2.5 md:text-[0.875rem]">
             <svg viewBox="0 0 16 16" aria-hidden="true" className="h-4 w-4 md:h-3.5 md:w-3.5" fill="none" stroke="currentColor" strokeWidth="1.6">{run.icon}</svg>
             <span className="max-md:sr-only">{run.text}</span>
           </button>

@@ -8,7 +8,7 @@ export const TARGETS: { id: Objective; label: string; track: Key; aria: string; 
   { id: "axial", label: "Axial", track: "E1", aria: "axial stiffness", active: [0, 4] },
   { id: "shear", label: "Shear", track: "G12", aria: "shear stiffness", active: [8] },
   { id: "bulk", label: "Bulk", track: "K", aria: "bulk modulus", active: [0, 1, 3, 4] },
-  { id: "auxetic", label: "Auxetic", track: "nu12", aria: "a negative Poisson's ratio", active: [0, 1, 3, 4] },
+  { id: "auxetic", label: "Auxetic", track: "nu12", aria: "a negative Poisson’s ratio", active: [0, 1, 3, 4] },
 ];
 export const target = (t: Objective) => TARGETS.find((x) => x.id === t)!;
 

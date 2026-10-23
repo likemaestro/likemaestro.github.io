@@ -83,7 +83,7 @@ const Vibrometer: React.FC = () => {
       stopRef.current = () => {};
       setPhase("idle");
       if (!done) return;
-      if (buf.t.length < 64) { setProblem("No motion data arrived. This device or browser doesn't share its accelerometer; the simulated example shows instead."); return; }
+      if (buf.t.length < 64) { setProblem("No motion data arrived. This device or browser doesn’t share its accelerometer; the simulated example shows instead."); return; }
       setRec({ ...buf, source: "phone" });
     };
     window.addEventListener("devicemotion", onMotion);
@@ -91,7 +91,7 @@ const Vibrometer: React.FC = () => {
     timers.push(window.setInterval(() => {
       const s = (performance.now() - t0) / 1000;
       setElapsed(s);
-      if (s > 1.5 && buf.t.length === 0) { stop(false); setProblem("No motion data arrived. This device or browser doesn't share its accelerometer; the simulated example shows instead."); }
+      if (s > 1.5 && buf.t.length === 0) { stop(false); setProblem("No motion data arrived. This device or browser doesn’t share its accelerometer; the simulated example shows instead."); }
       else if (s >= length) stop(true);
     }, 100));
     stopRef.current = () => stop(false);
@@ -109,7 +109,7 @@ const Vibrometer: React.FC = () => {
     if (!DME) { setProblem("This browser has no motion sensor access. Open the page on a phone, or upload a CSV."); return; }
     // iOS asks for motion permission; the request has to come straight from the tap.
     if (typeof DME.requestPermission === "function") {
-      DME.requestPermission().then((s) => (s === "granted" ? go() : setProblem("Motion access was declined. Allow it in the browser's settings to measure, or upload a CSV."))).catch(() => setProblem("Motion access isn't available here. Upload a CSV instead."));
+      DME.requestPermission().then((s) => (s === "granted" ? go() : setProblem("Motion access was declined. Allow it in the browser’s settings to measure, or upload a CSV."))).catch(() => setProblem("Motion access isn’t available here. Upload a CSV instead."));
     } else go();
   };
 
@@ -132,7 +132,7 @@ const Vibrometer: React.FC = () => {
       slug="vibrometer"
       methodRef={{ label: "Feng et al. 2015", href: "https://doi.org/10.3390/s150202980" }}
       method={<>
-        <p>The browser reads the phone's accelerometer through motion events. The record is resampled to a uniform rate, the mean and drift are removed, and a Hann-windowed fast Fourier transform gives the spectrum of the axis that moved most.</p>
+        <p>The browser reads the phone’s accelerometer through motion events. The record is resampled to a uniform rate, the mean and drift are removed, and a Hann-windowed fast Fourier transform gives the spectrum of the axis that moved most.</p>
         <p>The highest peak above 0.5 Hz is the main frequency, refined between frequency bins. Smartphone accelerometers have been checked against reference sensors on shaking tables and a bridge (Feng et al. 2015).</p>
       </>}
       limits={<>
@@ -154,7 +154,7 @@ const Vibrometer: React.FC = () => {
             ))}
           </div>
           <ol className="t-small list-decimal space-y-1.5 pl-4 text-ink-2">
-            <li>Lay the phone flat on the structure, screen up, where it can't fall.</li>
+            <li>Lay the phone flat on the structure, screen up, where it can’t fall.</li>
             <li>Tap Start and take your hands off it.</li>
             <li>Let the structure move: walk or jump once on a footbridge, or measure while people cross.</li>
           </ol>

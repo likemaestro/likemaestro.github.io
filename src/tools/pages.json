@@ -16,13 +16,13 @@
     {
       "path": "/tools/sketchpad",
       "title": "Cell sketchpad",
-      "line": "Draw a unit cell and see its stiffness and Poisson's ratio at once. Can you draw an auxetic?",
+      "line": "Draw a unit cell and see its stiffness and Poisson’s ratio at once. Can you draw an auxetic?",
       "group": "Microstructures"
     },
     {
       "path": "/tools/property-map",
       "title": "Property map",
-      "line": "Hundreds of optimized unit cells on one chart of stiffness against Poisson's ratio. Pick one to see it.",
+      "line": "Hundreds of optimized unit cells on one chart of stiffness against Poisson’s ratio. Pick one to see it.",
       "group": "Microstructures"
     },
     {

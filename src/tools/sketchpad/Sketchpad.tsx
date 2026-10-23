@@ -162,7 +162,7 @@ const Sketchpad: React.FC = () => {
     `<math><msub><mi>ν</mi><mn>12</mn></msub><mo>=</mo><mn>${num(q.nu12, 2)}</mn></math>`,
     `<math><mi>κ</mi><mo>=</mo><mn>${num(q.K, 3)}</mn><mspace width="0.2em"></mspace><mi>E</mi><mo>=</mo><mn>${num(q.K / kappaHS(vol), 2)}</mn><mspace width="0.2em"></mspace><msub><mi>κ</mi><mtext>HS</mtext></msub></math>`,
   ];
-  const label = `Drawing grid, 48 by 48, ${Math.round(vol * 100) || 0} percent solid. ${auxetic ? "Auxetic: negative Poisson's ratio." : ""}`;
+  const label = `Drawing grid, 48 by 48, ${Math.round(vol * 100) || 0} percent solid. ${auxetic ? "Auxetic: negative Poisson’s ratio." : ""}`;
 
   const exportSVG = () => {
     const { f, W, H } = panelField(show(cell), N, 1, 1, 0), s = 40 / N;
@@ -183,7 +183,7 @@ const Sketchpad: React.FC = () => {
         <p>Kaleidoscope and mirror drawings are solved on a quarter of the cell, which gives the same result faster.</p>
       </>}
       limits={<>
-        <p>Linear elastic, small strains, plane stress; stiffness in units of the solid's E.</p>
+        <p>Linear elastic, small strains, plane stress; stiffness in units of the solid’s E.</p>
         <p>Elements that touch only at a corner still pass load in this mesh, but would be weak hinges in a real part. Give joints some width.</p>
       </>}
     >
@@ -223,7 +223,7 @@ const Sketchpad: React.FC = () => {
             <p className="t-small mb-1.5 text-ink-2">Properties</p>
             <div className="math sm flex flex-col gap-1">{lines.map((h, i) => <MathML key={i} html={h} />)}</div>
             <p className="t-small mt-2 text-ink-2" role="status" aria-live="polite">
-              {failed ? "This browser can't run the solver." : !res ? "Computing…" : !whole ? "The solid doesn't connect across the cell, so it has almost no stiffness." : auxetic ? `Auxetic: it gets wider when stretched. ${Math.round(vol * 100)} % solid.` : `${Math.round(vol * 100)} % solid.`}
+              {failed ? "This browser can’t run the solver." : !res ? "Computing…" : !whole ? "The solid doesn’t connect across the cell, so it has almost no stiffness." : auxetic ? `Auxetic: it gets wider when stretched. ${Math.round(vol * 100)} % solid.` : `${Math.round(vol * 100)} % solid.`}
             </p>
           </div>
           <div className="flex flex-wrap gap-2">

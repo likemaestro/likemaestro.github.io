@@ -94,11 +94,11 @@ const PropertyMap: React.FC = () => {
       slug="property-map"
       methodRef={{ label: "Andreassen & Andreasen 2014", href: "https://doi.org/10.1016/j.commatsci.2013.09.006" }}
       method={<>
-        <p>Each point is one optimized unit cell from the designer's solver: 48 × 48 elements, run from a random start (seed) for each target at volume fractions 0.30, 0.40 and 0.50. Only runs that converged to a crisp design in one piece are kept.</p>
+        <p>Each point is one optimized unit cell from the designer’s solver: 48 × 48 elements, run from a random start (seed) for each target at volume fractions 0.30, 0.40 and 0.50. Only runs that converged to a crisp design in one piece are kept.</p>
         <p>The vertical axis divides the stiffness E₁ by its Voigt bound V·E, so cells of different volume fractions compare on one scale; no cell can pass 1.</p>
       </>}
       limits={<>
-        <p>Linear elastic, plane stress, base material ν = 0.3. All cells have the square's symmetries, so E₂ = E₁.</p>
+        <p>Linear elastic, plane stress, base material ν = 0.3. All cells have the square’s symmetries, so E₂ = E₁.</p>
         <p>The points show what this optimizer found from these seeds, not the limits of what is possible.</p>
       </>}
     >
@@ -123,11 +123,11 @@ const PropertyMap: React.FC = () => {
 
       <div className="grid gap-x-12 gap-y-8 lg:grid-cols-[minmax(0,calc((100svh-20.5rem)*640/420))_18rem] lg:justify-start">
         <div className="min-w-0">
-          {error && <p className="text-ink-2">The designs couldn't be loaded. Reload the page to try again.</p>}
+          {error && <p className="text-ink-2">The designs couldn’t be loaded. Reload the page to try again.</p>}
           {!data && !error && <p className="t-small text-ink-2">Loading the designs…</p>}
           {data && (
             <svg viewBox={`0 0 ${W} ${H}`} className="block w-full text-ink outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4"
-              role="group" aria-label={`Property map: ${visible.length} designs, Poisson's ratio across, stiffness up. Arrow keys move through the designs from left to right.`}
+              role="group" aria-label={`Property map: ${visible.length} designs, Poisson’s ratio across, stiffness up. Arrow keys move through the designs from left to right.`}
               tabIndex={0} onKeyDown={(e) => { if (e.key === "ArrowRight") { e.preventDefault(); step(1); } if (e.key === "ArrowLeft") { e.preventDefault(); step(-1); } }}>
               {/* axes and references */}
               <g className="text-rule" stroke="currentColor" strokeWidth="1">
@@ -141,7 +141,7 @@ const PropertyMap: React.FC = () => {
               <g className="fill-ink-2" fontSize="12" fontFamily="inherit">
                 {[-1, -0.5, 0, 0.5, 1].map((v) => <text key={v} x={sx(v)} y={H - M.b + 18} textAnchor="middle">{v < 0 ? `−${-v}` : v}</text>)}
                 {[0, 0.25, 0.5, 0.75, 1].map((v) => <text key={v} x={M.l - 8} y={sy(v) + 4} textAnchor="end">{v}</text>)}
-                <text x={(M.l + W - M.r) / 2} y={H - 6} textAnchor="middle">Poisson's ratio ν₁₂ (auxetic to the left of 0)</text>
+                <text x={(M.l + W - M.r) / 2} y={H - 6} textAnchor="middle">Poisson’s ratio ν₁₂ (auxetic to the left of 0)</text>
                 <text x={14} y={(M.t + H - M.b) / 2} textAnchor="middle" transform={`rotate(-90 14 ${(M.t + H - M.b) / 2})`}>Stiffness E₁ / V·E</text>
                 <text x={W - M.r - 4} y={sy(1) - 6} textAnchor="end">Voigt bound</text>
               </g>

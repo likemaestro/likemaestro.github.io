@@ -25,12 +25,13 @@ const Lattice: React.FC<{ rho: string; tiles: number; className?: string; label?
 // Small line drawings for the rows; the microstructure tools show their own lattice instead.
 const GLYPH: Record<string, React.ReactNode> = {
   "/tools/WorldMap": <><circle cx="24" cy="24" r="17" /><ellipse cx="24" cy="24" rx="7" ry="17" /><path d="M7 24h34M10 15h28M10 33h28" /></>,
+  "/tools/property-map": <><path d="M8 6v34h34" /><path d="M13 33l3-2M15 29l3-1M17 31l2-2M27 16l2 1M30 21l2 1M33 26l2 1M36 31l2 1" strokeWidth="2.4" strokeLinecap="round" /><path d="M24 6v34" strokeDasharray="2 2" /></>,
   "/tools/vibrometer": <path d="M4 24h6l3-9 4 18 4-24 4 28 4-20 3 12 3-5h9" />,
   "/tools/gauge-tool": <><path d="M8 32a16 16 0 0 1 32 0" /><path d="M24 32l8-10" /><circle cx="24" cy="32" r="1.6" fill="currentColor" /></>,
 };
 
 // Microstructure rows show a lattice of one of the precomputed designs.
-const LATTICE: Record<string, { rho: string }> = { "/tools/sketchpad": cells.shear, "/tools/property-map": cells.bulk };
+const LATTICE: Record<string, { rho: string }> = { "/tools/sketchpad": cells.shear };
 
 const Thumb: React.FC<{ path: string }> = ({ path }) =>
   GLYPH[path] ? (

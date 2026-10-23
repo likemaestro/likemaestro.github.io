@@ -213,12 +213,12 @@ const UnitCellDesigner: React.FC = () => {
       methodRef={{ label: "Andreassen & Andreasen 2014", href: "https://doi.org/10.1016/j.commatsci.2013.09.006" }}
       method={<>
         <p>Energy-based homogenization of a periodic unit cell on a square mesh of bilinear elements, after Andreassen and Andreasen (2014). Base material E = 1, ν = 0.3, plane stress.</p>
-        <p>Densities follow SIMP (p = 3) with a density filter and a Heaviside projection that sharpens during the run; MMA updates the design under the volume constraint. The cell keeps the square's symmetries, so it tiles in both directions.</p>
+        <p>Densities follow SIMP (p = 3) with a density filter and a Heaviside projection that sharpens during the run; MMA updates the design under the volume constraint. The cell keeps the square’s symmetries, so it tiles in both directions.</p>
       </>}
       limits={<>
-        <p>Linear elastic, small strains, plane stress; stiffness in units of the base material's E. A research demo, not a design check.</p>
+        <p>Linear elastic, small strains, plane stress; stiffness in units of the base material’s E. A research demo, not a design check.</p>
         <p>A link reproduces the settings. Another browser engine can end a run in a slightly different design.</p>
-        <p>Cutting files trace density 0.5 after light smoothing. Check the thinnest features against your cutter's kerf before cutting.</p>
+        <p>Cutting files trace density 0.5 after light smoothing. Check the thinnest features against your cutter’s kerf before cutting.</p>
       </>}
     >
       {clamped.length > 0 && <p className="t-small mb-4 text-ink-2">Some link settings were out of range and have been adjusted: {clamped.join(", ")}.</p>}
@@ -242,7 +242,7 @@ const UnitCellDesigner: React.FC = () => {
           </Field>
           {!vetted && <p className="t-small text-ink-2">Seeds are checked at V = 0.40 and filter radius 2. Other settings can end grey or in separate pieces; the checks below the result say which.</p>}
           {supported && <button type="button" onClick={toggle} className="btn btn-solid self-start">{runText}</button>}
-          {!supported && <p className="t-small text-ink-2">This browser can't run the solver; the precomputed design shows instead.</p>}
+          {!supported && <p className="t-small text-ink-2">This browser can’t run the solver; the precomputed design shows instead.</p>}
         </div>
 
         {/* Lattice: first on phones, sized from the viewport height on larger screens so the tool fits the first screen */}

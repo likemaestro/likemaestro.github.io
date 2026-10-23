@@ -165,3 +165,48 @@ Measure the natural frequency of a desk, floor or footbridge with a phone.
 - **Left out on purpose:**
   - bar cutting and nesting (too close to the PhD topic);
   - LLM tools (they need a server and an API key).
+
+## As built (2026-10-23)
+
+Departures from the design above, and numbers measured while building it.
+
+- **Unit-cell designer:**
+  - Away from the checked settings (V = 0.40, r = 2), axial and bulk runs often stall at uniform grey. At n = 48,
+    4–7 of 8 seeds stall at V = 0.30, 0.45 and 0.60. Shear and auxetic runs never stalled.
+  - The solver is unchanged, because the home page's hand-picked seeds depend on it. Instead, a run that ends with more
+    than half its elements grey moves on to seed + 7919, up to six times, with a note. The link then carries the seed
+    that worked.
+  - The status reads "Stayed grey" rather than "Converged" when that also fails.
+- **Property map:**
+  - The vertical axis is E₁ / (V·E), the share of the Voigt bound, so all three volume fractions sit on one scale with
+    the bound at 1.
+  - 464 designs; seeds k × 7919 for k = 1–60 at n = 48. Kept per target and V:
+    - axial 33 / 25 / 33;
+    - shear 42 / 47 / 51;
+    - bulk 30 / 14 / 31;
+    - auxetic 50 / 55 / 53.
+  - The data file is 209 KB, written by `npm run precompute-map` (`scripts/precompute-map.js`). It never touches
+    `src/lab/precomputed.ts`.
+  - "Open in designer" reproduces a design exactly in the same browser engine. For example, `auxetic-0.40-372193`
+    converges at iteration 127 in both.
+- **Cell sketchpad:**
+  - Symmetry sits in the side column, so the drawing toolbar fits one row.
+  - E₂ is shown beside E₁, since mirror and free drawings can differ in the two directions.
+  - The connectivity check uses 4-neighbours. Corner-only contacts are flagged in the limits text.
+- **Vibrometer:**
+  - Record length 10, 20 or 60 s.
+  - A peak must be the largest value within ±max(0.3 Hz, 4 × resolution) and at least 10 % of the main peak, so ripple
+    on a broad peak doesn't count.
+  - Checked with a 2.5 Hz sine on jittered timestamps, the two-mode simulated record, a 3.1 Hz CSV, and synthetic
+    `devicemotion` events at 4.4 Hz.
+  - The iOS permission path still needs a real iPhone.
+- **Site:**
+  - `scripts/postbuild.js` writes one HTML file per entry in `src/tools/pages.json`, with its own title, description,
+    canonical URL and Open Graph tags, plus 404.html, the `/publications` alias and the sitemap.
+  - `scripts/make-images.js` draws the share image (`og.png`, 1200 × 630) and the icons from the auxetic cell. They
+    replace the Create React App defaults, and the manifest is renamed.
+  - Hero buttons stay 44 px on touch tablets: a `pointer: coarse` override of `md:h-8`.
+  - The hero is pixel-identical to before at 1700 × 795, 1280 × 720 and 390 × 844.
+- **References:**
+  - Andreassen and Andreasen (2014), DOI 10.1016/j.commatsci.2013.09.006, verified with Crossref.
+  - Feng et al. (2015), DOI 10.3390/s150202980, verified by web search.
