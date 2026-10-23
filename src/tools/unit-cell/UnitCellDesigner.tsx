@@ -205,7 +205,7 @@ const UnitCellDesigner: React.FC = () => {
       </>}
     >
       {clamped.length > 0 && <p className="t-small mb-4 text-ink-2">Some link settings were out of range and have been adjusted: {clamped.join(", ")}.</p>}
-      <div className="grid gap-x-8 gap-y-8 md:grid-cols-[14rem_minmax(0,1fr)] xl:grid-cols-[18rem_minmax(0,1fr)_22rem] xl:gap-x-12">
+      <div className="grid gap-x-8 gap-y-8 md:grid-cols-[14rem_minmax(0,1fr)] xl:grid-cols-[20rem_minmax(0,1fr)_24rem] xl:gap-x-12">
         {/* Controls */}
         <div className="flex min-w-0 flex-col gap-4">
           <Field label="Target"><Segmented label="Optimization target" cols={2} value={t} onChange={(v) => set({ target: v, seed: defaultSeed(v as Objective, n) })} options={TARGETS.map((x) => ({ v: x.id, text: x.label }))} /></Field>
@@ -229,10 +229,10 @@ const UnitCellDesigner: React.FC = () => {
         </div>
 
         {/* Lattice: first on phones, sized from the viewport height on larger screens so the tool fits the first screen.
-            The status and the tiling sit above it, spanning exactly its width. Side by side (xl) the lattice runs a little
-            past the first screen so it fills more of the width. */}
+            The status and the tiling sit above it, spanning exactly its width. Side by side (xl) the wider controls and
+            readout take up the width the lattice leaves. */}
         <div className="min-w-0 max-md:order-first">
-          <div className="mx-auto w-full md:max-w-[max(18rem,min(100%,calc(100svh-19.5rem)))] xl:max-w-[max(18rem,min(100%,calc(100svh-12rem)))]">
+          <div className="mx-auto w-full md:max-w-[max(18rem,min(100%,calc(100svh-19.5rem)))]">
             <div className="mb-3 flex items-center justify-between gap-3">
               <p className="t-small text-ink-2" aria-hidden="true">{status}</p>
               <div className="w-36"><Segmented label="Tiles" value={String(tiles)} onChange={(v) => set({ tiles: v })} options={["1", "3", "5"].map((v) => ({ v, text: `${v} × ${v}` }))} /></div>
@@ -259,7 +259,7 @@ const UnitCellDesigner: React.FC = () => {
           <div className="min-w-0">
             <p className="t-small mb-1.5 text-ink-2">Properties</p>
             <div className="math sm flex flex-col gap-1">{lines.map((h, i) => <MathML key={i} html={h} />)}</div>
-            <div className="mt-3 flex"><Trace data={res.hist} reference={reference} live={live} /></div>
+            <div className="mt-3 flex"><Trace data={res.hist} reference={reference} live={live} className="h-9 xl:h-32" /></div>
             <p className="t-small mt-1 flex flex-wrap gap-x-3 text-ink-2">
               <span>Seed {seed}</span>
               {done && res.grey !== undefined && <span>Grey {(res.grey * 100).toFixed(1)} %</span>}
