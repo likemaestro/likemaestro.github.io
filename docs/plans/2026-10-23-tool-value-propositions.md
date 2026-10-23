@@ -88,20 +88,65 @@
   substance.
 - **Verdict:** **Keep.** The AI and outreach piece.
 
-## 4. GP surrogate: the bouncy footbridge
+## 4. Gaussian process tool (the footbridge was rejected by Murat)
 
-- **Positioning:** For students and engineers meeting surrogate models, the tool shows a Gaussian process learning how
-  hard a footbridge shakes under a walker from a few simulation runs, with its uncertainty. Unlike GP demos on toy
-  functions, the curve has real resonance peaks that a careless sample plan misses.
-- **Job:** understand how many runs a surrogate needs, and how to read its uncertainty.
-- **Pains:**
-  - surrogates look like curve fitting;
-  - toy examples hide the failure cases.
-- **Gains:** watch the GP miss a resonance peak, then catch it with one more run.
-- **Value:** practitioners ●, learners ●●, public ●, hiring ●●.
-- **Says about Murat:** surrogate modeling, used in current work (not named on the site).
-- **Cost and risk:** small to medium. It overlaps the chord as an AI piece, and the footbridge model needs care.
-- **Verdict:** **Later.** Worth building after the chord, if a second AI tool is wanted.
+**Council:**
+- **Geotechnical engineer:** "Kriging, the GP's original form, was born in mining (Krige 1951, Matheron). Its everyday
+  construction use is the ground between boreholes."
+- **Construction manager:** "Unforeseen ground is a classic cause of cost escalation and late completion ('Without
+  site investigation ground is a hazard', Site Investigation Steering Group 1993)."
+- **Assessment engineer:** "The lowest-carbon building is the one you keep. Deciding that starts with how strong the
+  old concrete really is, from a few cores."
+- **ML methodologist:** "Spatial data is where a GP's uncertainty is most honest and most useful."
+- **Hiring PI:** "Any of these shows GP fluency. Pick the one with the clearest story."
+
+### Option A: Between the boreholes (recommended; 3D)
+
+- **Positioning:** For architecture, engineering and construction students, and clients who wonder why site
+  investigation costs money, it is a 3D building site where you drill boreholes and a Gaussian process (kriging)
+  builds the ground model between them, showing how much is still unknown. Unlike borehole logs and static sections, it
+  shows the uncertainty live and lets you find out what you missed.
+- **Interaction:**
+  - Tap the site to drill. Each borehole reveals the depth to the bearing stratum on a hidden synthetic ground, which
+    has a buried channel.
+  - The GP draws the stratum surface with an uncertainty band, and pile lengths under the building footprint with
+    their range.
+  - The uncertainty map shows where the model is least sure. The visitor chooses where to drill, so there is no
+    optimizer.
+  - "Reveal" shows the true ground, and whether the channel was found.
+- **Job:** understand how few boreholes become a ground model, and what risk remains between them.
+- **Pain:** ground looks certain on a drawing.
+- **Gain:** seeing a hidden channel appear only once a borehole lands near it.
+- **Value:** practitioners ●, learners ●●●, public ●●, hiring ●●.
+- **Says about Murat:** GP fundamentals and uncertainty, applied to construction risk.
+- **Grounding:**
+  - GPs for depth to bedrock: an NMBU thesis (2023) found an anisotropic Matérn 3/2 kernel best;
+  - GP against classical kriging: Christianson, Pollyea and Gramacy (arXiv 2207.10138).
+- **3D:** the ground surface and its band, boreholes as cylinders, the building and its piles. True spatial data, so
+  3D is justified.
+- **Effort:** small to medium.
+
+### Option B: How strong is this old building? (reuse)
+
+- **Positioning:** For engineers and students assessing an existing building for reuse, it maps the in-situ concrete
+  strength across the building from a few cores and many cheap rebound readings, with honest uncertainty, and gives a
+  characteristic strength per floor. Unlike one average for the whole building, it shows where a weak zone could hide.
+- **Grounding:** EN 13791:2019 (cores, plus indirect methods correlated to cores). I found no spatial-GP version of
+  this assessment, so the angle is new.
+- **Says about Murat:** GP, plus the life cycle and reuse story.
+- **Caution:** concrete, not steel.
+- **Effort:** medium.
+
+### Option C: Fewer simulations (architecture)
+
+- **Positioning:** A GP learns a building's summer overheating hours from window-to-wall ratio and shading depth after
+  a few runs of a simple thermal model, so designers can explore instantly. This is surrogate modeling as practiced in
+  sustainable building design (Westermann and Evins 2019).
+- **Says about Murat:** surrogates replacing simulations, closest to the current work.
+- **Caution:** furthest from structures; it needs a thermal model.
+- **Effort:** medium.
+
+**Recommendation:** A. It is GP at home, construction-relevant, 3D, and its story is clear in ten seconds.
 
 ## 5. Unbuild it
 
@@ -139,15 +184,25 @@
 | Embodied carbon calculator | Practical: a defensible early estimate | M | Keep |
 | Why steel beams twist | Teaching: see LTB in one minute | S–M | Keep, build first |
 | The building's chord | Outreach and AI signal: hear monitoring | M | Keep |
-| GP surrogate (footbridge) | Teaching and a surrogate signal | S–M | Later |
+| GP: Between the boreholes | Teaching: the ground model and its uncertainty | S–M | Proposed (footbridge rejected) |
 | Unbuild it | Fun, but thin for its cost | L | Drop |
 | Design from reclaimed stock | Practical reuse | M | Only if Murat confirms it is clear of the PhD |
 
 ## References
 
+- Christianson, Pollyea and Gramacy. Traditional kriging versus modern Gaussian processes for large-scale mining
+  data. arXiv 2207.10138.
 - Brütting, Senatore, Schevenels and Fivet (2020). Optimum design of frame structures from a stock of reclaimed
   elements. Front. Built Environ. 6, 57. DOI 10.3389/fbuil.2020.00057.
+- EN 13791:2019. Assessment of in-situ compressive strength in structures and precast concrete components.
+- Krige (1951); Matheron (1960s): the origins of kriging (as summarized in secondary sources).
 - DISRUPT 2 steel reuse project toolkit (ASBP, 2024).
+- NMBU master's thesis (2023). Spatial estimation of depth to bedrock using borehole data: a Gaussian process
+  framework.
 - Moore (1991). Crossing the chasm. HarperBusiness. The positioning statement template.
+- Site Investigation Steering Group (1993). Site investigation in construction, part 1: Without site investigation
+  ground is a hazard. Thomas Telford.
 - Osterwalder, Pigneur, Bernarda, Smith and Papadakos (2014). Value proposition design. Wiley.
 - Other sources as in `2026-10-23-3d-tools-design.md` and `2026-10-23-ai-tools-design-session.md`.
+- Westermann and Evins (2019). Surrogate modelling for sustainable building design: a review. Energy Build. 198,
+  170–186. DOI 10.1016/j.enbuild.2019.05.057.
