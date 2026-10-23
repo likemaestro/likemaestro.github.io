@@ -88,65 +88,69 @@
   substance.
 - **Verdict:** **Keep.** The AI and outreach piece.
 
-## 4. Gaussian process tool (the footbridge was rejected by Murat)
+## 4. Gaussian process tool: structural engineering first
+
+Murat (2026-10-23): "I'm a structural engineer. The focus firstly be that." The footbridge and the construction and
+architecture options (boreholes, the old building's concrete, the thermal model) are dropped. The rule applies to every
+tool: structural engineering first.
 
 **Council:**
-- **Geotechnical engineer:** "Kriging, the GP's original form, was born in mining (Krige 1951, Matheron). Its everyday
-  construction use is the ground between boreholes."
-- **Construction manager:** "Unforeseen ground is a classic cause of cost escalation and late completion ('Without
-  site investigation ground is a hazard', Site Investigation Steering Group 1993)."
-- **Assessment engineer:** "The lowest-carbon building is the one you keep. Deciding that starts with how strong the
-  old concrete really is, from a few cores."
-- **ML methodologist:** "Spatial data is where a GP's uncertainty is most honest and most useful."
-- **Hiring PI:** "Any of these shows GP fluency. Pick the one with the clearest story."
+- **Reliability engineer:** "In structural engineering, a GP's main job is to stand in for the expensive solver in
+  reliability analysis (the 2025 review of Bayesian learning in structural dynamics; AK-MCS, EGRA)."
+- **Code committee member:** "β = 3.8 over 50 years for RC2 is what the Eurocode partial factors are built to deliver
+  (EN 1990). Few engineers have seen what that number means."
+- **Steel stability researcher:** "The European buckling curves came from more than 1,000 ECCS tests plus theory
+  (imperfection L/1000 plus residual stresses), later put in Ayrton–Perry form by Maquoi and Rondal."
+- **Hiring PI:** "A GP surrogate in a reliability problem is a structural engineer's GP, not a data scientist's."
 
-### Option A: Between the boreholes (recommended; 3D)
+### Option A: How safe is safe? (recommended)
 
-- **Positioning:** For architecture, engineering and construction students, and clients who wonder why site
-  investigation costs money, it is a 3D building site where you drill boreholes and a Gaussian process (kriging)
-  builds the ground model between them, showing how much is still unknown. Unlike borehole logs and static sections, it
-  shows the uncertainty live and lets you find out what you missed.
+- **Positioning:** For structural engineering students and engineers who use partial factors every day but have never
+  seen what they buy, it shows a Gaussian process surrogate estimating the probability of failure of a steel column
+  from a handful of model runs, and compares the reliability index β with the Eurocode target. Unlike textbook figures,
+  you place the runs, watch the surrogate learn the limit state, and check it against the truth.
+- **The problem:**
+  - a pinned steel column (HEB, S355);
+  - random yield strength, initial bow imperfection, permanent load and imposed load (distributions as in the JCSS
+    Probabilistic Model Code, to be checked);
+  - the "expensive model": the column's resistance with its imperfection (second-order, Ayrton–Perry first yield, the
+    basis of the European curves).
+  - In practice each run would be a nonlinear FE analysis; here the model is fast, so the GP can be checked against
+    the truth.
+- **Views:**
+  - The standard normal plane of the two dominant variables (resistance and load), with:
+    - the true limit state g = 0;
+    - the GP's limit state and its uncertainty band;
+    - Monte Carlo points, colored safe or failed;
+    - the design point and β (Hasofer–Lind).
+  - Readouts: Pf and β from Monte Carlo on the GP, against the truth, against the target 3.8.
 - **Interaction:**
-  - Tap the site to drill. Each borehole reveals the depth to the bearing stratum on a hidden synthetic ground, which
-    has a buried channel.
-  - The GP draws the stratum surface with an uncertainty band, and pile lengths under the building footprint with
-    their range.
-  - The uncertainty map shows where the model is least sure. The visitor chooses where to drill, so there is no
-    optimizer.
-  - "Reveal" shows the true ground, and whether the channel was found.
-- **Job:** understand how few boreholes become a ground model, and what risk remains between them.
-- **Pain:** ground looks certain on a drawing.
-- **Gain:** seeing a hidden channel appear only once a borehole lands near it.
-- **Value:** practitioners ●, learners ●●●, public ●●, hiring ●●.
-- **Says about Murat:** GP fundamentals and uncertainty, applied to construction risk.
-- **Grounding:**
-  - GPs for depth to bedrock: an NMBU thesis (2023) found an anisotropic Matérn 3/2 kernel best;
-  - GP against classical kriging: Christianson, Pollyea and Gramacy (arXiv 2207.10138).
-- **3D:** the ground surface and its band, boreholes as cylinders, the building and its piles. True spatial data, so
-  3D is justified.
-- **Effort:** small to medium.
+  - place runs by tapping, or use a plan (grid, random, Latin hypercube);
+  - change γM1, γG, γQ, or the load ratio, and see β move: what the partial factors buy;
+  - adaptive methods (AK-MCS) are named under Method, not implemented, since there is no optimizer.
+- **Value:** practitioners ●●, learners ●●●, public ●, hiring ●●●.
+- **Says about Murat:** a GP surrogate used the way structural engineers use it; reliability and the Eurocode basis of
+  design; steel stability.
+- **Effort:** small to medium. A 2D GP, Monte Carlo, Ayrton–Perry.
 
-### Option B: How strong is this old building? (reuse)
+### Option B: From tests to the buckling curve
 
-- **Positioning:** For engineers and students assessing an existing building for reuse, it maps the in-situ concrete
-  strength across the building from a few cores and many cheap rebound readings, with honest uncertainty, and gives a
-  characteristic strength per floor. Unlike one average for the whole building, it shows where a weak zone could hide.
-- **Grounding:** EN 13791:2019 (cores, plus indirect methods correlated to cores). I found no spatial-GP version of
-  this assessment, so the angle is new.
-- **Says about Murat:** GP, plus the life cycle and reuse story.
-- **Caution:** concrete, not steel.
+- **Positioning:** For steel design students who use curves a–d without knowing where they came from, a GP fits
+  (virtual) column tests against slenderness, with a mean and a 5 % fractile, and lays them over the Eurocode curves.
+  It retells the ECCS story and design assisted by testing (EN 1990, Annex D).
+- **Value:** practitioners ●, learners ●●●, public ○, hiring ●●.
+- **Effort:** small.
+- **Caution:** it overlaps with "Why steel beams twist" (also stability and Eurocode curves).
+
+### Option C: Calibrate the model (static load test)
+
+- **Positioning:** For engineers meeting digital twins, a GP emulates an FE model of a steel beam with semi-rigid end
+  connections. From a measured midspan deflection under a known load, Bayesian calibration (Kennedy and O'Hagan 2001)
+  gives the connection stiffness with its uncertainty, and classifies it per EN 1993-1-8 (rigid, semi-rigid, pinned).
+- **Value:** practitioners ●●, learners ●●, public ○, hiring ●●●.
 - **Effort:** medium.
 
-### Option C: Fewer simulations (architecture)
-
-- **Positioning:** A GP learns a building's summer overheating hours from window-to-wall ratio and shading depth after
-  a few runs of a simple thermal model, so designers can explore instantly. This is surrogate modeling as practiced in
-  sustainable building design (Westermann and Evins 2019).
-- **Says about Murat:** surrogates replacing simulations, closest to the current work.
-- **Caution:** furthest from structures; it needs a thermal model.
-- **Effort:** medium.
-
-**Recommendation:** A. It is GP at home, construction-relevant, 3D, and its story is clear in ten seconds.
+**Recommendation:** A. It is the GP's main role in structural engineering, centered on the Eurocode safety level.
 
 ## 5. Unbuild it
 
@@ -184,7 +188,7 @@
 | Embodied carbon calculator | Practical: a defensible early estimate | M | Keep |
 | Why steel beams twist | Teaching: see LTB in one minute | S–M | Keep, build first |
 | The building's chord | Outreach and AI signal: hear monitoring | M | Keep |
-| GP: Between the boreholes | Teaching: the ground model and its uncertainty | S–M | Proposed (footbridge rejected) |
+| GP: How safe is safe? | Teaching and signal: reliability with a GP surrogate | S–M | Proposed |
 | Unbuild it | Fun, but thin for its cost | L | Drop |
 | Design from reclaimed stock | Practical reuse | M | Only if Murat confirms it is clear of the PhD |
 
@@ -206,3 +210,11 @@
 - Other sources as in `2026-10-23-3d-tools-design.md` and `2026-10-23-ai-tools-design-session.md`.
 - Westermann and Evins (2019). Surrogate modelling for sustainable building design: a review. Energy Build. 198,
   170–186. DOI 10.1016/j.enbuild.2019.05.057.
+- EN 1990: target reliability index β = 3.8 for RC2 over 50 years (4.7 for one year).
+- Hasofer and Lind (1974). An exact and invariant first-order reliability format. J. Eng. Mech. Div. ASCE 100(1)
+  (from memory).
+- Kennedy and O'Hagan (2001). Bayesian calibration of computer models. J. R. Stat. Soc. B 63, 425–464.
+- Maquoi and Rondal (1978): the Ayrton–Perry form of the European buckling curves; ECCS test campaigns of the 1960s
+  (secondary sources).
+- Sudret (2012). Meta-models for structural reliability and uncertainty quantification. arXiv 1203.2062.
+- Bayesian learning in structural dynamics: a comprehensive review and emerging trends (2025). arXiv 2505.22223.
