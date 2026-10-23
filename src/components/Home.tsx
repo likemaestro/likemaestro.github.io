@@ -3,7 +3,7 @@ import { useLocation } from "react-router-dom";
 import LiveCell from "./LiveCell";
 import LaserBand from "./LaserBand";
 import DatedList from "./DatedList";
-import SiteHeader, { Wrap } from "./SiteHeader";
+import SiteHeader, { SiteFooter, Wrap } from "./SiteHeader";
 import { activity, email, profiles, publications, timeline } from "../content/site";
 
 const Section: React.FC<{ id: string; title: string; children: React.ReactNode }> = ({ id, title, children }) => (
@@ -140,9 +140,7 @@ const Home: React.FC = () => {
         </Section>
       </main>
 
-      <footer className="border-t border-rule">
-        <Wrap className="t-small py-8 text-ink-2">© {new Date().getFullYear()} Murat Güven</Wrap>
-      </footer>
+      <SiteFooter />
     </>
   );
 };

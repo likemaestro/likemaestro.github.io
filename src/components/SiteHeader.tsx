@@ -50,4 +50,10 @@ const SiteHeader: React.FC = () => {
   );
 };
 
+export const SiteFooter: React.FC = () => (
+  <footer className="border-t border-rule">
+    <Wrap className="t-small py-8 text-ink-2">© {new Date().getFullYear()} Murat Güven</Wrap>
+  </footer>
+);
+
 export default SiteHeader;

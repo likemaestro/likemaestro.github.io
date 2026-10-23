@@ -11,6 +11,7 @@ module.exports = {
         rule: "#CBD2D5",
         laser: "#F05A24",
         bay: "#121A1F",
+        wash: "#EEF0EE",   // hover and quiet fills
       },
       fontFamily: {
         sans: ['"Archivo Variable"', "Archivo", "system-ui", "sans-serif"],

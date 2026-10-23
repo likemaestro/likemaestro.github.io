@@ -61,6 +61,16 @@
     transition: text-decoration-thickness 120ms ease-out;
   }
   .link:hover { text-decoration-thickness: 2px; }
+  /* Outlined action button (tools). 44 px tall wherever the pointer is a finger. */
+  .btn {
+    @apply t-data inline-flex h-9 cursor-pointer items-center justify-center gap-1.5 rounded-[2px] border border-ink px-3 text-ink transition-colors duration-150;
+  }
+  .btn-solid { @apply bg-ink text-canvas; }
+  @media (hover: hover) {
+    .btn:hover { @apply bg-wash; }
+    .btn-solid:hover { @apply bg-ink-2; }
+  }
+  @media (pointer: coarse) { .btn { min-height: 44px; } }
 }
 
 /* Typeset math in the live cell (MathML). Entries outside the current objective are dimmed. */

@@ -82,6 +82,6 @@ export const Trace: React.FC<{ data: number[]; reference?: number; live: boolean
 };
 
 /** MathML set as HTML; the strings above are built from fixed markup and numbers only. */
-export const Math_: React.FC<{ html: string; className?: string }> = ({ html, className }) => (
+export const MathML: React.FC<{ html: string; className?: string }> = ({ html, className }) => (
   <div className={className} dangerouslySetInnerHTML={{ __html: html }} />
 );

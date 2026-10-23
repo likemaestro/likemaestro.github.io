@@ -10,9 +10,9 @@ for (let i = 0; i < 256; i++) {
 }
 
 /** src: n × n densities, row 0 at the bottom; Uint8Array in 0..255 or Float32Array in 0..1. mark: outline one tile. */
-export function drawLattice(cv: HTMLCanvasElement, src: Uint8Array | Float32Array, cols: number, rows: number, mark?: [number, number]) {
+export function drawLattice(cv: HTMLCanvasElement, src: Uint8Array | Float32Array, cols: number, rows: number, mark?: [number, number], widthPx?: number) {
   const dpr = window.devicePixelRatio || 1;
-  const px = Math.round((cv.clientWidth || 300) * dpr), t = px / cols, py = Math.round(t * rows);
+  const px = widthPx ?? Math.round((cv.clientWidth || 300) * dpr), t = px / cols, py = Math.round(t * rows);
   if (cv.width !== px || cv.height !== py) { cv.width = px; cv.height = py; }
   const g = cv.getContext("2d");
   if (!g) return;
