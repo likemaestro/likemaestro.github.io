@@ -24,20 +24,23 @@ export const Segmented: React.FC<{ label: string; options: { v: string; text: st
 );
 
 /** An ⓘ that shows a short explanation on hover or keyboard focus, and on tap on touch screens. The text is fixed to
- *  the window, so scroll boxes don't clip it, kept on screen, and closed by Escape or by scrolling. */
+ *  the window, so scroll boxes don't clip it, follows its button when the page scrolls, stays on screen, and Escape
+ *  closes it. */
 export const Tip: React.FC<{ label: string; children: React.ReactNode }> = ({ label, children }) => {
   const id = React.useId(), btn = React.useRef<HTMLButtonElement>(null), tip = React.useRef<HTMLSpanElement>(null);
   const [open, setOpen] = React.useState(false);
   React.useLayoutEffect(() => {
     const b = btn.current, t = tip.current;
     if (!open || !b || !t) return;
-    const r = b.getBoundingClientRect(), W = document.documentElement.clientWidth, H = window.innerHeight;
-    t.style.left = `${Math.max(8, Math.min(r.left, W - 8 - t.offsetWidth))}px`;
-    t.style.top = `${r.bottom + 4 + t.offsetHeight > H && r.top > t.offsetHeight + 8 ? r.top - 4 - t.offsetHeight : r.bottom + 4}px`;
-    const close = () => setOpen(false);
-    window.addEventListener("scroll", close, { capture: true, passive: true });
-    window.addEventListener("resize", close);
-    return () => { window.removeEventListener("scroll", close, { capture: true }); window.removeEventListener("resize", close); };
+    const place = () => {
+      const r = b.getBoundingClientRect(), W = document.documentElement.clientWidth, H = window.innerHeight;
+      t.style.left = `${Math.max(8, Math.min(r.left, W - 8 - t.offsetWidth))}px`;
+      t.style.top = `${r.bottom + 4 + t.offsetHeight > H && r.top > t.offsetHeight + 8 ? r.top - 4 - t.offsetHeight : r.bottom + 4}px`;
+    };
+    place();
+    window.addEventListener("scroll", place, { capture: true, passive: true });
+    window.addEventListener("resize", place);
+    return () => { window.removeEventListener("scroll", place, { capture: true }); window.removeEventListener("resize", place); };
   }, [open]);
   return (
     <span className="inline-flex align-middle" onMouseEnter={() => setOpen(true)} onMouseLeave={() => setOpen(false)}
