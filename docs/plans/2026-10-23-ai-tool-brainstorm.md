@@ -138,7 +138,8 @@ Batra's Exploring Bayesian Optimization (Distill, 2020)." No code from these pro
 
 1. The classification table: kinds, wording, and whether the vibrometer is an explainer.
 2. Tag names: "Research method", "Explainer", "Utility"?
-4. B: may the site cite the EWSHM project with synthetic data? This needs the team's agreement.
+4. ~~B: may the site cite the EWSHM project?~~ Yes (Murat, 2026-10-23): Murat was a team member and may show the
+   autoencoder idea. Designs continue in `2026-10-23-ai-tools-design-session.md`.
 5. Back button: up one level to the group, or to the top of `/tools` as now?
 
 ## References
