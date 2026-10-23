@@ -318,10 +318,10 @@ const TrussSizing: React.FC = () => {
               {snap && sel && detail && (
                 <button type="button" onClick={() => setView(view === "front" ? "truss" : "front")}
                   aria-label={view === "front" ? "Show the picked truss large" : "Show the Pareto front large"}
-                  className="group absolute right-0 top-0 w-32 border border-rule bg-canvas px-2 pb-1.5 pt-1 text-left transition-colors duration-150 hover:border-ink sm:w-44">
-                  <span className="t-small block text-ink-2 group-hover:text-ink">{view === "front" ? "Picked truss" : "Pareto front"}</span>
-                  <span className="mt-1 block">
-                    {view === "front" ? <TrussSvg mini L={L} x={sel.x} r={detail} className="block h-auto w-full" /> : <FrontChart mini snap={snap} front={front} sel={sel} W={176} H={88} kmax={kmax} />}
+                  className="group absolute right-0 top-0 w-32 border border-rule bg-canvas p-1.5 transition-colors duration-150 hover:border-ink sm:w-44">
+                  {view === "front" ? <TrussSvg mini L={L} x={sel.x} r={detail} className="block h-auto w-full" /> : <FrontChart mini snap={snap} front={front} sel={sel} W={176} H={88} kmax={kmax} />}
+                  <span aria-hidden="true" className="t-small pointer-events-none absolute right-0 top-full z-10 mt-1 whitespace-nowrap bg-ink px-2 py-1 text-canvas opacity-0 transition-opacity duration-150 group-hover:opacity-100 group-focus-visible:opacity-100">
+                    {view === "front" ? "Picked truss: click to show it large" : "Pareto front: click to show it large"}
                   </span>
                 </button>
               )}
