@@ -44,19 +44,32 @@ function knee(F: Ind[]) {
   const d = (p: Ind) => [0, 1].reduce((s, k) => s + ((p.f[k] - lo[k]) / (hi[k] - lo[k] || 1)) ** 2, 0);
   return F.reduce((a, b) => (d(b) < d(a) ? b : a));
 }
-// utilization 0 → steel grey, 1 → laser orange
-const mix = (u: number) => {
-  const t = Math.min(1, Math.max(0, u)), a = [0x81, 0x91, 0x99], b = [0xf0, 0x5a, 0x24];
+// utilization as a grey: 0 → steel, 1 → ink (the site keeps orange for the selected mark)
+const grey = (u: number) => {
+  const t = Math.min(1, Math.max(0, u)), a = [0x81, 0x91, 0x99], b = [0x17, 0x20, 0x27];
   return `rgb(${a.map((v, i) => Math.round(v + (b[i] - v) * t)).join(",")})`;
 };
+/** Size of an element in CSS pixels, so charts draw at their real size and text stays the page's size. */
+function useBox<T extends HTMLElement>() {
+  const ref = useRef<T>(null);
+  const [box, setBox] = useState({ w: 0, h: 0 });
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const ro = new ResizeObserver(([e]) => setBox({ w: Math.round(e.contentRect.width), h: Math.round(e.contentRect.height) }));
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+  return [ref, box] as const;
+}
 
 const FORMULATION = `<math displaystyle="true"><munder><mo movablelimits="false">min</mo><mrow><mi>x</mi><mo>∈</mo><msup><mi>S</mi><mi>n</mi></msup></mrow></munder><mspace width="0.3em"></mspace><mo>(</mo><mi>m</mi><mo>,</mo><mspace width="0.3em"></mspace><msub><mi>δ</mi><mtext>max</mtext></msub><mo>,</mo><mspace width="0.3em"></mspace><msub><mi>n</mi><mtext>s</mtext></msub><mo>)</mo></math>`;
 const SUBJECT = `<math><mtext>subject to</mtext><mspace width="0.5em"></mspace><msub><mi>N</mi><mrow><mtext>Ed</mtext><mo>,</mo><mi>i</mi></mrow></msub><mo>≤</mo><msub><mi>N</mi><mrow><mtext>Rd</mtext><mo>,</mo><mi>i</mi></mrow></msub></math>`;
 
-// The front: steel mass across, largest deflection up. The designs with as many different sections as the selected one
-// are filled and joined; up and down arrows move between those levels.
-const FrontChart: React.FC<{ snap: Snap; front: Ind[]; sel?: Ind; onPick: (p: Ind) => void; mini?: boolean }> = ({ snap, front, sel, onPick, mini }) => {
-  const W = 520, H = 360, M = mini ? { l: 8, r: 8, t: 8, b: 8 } : { l: 52, r: 12, t: 12, b: 44 }, dot = mini ? 2.6 : 1;
+// The front: steel mass across, largest deflection up, in the property map's style. The designs with as many different
+// sections as the selected one are filled and joined; up and down arrows move between those levels.
+const FrontChart: React.FC<{ snap: Snap; front: Ind[]; sel?: Ind; onPick: (p: Ind) => void; W: number; H: number; mini?: boolean }> = ({ snap, front, sel, onPick, W, H, mini }) => {
+  const M = mini ? { l: 10, r: 10, t: 10, b: 10 } : { l: 56, r: 16, t: 16, b: 46 };
   const feas = snap.pop.filter((p) => p.cv === 0), base = feas.length ? feas : snap.pop;
   const ext = (k: number) => { const v = base.map((p) => p.f[k]); const lo = Math.min(...v), hi = Math.max(...v), pad = (hi - lo) * 0.05 || 1; return [Math.max(0, lo - pad), hi + pad]; };
   const [x0, x1] = ext(0), [y0, y1] = ext(1);
@@ -76,16 +89,17 @@ const FrontChart: React.FC<{ snap: Snap; front: Ind[]; sel?: Ind; onPick: (p: In
     if (i >= 0 && i < levels.length) onPick(levels[i].ps.reduce((a, b) => (Math.abs(b.f[0] - sel.f[0]) < Math.abs(a.f[0] - sel.f[0]) ? b : a)));
   };
   const active = levels.find((l) => l.k === sel?.f[2]);
+  if (!(W > 0 && H > 0)) return null;
 
   if (mini) return (
-    <svg viewBox={`0 0 ${W} ${H}`} className="block w-full" aria-hidden="true">
-      <g stroke="#CBD2D5" strokeWidth="3"><line x1={M.l} x2={W - M.r} y1={H - M.b} y2={H - M.b} /><line x1={M.l} x2={M.l} y1={M.t} y2={H - M.b} /></g>
-      <g fill="#4F5D68">{front.map((p) => <circle key={key(p.x)} cx={sx(p.f[0])} cy={sy(p.f[1])} r={3.6 * dot} />)}</g>
-      {sel && <circle cx={sx(sel.f[0])} cy={sy(sel.f[1])} r={5 * dot} fill="#F05A24" stroke="#172027" strokeWidth="3" />}
+    <svg viewBox={`0 0 ${W} ${H}`} className="block w-full text-ink" aria-hidden="true">
+      <g stroke="#CBD2D5"><line x1={M.l} x2={W - M.r} y1={H - M.b} y2={H - M.b} /><line x1={M.l} x2={M.l} y1={M.t} y2={H - M.b} /></g>
+      <g fill="currentColor">{front.map((p) => <circle key={key(p.x)} cx={sx(p.f[0])} cy={sy(p.f[1])} r={2.2} />)}</g>
+      {sel && <circle cx={sx(sel.f[0])} cy={sy(sel.f[1])} r={3.6} fill="#F05A24" stroke="#172027" strokeWidth="1" />}
     </svg>
   );
   return (
-    <svg viewBox={`0 0 ${W} ${H}`} className="block w-full text-ink outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4"
+    <svg viewBox={`0 0 ${W} ${H}`} width={W} height={H} className="block text-ink outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4"
       role="group" tabIndex={0} aria-label={`Pareto front, generation ${snap.gen}: ${front.length} designs, steel mass across, deflection up. Left and right arrows move from light to heavy, up and down change the number of different sections.`}
       onKeyDown={(e) => {
         const d = { ArrowRight: [step, 1], ArrowLeft: [step, -1], ArrowUp: [level, 1], ArrowDown: [level, -1] }[e.key] as [(d: number) => void, number] | undefined;
@@ -93,25 +107,22 @@ const FrontChart: React.FC<{ snap: Snap; front: Ind[]; sel?: Ind; onPick: (p: In
       }}>
       <g className="text-rule" stroke="currentColor"><line x1={M.l} x2={W - M.r} y1={H - M.b} y2={H - M.b} /><line x1={M.l} x2={M.l} y1={M.t} y2={H - M.b} /></g>
       <g className="fill-ink-2" fontSize="12">
-        {ticks(x0, x1).map((v) => <text key={v} x={sx(v)} y={H - M.b + 18} textAnchor="middle">{v.toLocaleString("en")}</text>)}
-        {ticks(y0, y1).map((v) => <text key={v} x={M.l - 8} y={sy(v) + 4} textAnchor="end">{v}</text>)}
+        {ticks(x0, x1, Math.max(3, Math.round(W / 150))).map((v) => <text key={v} x={sx(v)} y={H - M.b + 18} textAnchor="middle">{v.toLocaleString("en")}</text>)}
+        {ticks(y0, y1, Math.max(3, Math.round(H / 80))).map((v) => <text key={v} x={M.l - 8} y={sy(v) + 4} textAnchor="end">{v}</text>)}
         <text x={(M.l + W - M.r) / 2} y={H - 6} textAnchor="middle">Steel mass, kg</text>
         <text x={14} y={(M.t + H - M.b) / 2} textAnchor="middle" transform={`rotate(-90 14 ${(M.t + H - M.b) / 2})`}>Largest deflection, mm</text>
       </g>
       {/* the rest of the population: feasible filled, infeasible hollow */}
       <g>
         {snap.pop.filter((p) => !onFront.has(p) && inside(p)).map((p, i) => p.cv === 0
-          ? <circle key={i} cx={sx(p.f[0])} cy={sy(p.f[1])} r={2.2} fill="#CBD2D5" />
-          : <circle key={i} cx={sx(p.f[0])} cy={sy(p.f[1])} r={2.4} fill="none" stroke="#819199" strokeWidth="0.9" />)}
+          ? <circle key={i} cx={sx(p.f[0])} cy={sy(p.f[1])} r={2} fill="#CBD2D5" />
+          : <circle key={i} cx={sx(p.f[0])} cy={sy(p.f[1])} r={2.2} fill="none" stroke="#819199" strokeWidth="0.9" />)}
       </g>
-      <g fill="#F6F7F5" stroke="#4F5D68" strokeWidth="1">
-        {front.map((p) => <circle key={key(p.x)} cx={sx(p.f[0])} cy={sy(p.f[1])} r={3.6} className="cursor-pointer" onClick={() => onPick(p)} />)}
+      {active && active.ps.length > 1 && <polyline points={active.ps.map((p) => `${sx(p.f[0]).toFixed(1)},${sy(p.f[1]).toFixed(1)}`).join(" ")} fill="none" stroke="currentColor" strokeWidth="1" pointerEvents="none" />}
+      <g stroke="currentColor" strokeWidth="1.1">
+        {front.map((p) => <circle key={key(p.x)} cx={sx(p.f[0])} cy={sy(p.f[1])} r={4} fill={p.f[2] === sel?.f[2] ? "#172027" : "#F6F7F5"} className="cursor-pointer" onClick={() => onPick(p)} />)}
       </g>
-      {active && <g pointerEvents="none">
-        <polyline points={active.ps.map((p) => `${sx(p.f[0]).toFixed(1)},${sy(p.f[1]).toFixed(1)}`).join(" ")} fill="none" stroke="#172027" strokeWidth="1.4" />
-        {active.ps.map((p) => <circle key={key(p.x)} cx={sx(p.f[0])} cy={sy(p.f[1])} r={3.6} fill="#172027" />)}
-      </g>}
-      {sel && <circle cx={sx(sel.f[0])} cy={sy(sel.f[1])} r={5} fill="#F05A24" stroke="#172027" strokeWidth="1.2" pointerEvents="none" />}
+      {sel && <circle cx={sx(sel.f[0])} cy={sy(sel.f[1])} r={5.5} fill="#F05A24" stroke="#172027" strokeWidth="1.2" pointerEvents="none" />}
     </svg>
   );
 };
@@ -119,7 +130,8 @@ const FrontChart: React.FC<{ snap: Snap; front: Ind[]; sel?: Ind; onPick: (p: In
 /** Deformation scale for the drawing: the largest displacement shows as about 6 % of the length, a round number. */
 const ampOf = (L: Layout, r: Analysis) => Math.max(1, Math.round((0.06 * lengthOf(L)) / r.deflection / 5) * 5);
 
-// The selected design to scale: tube diameters true to the drawing, colour by utilization, dashed deflected shape.
+// The selected design as a line drawing to scale: tubes at their true diameter in greys by utilization, pinned joints as
+// open circles, the deflected shape dashed, supports and loads in ink.
 const TrussSvg: React.FC<{ L: Layout; x: number[]; r: Analysis; mini?: boolean; className?: string }> = ({ L, x, r, mini, className }) => {
   const xs = L.nodes.map((n) => n[0]), ys = L.nodes.map((n) => n[1]);
   const span = lengthOf(L), pad = span * (mini ? 0.03 : 0.06);
@@ -134,26 +146,27 @@ const TrussSvg: React.FC<{ L: Layout; x: number[]; r: Analysis; mini?: boolean; 
       aria-label={mini ? undefined : `Selected design drawn to scale. Highest utilization ${Math.max(...r.util).toFixed(2)}; deflected shape dashed, ${amp} times enlarged.`}>
       {!mini && L.members.map(([i, j], e) => {
         const [a, b] = [P(i, amp), P(j, amp)];
-        return <line key={`d${e}`} x1={a[0]} y1={a[1]} x2={b[0]} y2={b[1]} stroke="#819199" strokeOpacity="0.8" strokeWidth={s * 0.14} strokeDasharray={`${s} ${s * 0.8}`} />;
+        return <line key={`d${e}`} x1={a[0]} y1={a[1]} x2={b[0]} y2={b[1]} stroke="#819199" strokeWidth={s * 0.12} strokeDasharray={`${s * 0.9} ${s * 0.7}`} />;
       })}
       {L.members.map(([i, j], e) => {
         const [a, b] = [P(i), P(j)], sec = SECTIONS[x[L.group[e]]];
-        return <line key={e} x1={a[0]} y1={a[1]} x2={b[0]} y2={b[1]} stroke={mix(r.util[e])} strokeWidth={Math.max(sec.D, s * (mini ? 0.5 : 0.25))} strokeLinecap="round">
+        return <line key={e} x1={a[0]} y1={a[1]} x2={b[0]} y2={b[1]} stroke={grey(r.util[e])} strokeWidth={Math.max(sec.D, s * (mini ? 0.6 : 0.25))}>
           {!mini && <title>{`${sec.name}, ${(r.N[e] / 1e3).toFixed(0)} kN, utilization ${r.util[e].toFixed(2)}`}</title>}
         </line>;
       })}
+      {!mini && L.nodes.map((_, k) => { const [cx, cy] = P(k); return <circle key={`n${k}`} cx={cx} cy={cy} r={s * 0.6} fill="#F6F7F5" stroke="#172027" strokeWidth={s * 0.12} />; })}
       {!mini && fixedNodes.map((k) => {
-        const [cx, cy] = P(k), roller = L.fixed.filter((d) => d >> 1 === k).length === 1;
-        return <g key={k} fill="none" stroke="#172027" strokeWidth={s * 0.15}>
-          <path d={`M${cx} ${cy}l${-1.6 * s} ${2.6 * s}h${3.2 * s}z`} />
-          {roller && <line x1={cx - 2 * s} x2={cx + 2 * s} y1={cy + 3.4 * s} y2={cy + 3.4 * s} />}
+        const [cx, cy] = P(k), roller = L.fixed.filter((d) => d >> 1 === k).length === 1, h = 2.2 * s, w = 1.4 * s;
+        return <g key={k} fill="none" stroke="#172027" strokeWidth={s * 0.12}>
+          <path d={`M${cx} ${cy + 0.6 * s}l${-w} ${h}h${2 * w}z`} />
+          <line x1={cx - 2 * w} x2={cx + 2 * w} y1={cy + 0.6 * s + h + (roller ? 0.9 * s : 0)} y2={cy + 0.6 * s + h + (roller ? 0.9 * s : 0)} />
         </g>;
       })}
       {!mini && L.loaded.map((k) => {
         const [cx, cy] = P(k);
-        return <g key={`p${k}`} stroke="#172027" strokeWidth={s * 0.15} fill="#172027">
-          <line x1={cx} x2={cx} y1={cy + 1.2 * s} y2={cy + 4.4 * s} />
-          <path d={`M${cx} ${cy + 5.8 * s}l${-0.8 * s} ${-1.6 * s}h${1.6 * s}z`} stroke="none" />
+        return <g key={`p${k}`} stroke="#172027" strokeWidth={s * 0.12} fill="#172027">
+          <line x1={cx} x2={cx} y1={cy + 0.8 * s} y2={cy + 4.6 * s} />
+          <path d={`M${cx} ${cy + 5.8 * s}l${-0.6 * s} ${-1.4 * s}h${1.2 * s}z`} stroke="none" />
         </g>;
       })}
     </svg>
@@ -169,6 +182,7 @@ const TrussSizing: React.FC = () => {
   const [mode, setMode] = useState<Mode>("running");
   const [showMembers, setShowMembers] = useState(false);
   const [view, setView] = useState<"front" | "truss">("front");
+  const [stageRef, stage] = useBox<HTMLDivElement>();
   const [showTable, setShowTable] = useState(false);
 
   const tick = useCallback(() => {
@@ -252,9 +266,9 @@ const TrussSizing: React.FC = () => {
       </>}
     >
       {clamped.length > 0 && <p className="t-small mb-4 text-ink-2">Some link settings were out of range and have been adjusted: {clamped.join(", ")}.</p>}
-      <div className="grid gap-x-8 gap-y-8 md:grid-cols-[14rem_minmax(0,1fr)] xl:grid-cols-[14rem_minmax(0,1fr)_17rem]">
-        {/* Controls */}
-        <div className="flex min-w-0 flex-col gap-4 max-md:order-3">
+      <div className="grid gap-x-10 gap-y-8 md:grid-cols-[14rem_minmax(0,1fr)]">
+        {/* Controls, then the formulation */}
+        <div className="flex min-w-0 flex-col gap-4 max-md:order-2">
           <Field label="Truss"><Segmented label="Truss layout" value={p.layout} onChange={(v) => set({ layout: v })} options={[{ v: "bridge", text: "Bridge" }, { v: "cantilever", text: "10-bar" }]} /></Field>
           {slider("load", "Load per arrow", (v) => `${v} kN`)}
           {slider("pop", "Population", String)}
@@ -276,56 +290,7 @@ const TrussSizing: React.FC = () => {
             </div>
           </Field>
           <button type="button" onClick={toggle} className="btn btn-solid self-start">{mode === "running" ? "Pause" : mode === "paused" ? "Resume" : "Run again"}</button>
-        </div>
-
-        {/* Stage: the front or the selected truss, with the other as a thumbnail in the corner that swaps them */}
-        <div className="min-w-0 max-md:order-1">
-          <p className="t-small mb-3 text-ink-2" aria-hidden="true">{status}</p>
-          <div className="max-w-[max(24rem,calc((100svh-23rem)*520/360))]">
-            <div className="relative">
-              {view === "front"
-                ? snap && <FrontChart snap={snap} front={front} sel={sel} onPick={pick} />
-                : sel && detail && <div className="relative aspect-[520/360]"><TrussSvg L={L} x={sel.x} r={detail} className="absolute inset-x-0 bottom-0 h-[58%] w-full" /></div>}
-              {sel && detail && snap && (
-                <button type="button" onClick={() => setView((v) => (v === "front" ? "truss" : "front"))}
-                  aria-label={view === "front" ? "Show the selected truss full size" : "Show the Pareto front full size"}
-                  className="group absolute right-0 top-0 w-[36%] max-w-[15rem] border border-rule bg-canvas p-2 text-left transition-colors duration-150 hover:border-ink focus-visible:border-ink">
-                  {view === "front" ? <TrussSvg mini L={L} x={sel.x} r={detail} className="block w-full" /> : <FrontChart mini snap={snap} front={front} sel={sel} onPick={pick} />}
-                  <span className="t-small mt-1.5 flex items-center justify-between gap-2 text-ink-2 group-hover:text-ink">
-                    {view === "front" ? "Selected truss" : "Pareto front"}
-                    <svg viewBox="0 0 16 16" aria-hidden="true" className="h-3.5 w-3.5 shrink-0" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M9.5 2.5h4v4M13.5 2.5 9 7M6.5 13.5h-4v-4M2.5 13.5 7 9" /></svg>
-                  </span>
-                </button>
-              )}
-            </div>
-            {view === "front"
-              ? <p className="t-small mt-2 text-ink-2">Circles: the front. Filled and joined: designs with as many different sections as the selected one (arrow keys up and down change it). Grey dots: the rest of the population; hollow ones fail a member check.</p>
-              : detail && <p className="t-small mt-2 flex flex-wrap items-center gap-x-5 gap-y-1 text-ink-2">
-                  <span>Drawn to scale, tubes at their true diameter</span>
-                  <span className="flex items-center gap-2">Utilization 0 <span className="inline-block h-2 w-16" style={{ background: `linear-gradient(90deg, ${mix(0)}, ${mix(1)})` }} /> 1</span>
-                  <span>Dashed: deflected shape × {ampOf(L, detail)}</span>
-                  <span>Arrows: {p.load} kN each</span>
-                </p>}
-          </div>
-          <p className="sr-only" role="status" aria-live="polite">{mode === "done" ? `Done: ${front.length} designs on the front.` : ""}</p>
-        </div>
-
-        {/* Readout */}
-        <div className="flex min-w-0 flex-col gap-6 max-md:order-2 md:col-span-2 md:grid md:grid-cols-3 xl:col-span-1 xl:flex">
-          {sel && detail && <div className="min-w-0">
-            <p className="t-small mb-1.5 text-ink-2">Selected design{!linked ? ", the bend of the current front" : !front.includes(sel!) ? ", not on the current front" : ""}</p>
-            <dl className="t-data grid grid-cols-[auto_1fr] gap-x-4 gap-y-1">
-              <dt className="text-ink-2">Steel</dt><dd>{kg(sel.f[0])}</dd>
-              <dt className="text-ink-2">Deflection</dt><dd>{mm(sel.f[1])} <span className="text-ink-2">(length / {Math.round(span / sel.f[1])})</span></dd>
-              <dt className="text-ink-2">Sections</dt><dd>{sel.f[2]} different</dd>
-              <dt className="text-ink-2">Utilization</dt><dd>{Math.max(...detail.util).toFixed(2)} highest</dd>
-            </dl>
-          </div>}
-          <div className="min-w-0">
-            <p className="t-small text-ink-2">Hypervolume <span className="t-data text-ink">{hv.toFixed(3)}</span></p>
-            <div className="mt-2 flex"><Trace data={snap?.hv ?? []} live={mode === "running"} /></div>
-          </div>
-          <div className="min-w-0">
+          <div className="mt-4 min-w-0 border-t border-rule pt-5">
             <p className="t-small mb-1.5 text-ink-2">Objectives</p>
             <div className="math sm flex flex-col gap-1 overflow-x-auto overflow-y-hidden">
               <MathML html={FORMULATION} />
@@ -333,6 +298,43 @@ const TrussSizing: React.FC = () => {
             </div>
             <p className="t-small mt-2 text-ink-2">Steel mass m, largest vertical deflection δ<sub>max</sub> and number of different sections n<sub>s</sub>; each of the n design variables takes a size from the list S.</p>
           </div>
+        </div>
+
+        {/* Stage: the front or the selected truss, the other as a thumbnail in the corner that swaps them; numbers below */}
+        <div className="min-w-0 max-md:order-1">
+          <p className="t-small mb-3 text-ink-2" aria-hidden="true">{status}</p>
+          <div ref={stageRef} className="relative h-[clamp(18rem,calc(100svh-31rem),34rem)] w-full">
+            {view === "front"
+              ? snap && <FrontChart snap={snap} front={front} sel={sel} onPick={pick} W={stage.w} H={stage.h} />
+              : sel && detail && <TrussSvg L={L} x={sel.x} r={detail} className="absolute inset-x-0 bottom-0 h-[66%] w-full" />}
+            {sel && detail && snap && (
+              <button type="button" onClick={() => setView((v) => (v === "front" ? "truss" : "front"))}
+                aria-label={view === "front" ? "Show the selected truss full size" : "Show the Pareto front full size"}
+                className="group absolute right-0 top-0 w-[18%] min-w-[9rem] max-w-[14rem] border border-rule bg-canvas p-2.5 transition-colors duration-150 hover:border-ink focus-visible:border-ink">
+                {view === "front" ? <TrussSvg mini L={L} x={sel.x} r={detail} className="block w-full" /> : <FrontChart mini snap={snap} front={front} sel={sel} onPick={pick} W={208} H={144} />}
+                <svg viewBox="0 0 16 16" aria-hidden="true" className="absolute right-1 top-1 h-2.5 w-2.5 text-steel group-hover:text-ink" fill="none" stroke="currentColor" strokeWidth="1.6"><path d="M9.5 2.5h4v4M13.5 2.5 9 7M6.5 13.5h-4v-4M2.5 13.5 7 9" /></svg>
+              </button>
+            )}
+          </div>
+          {view === "front"
+            ? <p className="t-small mt-3 text-ink-2">Filled: the {sel?.f[2] ?? "·"}-section designs, like the selected one. Arrow keys: ← → along the front, ↑ ↓ between section counts. Grey: other designs; hollow ones fail a check.</p>
+            : detail && <p className="t-small mt-3 flex flex-wrap items-center gap-x-5 gap-y-1 text-ink-2">
+                <span>Drawn to scale, tubes at their true diameter</span>
+                <span className="flex items-center gap-2">Utilization 0 <span className="inline-block h-2 w-16" style={{ background: `linear-gradient(90deg, ${grey(0)}, ${grey(1)})` }} /> 1</span>
+                <span>Dashed: deflected shape × {ampOf(L, detail)}</span>
+                <span>Arrows: {p.load} kN each</span>
+              </p>}
+          <p className="sr-only" role="status" aria-live="polite">{mode === "done" ? `Done: ${front.length} designs on the front.` : ""}</p>
+
+          {sel && detail && <div className="mt-5 border-t border-rule pt-4">
+            <p className="t-small text-ink-2">Selected design{!linked ? ", the bend of the current front" : !front.includes(sel) ? ", not on the current front" : ""}</p>
+            <dl className="mt-2 grid grid-cols-2 gap-x-8 gap-y-3 sm:grid-cols-3 lg:grid-cols-[repeat(4,auto)_minmax(10rem,1fr)]">
+              {([["Steel", kg(sel.f[0])], ["Deflection", `${mm(sel.f[1])}, length / ${Math.round(span / sel.f[1])}`], ["Sections", `${sel.f[2]} different`], ["Utilization", `${Math.max(...detail.util).toFixed(2)} highest`]] as const).map(([k, v]) => (
+                <div key={k} className="min-w-0"><dt className="t-small text-ink-2">{k}</dt><dd className="t-data mt-0.5">{v}</dd></div>
+              ))}
+              <div className="min-w-0 max-sm:col-span-2"><dt className="t-small text-ink-2">Hypervolume</dt><dd className="t-data mt-0.5 flex items-center gap-3">{hv.toFixed(3)}<Trace data={snap?.hv ?? []} live={mode === "running"} /></dd></div>
+            </dl>
+          </div>}
         </div>
       </div>
 
