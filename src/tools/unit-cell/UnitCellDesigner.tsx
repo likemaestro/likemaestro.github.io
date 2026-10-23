@@ -228,14 +228,17 @@ const UnitCellDesigner: React.FC = () => {
           {!supported && <p className="t-small text-ink-2">This browser can’t run the solver, so it shows a design computed in advance.</p>}
         </div>
 
-        {/* Lattice: first on phones, sized from the viewport height on larger screens so the tool fits the first screen */}
+        {/* Lattice: first on phones, sized from the viewport height on larger screens so the tool fits the first screen.
+            The status and the tiling sit above it, spanning exactly its width. */}
         <div className="min-w-0 max-md:order-first">
-          <div className="mb-3 flex items-center justify-between gap-3">
-            <p className="t-small text-ink-2" aria-hidden="true">{status}</p>
-            <div className="w-36"><Segmented label="Tiles" value={String(tiles)} onChange={(v) => set({ tiles: v })} options={["1", "3", "5"].map((v) => ({ v, text: `${v} × ${v}` }))} /></div>
+          <div className="mx-auto w-full md:max-w-[max(18rem,min(100%,calc(100svh-19.5rem)))]">
+            <div className="mb-3 flex items-center justify-between gap-3">
+              <p className="t-small text-ink-2" aria-hidden="true">{status}</p>
+              <div className="w-36"><Segmented label="Tiles" value={String(tiles)} onChange={(v) => set({ tiles: v })} options={["1", "3", "5"].map((v) => ({ v, text: `${v} × ${v}` }))} /></div>
+            </div>
+            <canvas ref={canvasRef} role="img" aria-label={label} className="block aspect-square w-full" />
+            {retryNote && <p className="t-small mt-2 text-ink-2">{retryNote}</p>}
           </div>
-          <canvas ref={canvasRef} role="img" aria-label={label} className="mx-auto block aspect-square w-full md:max-w-[max(18rem,min(100%,calc(100svh-19.5rem)))]" />
-          {retryNote && <p className="t-small mt-2 text-ink-2">{retryNote}</p>}
           <p className="sr-only" role="status" aria-live="polite">{mode === "running" ? "Computing in your browser" : status}</p>
         </div>
 
