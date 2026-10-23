@@ -1,4 +1,4 @@
-// After `react-scripts build`: one HTML file per page in src/tools/pages.json (plus 404.html and aliases), so GitHub
+// After `vite build`: one HTML file per page in src/tools/pages.json (plus 404.html and aliases), so GitHub
 // Pages answers those URLs with 200 and each link previews with its own title and description, and the sitemap.
 const fs = require("fs");
 const path = require("path");
