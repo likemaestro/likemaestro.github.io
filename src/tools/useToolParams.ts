@@ -1,4 +1,4 @@
-import { useCallback, useMemo } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 
 // A tool's settings live in the query string, so a link reproduces them. Out-of-range values are clamped and reported.
@@ -13,11 +13,15 @@ const snap = (v: number, f: Extract<Field, { kind: "num" }>) => {
 
 export function useToolParams<S extends Record<string, Field>>(spec: S) {
   const [sp, setSp] = useSearchParams();
+  // The settings live in state and the link mirrors them: the router updates the link asynchronously, so an input
+  // that read straight from it would drop fast keystrokes.
+  const [q, setQ] = useState(() => new URLSearchParams(sp));
+  useEffect(() => { if (q.toString() !== sp.toString()) setSp(q, { replace: true }); }, [q]);   // eslint-disable-line react-hooks/exhaustive-deps
   const { values, clamped } = useMemo(() => {
     const values = {} as { [K in keyof S]: S[K] extends { kind: "num" } ? number : string };
     const clamped: string[] = [];
     for (const k of Object.keys(spec) as (keyof S & string)[]) {
-      const f = spec[k], raw = sp.get(k);
+      const f = spec[k], raw = q.get(k);
       let v: string | number = f.def;
       if (raw !== null) {
         if (f.kind === "enum") { if (f.values.includes(raw)) v = raw; else clamped.push(k); }
@@ -26,13 +30,13 @@ export function useToolParams<S extends Record<string, Field>>(spec: S) {
       (values as Record<string, string | number>)[k] = v;
     }
     return { values, clamped };
-  }, [sp, spec]);
+  }, [q, spec]);
   const set = useCallback((patch: Partial<Record<keyof S, string | number>>) => {
-    setSp((prev) => {
+    setQ((prev) => {
       const next = new URLSearchParams(prev);
       for (const [k, v] of Object.entries(patch)) if (v !== undefined) next.set(k, String(v));
       return next;
-    }, { replace: true });
-  }, [setSp]);
+    });
+  }, []);
   return { values, clamped, set };
 }

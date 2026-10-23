@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import ToolShell from "../ToolShell";
 import { Field, Segmented, Tip } from "../controls";
@@ -32,8 +32,8 @@ function readTable(s: string | null): Table {
 }
 const writeTable = (t: Table) => JSON.stringify([t.crit, t.up.map((u) => (u ? "1" : "0")).join(""), t.alts, t.x]);
 const pct = (v: number) => (v > 0 && v < 0.005 ? "<1 %" : `${Math.round(v * 100)} %`);
-// rank acceptability as a grey: 0 canvas, 1 ink
-const shade = (b: number) => `rgb(${[[0xf6, 0x17], [0xf7, 0x20], [0xf5, 0x27]].map(([a, z]) => Math.round(a + (z - a) * b)).join(",")})`;
+// rank acceptability as a grey from canvas (0) to mid grey (1), so ink text stays readable on every cell
+const shade = (b: number) => `rgb(${[[0xf6, 0x17], [0xf7, 0x20], [0xf5, 0x27]].map(([a, z]) => Math.round(a + (z - a) * 0.5 * b)).join(",")})`;
 const Dot: React.FC<{ on: boolean }> = ({ on }) => <span aria-hidden="true" className={`inline-block h-2 w-2 shrink-0 rounded-full ${on ? "bg-laser" : "bg-transparent"}`} />;
 
 const cell = "t-data h-9 rounded-[2px] border bg-transparent px-2 transition-colors duration-150 hover:border-rule focus:border-ink focus:outline-none [@media(pointer:coarse)]:h-11";
@@ -43,13 +43,17 @@ const Cross = () => <svg viewBox="0 0 16 16" aria-hidden="true" className="h-3 w
 const Decision: React.FC = () => {
   const [sp, setSp] = useSearchParams();
   const [note, setNote] = useState("");
-  const patch = (o: Record<string, string | null>) => setSp((prev) => {
-    const q = new URLSearchParams(prev);
-    Object.entries(o).forEach(([k, v]) => (v === null ? q.delete(k) : q.set(k, v)));
-    return q;
-  }, { replace: true });
+  // The settings live in this state and the link mirrors them: the router updates the link asynchronously, and inputs
+  // read straight from it would lose keystrokes and their caret.
+  const [q, setQ] = useState(() => new URLSearchParams(sp));
+  useEffect(() => { if (q.toString() !== sp.toString()) setSp(q, { replace: true }); }, [q]);   // eslint-disable-line react-hooks/exhaustive-deps
+  const patch = (o: Record<string, string | null>) => setQ((prev) => {
+    const next = new URLSearchParams(prev);
+    Object.entries(o).forEach(([k, v]) => (v === null ? next.delete(k) : next.set(k, v)));
+    return next;
+  });
 
-  const t = useMemo(() => readTable(sp.get("t")), [sp]);
+  const t = useMemo(() => readTable(q.get("t")), [q]);
   const n = t.crit.length, m = t.alts.length, isExample = writeTable(t) === writeTable(EXAMPLE);
   // a change in the number of criteria resets the weights, the comparisons and the order, which are per criterion
   const edit = (f: (d: Table) => void, reset = false) => {
@@ -61,9 +65,9 @@ const Decision: React.FC = () => {
   // weights: linked sliders, or AHP from one comparison per pair (s < 0: the left criterion matters more, by 1 − s)
   const pairs: [number, number][] = [];
   for (let i = 0; i < n; i++) for (let j = i + 1; j < n; j++) pairs.push([i, j]);
-  const wmode = sp.get("wm") === "ahp" ? "ahp" : "sliders";
-  const sliders = normalize(ints(sp.get("w"), n, 0, 100) ?? new Array(n).fill(1));
-  const pv = ints(sp.get("p"), pairs.length, -8, 8) ?? new Array(pairs.length).fill(0);
+  const wmode = q.get("wm") === "ahp" ? "ahp" : "sliders";
+  const sliders = normalize(ints(q.get("w"), n, 0, 100) ?? new Array(n).fill(1));
+  const pv = ints(q.get("p"), pairs.length, -8, 8) ?? new Array(pairs.length).fill(0);
   const A = Array.from({ length: n }, () => new Array(n).fill(1));
   pairs.forEach(([i, j], k) => { const s = pv[k], a = s <= 0 ? 1 - s : 1 / (1 + s); A[i][j] = a; A[j][i] = 1 / a; });
   const AH = ahp(A);
@@ -78,14 +82,14 @@ const Decision: React.FC = () => {
   };
 
   // SMAA-2 weight information
-  const smode = (["none", "order", "around"].includes(sp.get("sm") ?? "") ? sp.get("sm") : "none") as "none" | "order" | "around";
-  const order = (() => { const o = ints(sp.get("o"), n, 0, n - 1); return o && new Set(o).size === n ? o : Array.from({ length: n }, (_, j) => j); })();
-  const spread = Math.min(50, Math.max(5, Math.round(Number(sp.get("sp") ?? 20)) || 20));
+  const smode = (["none", "order", "around"].includes(q.get("sm") ?? "") ? q.get("sm") : "none") as "none" | "order" | "around";
+  const order = (() => { const o = ints(q.get("o"), n, 0, n - 1); return o && new Set(o).size === n ? o : Array.from({ length: n }, (_, j) => j); })();
+  const spread = Math.min(50, Math.max(5, Math.round(Number(q.get("sp") ?? 20)) || 20));
   const move = (r: number, d: number) => { const o = [...order]; [o[r], o[r + d]] = [o[r + d], o[r]]; patch({ o: o.join(",") }); };
 
   const nums = t.x.map((r) => r.map(parseCell));
   const bad = nums.flat().filter((v) => !Number.isFinite(v)).length;
-  const key = JSON.stringify([nums, t.up, weights, smode, order, spread]);
+  const key = JSON.stringify([nums, t.up, weights, smode, order, spread]);   // TOPSIS and VIKOR use the weights in every mode
   const res = useMemo(() => {
     if (bad) return null;
     const T = topsis(nums, weights, t.up), V = vikorDetail(nums, weights, t.up), C = vikorChoice(V.S, V.R, V.Q);
@@ -247,7 +251,7 @@ const Decision: React.FC = () => {
           </section>
           <section aria-labelledby="dc-vikor" className="min-w-0">
             <h2 id="dc-vikor" className="flex items-center gap-1.5 font-[520]">VIKOR
-              <Tip label="VIKOR" align="right">Q mixes S, the weighted sum of how far an option falls short of the best on each criterion, and R, its largest single shortfall. Lower is better for all three.</Tip>
+              <Tip label="VIKOR">Q mixes S, the weighted sum of how far an option falls short of the best on each criterion, and R, its largest single shortfall. Lower is better for all three.</Tip>
             </h2>
             {res ? <>
               <ol className="mt-3 flex flex-col">
@@ -312,7 +316,7 @@ const Decision: React.FC = () => {
                     <tr className="t-small text-ink-2">
                       <th scope="col" className="pb-2 text-left font-normal">Option</th>
                       {t.alts.map((_, r) => <th key={r} scope="col" className="px-1 pb-2 font-normal">Rank {r + 1}</th>)}
-                      <th scope="col" className="pb-2 pl-3 font-normal"><span className="inline-flex items-center gap-1">Holistic <Tip label="holistic acceptability" align="right">One number per option from all its ranks: a first place counts fully, the last place not at all, ranks between in equal steps.</Tip></span></th>
+                      <th scope="col" className="pb-2 pl-3 font-normal"><span className="inline-flex items-center gap-1">Holistic <Tip label="holistic acceptability">One number per option from all its ranks: a first place counts fully, the last place not at all, ranks between in equal steps.</Tip></span></th>
                     </tr>
                   </thead>
                   <tbody>
@@ -321,7 +325,7 @@ const Decision: React.FC = () => {
                         <th scope="row" className="py-1 pr-2 text-left font-normal"><span className="flex items-center gap-2"><Dot on={r === 0} /><span className="truncate">{t.alts[i]}</span></span></th>
                         {res.S.acc[i].map((b, k) => (
                           <td key={k} className="p-0.5">
-                            <span className="block px-1.5 py-1" style={{ background: shade(b), color: b > 0.45 ? "#F6F7F5" : "#172027" }}>{b > 0 ? pct(b) : "–"}</span>
+                            <span className="block px-1.5 py-1" style={{ background: shade(b) }}>{b > 0 ? pct(b) : "–"}</span>
                           </td>
                         ))}
                         <td className="py-1 pl-3">{res.S.holistic[i].toFixed(2)}</td>
