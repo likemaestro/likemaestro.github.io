@@ -11,6 +11,7 @@ const Sketchpad = lazy(() => import("./tools/sketchpad/Sketchpad"));
 const PropertyMap = lazy(() => import("./tools/property-map/PropertyMap"));
 const Vibrometer = lazy(() => import("./tools/vibrometer/Vibrometer"));
 const TrussSizing = lazy(() => import("./tools/truss-sizing/TrussSizing"));
+const Decision = lazy(() => import("./tools/decision/Decision"));
 const GaugeTool = lazy(() => import("./components/tools/GaugeTool/GaugeTool"));
 const CUTTIA = lazy(() => import("./components/tools/CUTT-IA/CUTT-IA"));
 const WorldMap = lazy(() => import("./components/tools/WorldMap/WorldMap"));
@@ -38,6 +39,7 @@ const App: React.FC = () => (
       <Route path="/tools/sketchpad" element={<Sketchpad />} />
       <Route path="/tools/property-map" element={<PropertyMap />} />
       <Route path="/tools/truss-sizing" element={<TrussSizing />} />
+      <Route path="/tools/decision" element={<Decision />} />
       <Route path="/tools/vibrometer" element={<Vibrometer />} />
       <Route path="/tools/WorldMap" element={<WorldMap />} />
       <Route path="/tools/gauge-tool" element={<GaugeTool />} />
