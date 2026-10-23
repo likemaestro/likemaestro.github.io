@@ -1,4 +1,4 @@
-import React, { Suspense, lazy, useLayoutEffect } from "react";
+import React, { Suspense, lazy, useLayoutEffect, useRef } from "react";
 import { Navigate, Route, Routes, useLocation, useNavigationType } from "react-router-dom";
 import Home from "./components/Home";
 
@@ -15,10 +15,15 @@ const GaugeTool = lazy(() => import("./components/tools/GaugeTool/GaugeTool"));
 const CUTTIA = lazy(() => import("./components/tools/CUTT-IA/CUTT-IA"));
 const WorldMap = lazy(() => import("./components/tools/WorldMap/WorldMap"));
 
-/** A new page opens at its top; back and forward keep the browser's scroll, and /#section links scroll themselves. */
+/** A new page opens at its top; back and forward keep the browser's scroll, and /#section links scroll themselves.
+ *  Only a new path counts: the tools rewrite their query string whenever a setting moves. */
 const ScrollToTop: React.FC = () => {
-  const { pathname, hash } = useLocation(), type = useNavigationType();
-  useLayoutEffect(() => { if (type !== "POP" && !hash) window.scrollTo(0, 0); }, [pathname, hash, type]);
+  const { pathname, hash } = useLocation(), type = useNavigationType(), last = useRef(pathname);
+  useLayoutEffect(() => {
+    if (pathname === last.current) return;
+    last.current = pathname;
+    if (type !== "POP" && !hash) window.scrollTo(0, 0);
+  }, [pathname, hash, type]);
   return null;
 };
 

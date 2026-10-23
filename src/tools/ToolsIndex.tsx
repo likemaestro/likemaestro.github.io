@@ -84,7 +84,7 @@ const FEATURED = [
   { path: "/tools/property-map", cta: "Open the property map", art: <Cells names={["axial", "shear", "bulk", "auxetic"]} tiles={2} /> },
   { path: "/tools/vibrometer", cta: "Open the vibrometer", art: DecayArt },
 ].map((f) => ({ ...f, ...registry.pages.find((t) => t.path === f.path)! }));
-const SLIDE_MS = 7000;
+const SLIDE_MS = 4500;
 
 const Icon: React.FC<{ d: string }> = ({ d }) => <svg viewBox="0 0 16 16" aria-hidden="true" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.5"><path d={d} /></svg>;
 

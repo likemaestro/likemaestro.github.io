@@ -13,7 +13,7 @@ async function copy(text: string) {
   try { await navigator.clipboard.writeText(text); return true; } catch { return false; }
 }
 
-/** The frame every tool page shares: header, breadcrumb, title, actions, the tool, then method, limits and citation. */
+/** The frame every tool page shares: header, breadcrumb, title, the tool, then method (with its links), limits and citation. */
 const ToolShell: React.FC<{
   path: string;
   slug: string;
@@ -40,25 +40,13 @@ const ToolShell: React.FC<{
       <SiteHeader />
       <main id="main">
         <Wrap className="pb-20 pt-4 md:pt-6">
-          <div className="flex flex-wrap items-center justify-between gap-x-8 gap-y-3">
-            <nav aria-label="Breadcrumb" className="t-data text-ink-2">
-              <Link className="link" to="/tools">Tools</Link>
-              <span aria-hidden="true"> / </span>
-              <span aria-current="page">{p.title}</span>
-            </nav>
-            <div className="flex flex-wrap items-center gap-2 max-md:order-last">
-              <button type="button" className="btn" onClick={async () => flash((await copy(window.location.href)) ? "Link copied" : "Copy the address bar instead")}>Copy link</button>
-              <a className="btn" href="#cite">Cite</a>
-              {paper && <a className="btn" href={paper} rel="noopener noreferrer">My paper</a>}
-              {methodRef && <a className="btn" href={methodRef.href} rel="noopener noreferrer">Method reference</a>}
-              <a className="btn" href={`${REPO}/${slug}`} rel="noopener noreferrer">Code</a>
-              <span className={note ? "t-small text-ink-2" : "sr-only"} role="status" aria-live="polite">{note}</span>
-            </div>
-            <div className="w-full min-w-0">
-              <h1 className="t-h2">{p.title}</h1>
-              <p className="mt-2 max-w-[78ch] text-ink-2">{p.line}</p>
-            </div>
-          </div>
+          <nav aria-label="Breadcrumb" className="t-data text-ink-2">
+            <Link className="link" to="/tools">Tools</Link>
+            <span aria-hidden="true"> / </span>
+            <span aria-current="page">{p.title}</span>
+          </nav>
+          <h1 className="t-h2 mt-3">{p.title}</h1>
+          <p className="mt-2 max-w-[78ch] text-ink-2">{p.line}</p>
 
           <div className="mt-8">{children}</div>
 
@@ -66,6 +54,11 @@ const ToolShell: React.FC<{
             <section aria-labelledby="method-h" className="min-w-0">
               <h2 id="method-h" className="t-h3">Method</h2>
               <div className="mt-3 space-y-3 text-ink-2">{method}</div>
+              <div className="mt-5 flex flex-wrap gap-2">
+                {paper && <a className="btn" href={paper} rel="noopener noreferrer">My paper</a>}
+                {methodRef && <a className="btn" href={methodRef.href} rel="noopener noreferrer">Method reference</a>}
+                <a className="btn" href={`${REPO}/${slug}`} rel="noopener noreferrer">Code</a>
+              </div>
             </section>
             <section aria-labelledby="limits-h" className="min-w-0">
               <h2 id="limits-h" className="t-h3">Assumptions and limits</h2>
@@ -74,7 +67,11 @@ const ToolShell: React.FC<{
             <section id="cite" aria-labelledby="cite-h" className="min-w-0">
               <h2 id="cite-h" className="t-h3">Cite</h2>
               <pre className="t-small mt-3 overflow-x-auto border border-rule bg-wash p-3 font-mono">{bib}</pre>
-              <button type="button" className="btn mt-3" onClick={async () => flash((await copy(bib)) ? "Citation copied" : "Select the text to copy it")}>Copy BibTeX</button>
+              <div className="mt-3 flex flex-wrap items-center gap-2">
+                <button type="button" className="btn" onClick={async () => flash((await copy(bib)) ? "Citation copied" : "Select the text to copy it")}>Copy BibTeX</button>
+                <button type="button" className="btn" onClick={async () => flash((await copy(window.location.href)) ? "Link copied, with these settings" : "Copy the address bar instead")}>Copy link</button>
+                <span className={note ? "t-small text-ink-2" : "sr-only"} role="status" aria-live="polite">{note}</span>
+              </div>
             </section>
           </div>
         </Wrap>
