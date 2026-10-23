@@ -88,8 +88,9 @@ const SLIDE_MS = 7000;
 
 const Icon: React.FC<{ d: string }> = ({ d }) => <svg viewBox="0 0 16 16" aria-hidden="true" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.5"><path d={d} /></svg>;
 
-// One featured tool at a time. It moves on every SLIDE_MS while playing; pointing at it or focusing inside it holds
-// it, the button stops it, and with reduced motion it starts stopped. The active bar fills as the time runs.
+// One featured tool at a time. It moves on every SLIDE_MS while playing; pointing at it or keyboard focus inside it
+// holds it, the button stops it, and with reduced motion it starts stopped. The active bar fills as the time runs.
+// Phones swipe or use the bars; the arrows show from the sm width up.
 const Featured: React.FC = () => {
   const [i, setI] = useState(0);
   const [playing, setPlaying] = useState(() => !window.matchMedia("(prefers-reduced-motion: reduce)").matches);
@@ -102,7 +103,7 @@ const Featured: React.FC = () => {
   return (
     <section aria-roledescription="carousel" aria-label="Featured tools" className="mt-10 border-t border-rule pt-4"
       onPointerEnter={(e) => e.pointerType === "mouse" && setHover(true)} onPointerLeave={() => setHover(false)}
-      onFocus={() => setFocus(true)} onBlur={(e) => !e.currentTarget.contains(e.relatedTarget as Node | null) && setFocus(false)}>
+      onFocus={(e) => (e.target as HTMLElement).matches(":focus-visible") && setFocus(true)} onBlur={(e) => !e.currentTarget.contains(e.relatedTarget as Node | null) && setFocus(false)}>
       <div className="flex items-center gap-3">
         <p className="t-small text-ink-2">Featured</p>
         <button type="button" className={btn} onClick={() => setPlaying((v) => !v)} aria-label={playing ? "Stop the slide show" : "Start the slide show"}>
@@ -111,7 +112,7 @@ const Featured: React.FC = () => {
         <div className="flex">
           {FEATURED.map((s, k) => (
             <button key={s.path} type="button" onClick={() => setI(k)} aria-label={`${s.title}, ${k + 1} of ${n}`} aria-current={k === i ? "true" : undefined}
-              className="group px-1 py-4 [@media(pointer:coarse)]:py-5">
+              className="group px-1 py-4 [@media(pointer:coarse)]:px-2.5 [@media(pointer:coarse)]:py-[21px]">
               <span className="relative block h-0.5 w-6 overflow-hidden bg-rule group-hover:bg-steel sm:w-8">
                 {k === i && <span key={`${i}-${playing}`} onAnimationEnd={() => go(1)} className={`absolute inset-0 origin-left bg-ink ${playing ? "animate-featured" : ""}`}
                   style={{ animationDuration: `${SLIDE_MS}ms`, animationPlayState: running ? "running" : "paused" }} />}
@@ -119,7 +120,7 @@ const Featured: React.FC = () => {
             </button>
           ))}
         </div>
-        <div className="ml-auto flex gap-2">
+        <div className="ml-auto hidden gap-2 sm:flex">
           <button type="button" className={btn} onClick={() => go(-1)} aria-label="Previous tool"><Icon d="M10 3.5 5.5 8l4.5 4.5" /></button>
           <button type="button" className={btn} onClick={() => go(1)} aria-label="Next tool"><Icon d="M6 3.5 10.5 8 6 12.5" /></button>
         </div>
