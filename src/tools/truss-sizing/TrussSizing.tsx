@@ -5,7 +5,7 @@ import { useToolParams } from "../useToolParams";
 import { Field, Segmented } from "../controls";
 import { MathML, Trace } from "../../lab/readout";
 import { download } from "../../lab/export";
-import { normalize, rank, type Method } from "../mcdm";
+import { normalize, rank, relink, type Method } from "../mcdm";
 import { createNSGA2, hv3, paretoSet, type Ind } from "./ga";
 import { analyse, bounds, genes, LAYOUTS, SECTIONS, type Analysis, type Layout } from "./truss";
 
@@ -20,12 +20,13 @@ const SPEC = {
   etam: { kind: "num", min: 1, max: 30, step: 1, def: 3 },
   seed: { kind: "num", min: 1, max: 999999, step: 1, def: 7 },
   mcdm: { kind: "enum", values: ["topsis", "vikor"], def: "topsis" },
-  wm: { kind: "num", min: 0, max: 1, step: 0.05, def: 0.5 },
-  wd: { kind: "num", min: 0, max: 1, step: 0.05, def: 0.5 },
-  ws: { kind: "num", min: 0, max: 1, step: 0.05, def: 0.5 },
+  wm: { kind: "num", min: 0, max: 1, step: 0.01, def: 0.34 },
+  wd: { kind: "num", min: 0, max: 1, step: 0.01, def: 0.33 },
+  ws: { kind: "num", min: 0, max: 1, step: 0.01, def: 0.33 },
 } as const;
 const WEIGHTS = ["wm", "wd", "ws"] as const;
 const METHOD_NAME: Record<Method, string> = { topsis: "TOPSIS", vikor: "VIKOR" };
+const CRITERIA = [["wm", "Steel mass", "bg-ink"], ["wd", "Deflection", "bg-steel"], ["ws", "Different sections", "bg-rule"]] as const;
 const REDUCED = typeof window !== "undefined" && !!window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
 type Mode = "running" | "paused" | "done";
@@ -67,7 +68,7 @@ const FORMULATION = `<math displaystyle="true"><munder><mo movablelimits="false"
 const SUBJECT = `<math><mtext>subject to</mtext><mspace width="0.5em"></mspace><msub><mi>N</mi><mrow><mtext>Ed</mtext><mo>,</mo><mi>i</mi></mrow></msub><mo>≤</mo><msub><mi>N</mi><mrow><mtext>Rd</mtext><mo>,</mo><mi>i</mi></mrow></msub></math>`;
 
 // The front: steel mass across, largest deflection up, in the property map's style. The designs with as many different
-// sections as the selected one are filled and joined; up and down arrows move between those levels.
+// sections as the selected one are filled; up and down arrows move between those levels.
 const FrontChart: React.FC<{ snap: Snap; front: Ind[]; sel?: Ind; onPick: (p: Ind) => void; W: number; H: number; mini?: boolean }> = ({ snap, front, sel, onPick, W, H, mini }) => {
   const M = mini ? { l: 10, r: 10, t: 10, b: 10 } : { l: 56, r: 16, t: 16, b: 46 };
   const feas = snap.pop.filter((p) => p.cv === 0), base = feas.length ? feas : snap.pop;
@@ -88,7 +89,6 @@ const FrontChart: React.FC<{ snap: Snap; front: Ind[]; sel?: Ind; onPick: (p: In
     const i = levels.findIndex((l) => l.k === sel.f[2]) + d;
     if (i >= 0 && i < levels.length) onPick(levels[i].ps.reduce((a, b) => (Math.abs(b.f[0] - sel.f[0]) < Math.abs(a.f[0] - sel.f[0]) ? b : a)));
   };
-  const active = levels.find((l) => l.k === sel?.f[2]);
   if (!(W > 0 && H > 0)) return null;
 
   if (mini) return (
@@ -118,9 +118,8 @@ const FrontChart: React.FC<{ snap: Snap; front: Ind[]; sel?: Ind; onPick: (p: In
           ? <circle key={i} cx={sx(p.f[0])} cy={sy(p.f[1])} r={2} fill="#CBD2D5" />
           : <circle key={i} cx={sx(p.f[0])} cy={sy(p.f[1])} r={2.2} fill="none" stroke="#819199" strokeWidth="0.9" />)}
       </g>
-      {active && active.ps.length > 1 && <polyline points={active.ps.map((p) => `${sx(p.f[0]).toFixed(1)},${sy(p.f[1]).toFixed(1)}`).join(" ")} fill="none" stroke="currentColor" strokeWidth="1" pointerEvents="none" />}
       <g stroke="currentColor" strokeWidth="1.1">
-        {front.map((p) => <circle key={key(p.x)} cx={sx(p.f[0])} cy={sy(p.f[1])} r={4} fill={p.f[2] === sel?.f[2] ? "#172027" : "#F6F7F5"} className="cursor-pointer" onClick={() => onPick(p)} />)}
+        {front.map((p) => <circle key={key(p.x)} cx={sx(p.f[0])} cy={sy(p.f[1])} r={3.6} fill={p.f[2] === sel?.f[2] ? "#172027" : "#F6F7F5"} className="cursor-pointer" onClick={() => onPick(p)} />)}
       </g>
       {sel && <circle cx={sx(sel.f[0])} cy={sy(sel.f[1])} r={5.5} fill="#F05A24" stroke="#172027" strokeWidth="1.2" pointerEvents="none" />}
     </svg>
@@ -184,6 +183,7 @@ const TrussSizing: React.FC = () => {
   const [view, setView] = useState<"front" | "truss">("front");
   const [stageRef, stage] = useBox<HTMLDivElement>();
   const [showTable, setShowTable] = useState(false);
+  const [algo, setAlgo] = useState(false);
 
   const tick = useCallback(() => {
     const run = runRef.current;
@@ -244,6 +244,12 @@ const TrussSizing: React.FC = () => {
       return next;
     }, { replace: true });
   };
+  const W = normalize(weights), shares = W.map((v) => Math.round(v * 100));
+  shares[2] = 100 - shares[0] - shares[1];
+  const setWeight = (j: number, v: number) => {
+    const n = relink(weights, j, v);
+    choose({ wm: String(n[0]), wd: String(n[1]), ws: String(n[2]) });
+  };
   const hv = snap?.hv[snap.hv.length - 1] ?? 0;
   const span = lengthOf(L);
   const status = !snap ? "" : `Generation ${snap.gen} of ${p.gens} · ${snap.evaluations.toLocaleString("en")} designs analysed · ${front.length} on the front`;
@@ -283,85 +289,108 @@ const TrussSizing: React.FC = () => {
       </>}
     >
       {clamped.length > 0 && <p className="t-small mb-4 text-ink-2">Some link settings were out of range and have been adjusted: {clamped.join(", ")}.</p>}
-      <div className="grid gap-x-10 gap-y-8 md:grid-cols-[14rem_minmax(0,1fr)]">
-        {/* Controls, then the formulation */}
-        <div className="flex min-w-0 flex-col gap-4 max-md:order-2">
-          <Field label="Truss"><Segmented label="Truss layout" value={p.layout} onChange={(v) => set({ layout: v })} options={[{ v: "bridge", text: "Bridge" }, { v: "cantilever", text: "10-bar" }]} /></Field>
-          {slider("load", "Load per arrow", (v) => `${v} kN`)}
-          <Field label="Seed" htmlFor="ts-seed">
-            <div className="flex gap-2">
-              <input id="ts-seed" type="number" inputMode="numeric" min={1} value={p.seed} onChange={(e) => e.target.value && set({ seed: e.target.value })}
-                className="t-data h-9 w-full min-w-0 rounded-[2px] border border-rule bg-transparent px-2 [@media(pointer:coarse)]:h-11" />
-              <button type="button" className="btn shrink-0" onClick={() => set({ seed: 1 + Math.floor(Math.random() * 999998) })}>New</button>
-            </div>
-          </Field>
-          <button type="button" onClick={toggle} className="btn btn-solid self-start">{mode === "running" ? "Pause" : mode === "paused" ? "Resume" : "Run again"}</button>
-          <div className="mt-4 flex min-w-0 flex-col gap-4 border-t border-rule pt-5">
-            <Field label="Choose with weights"><Segmented label="Decision method" value={method} onChange={(v) => choose({ mcdm: v })} options={[{ v: "topsis", text: "TOPSIS" }, { v: "vikor", text: "VIKOR" }]} /></Field>
-            {([["wm", "Steel mass"], ["wd", "Deflection"], ["ws", "Different sections"]] as const).map(([k, label], j) => (
-              <Field key={k} label={label} value={`${Math.round(normalize(weights)[j] * 100)} %`} htmlFor={`ts-${k}`}>
-                <input id={`ts-${k}`} type="range" min={0} max={1} step={0.05} value={p[k]} onChange={(e) => choose({ [k]: e.target.value } as Partial<Record<(typeof WEIGHTS)[number], string>>)} className="w-full accent-ink" />
-              </Field>
-            ))}
-            <p className="t-small text-ink-2">Moving a weight selects the best design on the front for those weights.</p>
+      {/* One framed workspace, ruled like a drawing sheet: toolbar, stage and weights, then a title block */}
+      <div className="border border-rule">
+        <div className="flex flex-wrap items-center gap-x-6 gap-y-3 px-4 py-3">
+          <div className="w-44"><Segmented label="Truss layout" value={p.layout} onChange={(v) => set({ layout: v })} options={[{ v: "bridge", text: "Bridge" }, { v: "cantilever", text: "10-bar" }]} /></div>
+          <div className="flex items-center gap-3">
+            <label htmlFor="ts-load" className="t-small text-ink-2">Load per arrow</label>
+            <input id="ts-load" type="range" min={SPEC.load.min} max={SPEC.load.max} step={SPEC.load.step} value={p.load} onChange={(e) => set({ load: e.target.value })} className="w-32 accent-ink" />
+            <output htmlFor="ts-load" className="t-data w-14">{p.load} kN</output>
           </div>
-          <details className="group border-t border-rule pt-5">
-            <summary className="t-small cursor-pointer text-ink-2 hover:text-ink">Algorithm</summary>
-            <div className="mt-3 flex flex-col gap-4">
-              {slider("pop", "Population", String)}
-              {slider("gens", "Generations", String)}
-              {slider("pc", "Crossover probability", (v) => v.toFixed(2))}
-              {slider("mut", "Mutated sizes per child", (v) => v.toFixed(1))}
-              {slider("etac", "Crossover index ηc", String)}
-              {slider("etam", "Mutation index ηm", String)}
-            </div>
-          </details>
-          <div className="min-w-0 border-t border-rule pt-5">
-            <p className="t-small mb-1.5 text-ink-2">Objectives</p>
-            <div className="math sm flex flex-col gap-1 overflow-x-auto overflow-y-hidden">
-              <MathML html={FORMULATION} />
-              <MathML html={SUBJECT} />
-            </div>
-            <p className="t-small mt-2 text-ink-2">Steel mass m, largest vertical deflection δ<sub>max</sub> and number of different sections n<sub>s</sub>; each of the n design variables takes a size from the list S.</p>
+          <div className="flex items-center gap-2">
+            <label htmlFor="ts-seed" className="t-small text-ink-2">Seed</label>
+            <input id="ts-seed" type="number" inputMode="numeric" min={1} value={p.seed} onChange={(e) => e.target.value && set({ seed: e.target.value })}
+              className="t-data h-9 w-24 rounded-[2px] border border-rule bg-transparent px-2 [@media(pointer:coarse)]:h-11" />
+            <button type="button" className="btn" onClick={() => set({ seed: 1 + Math.floor(Math.random() * 999998) })}>New</button>
           </div>
+          <button type="button" className="btn gap-1.5" aria-expanded={algo} aria-controls="ts-algo" onClick={() => setAlgo((v) => !v)}>
+            Algorithm
+            <svg viewBox="0 0 16 16" aria-hidden="true" className={`h-3 w-3 transition-transform duration-150 ${algo ? "rotate-180" : ""}`} fill="none" stroke="currentColor" strokeWidth="1.6"><path d="M3.5 6 8 10.5 12.5 6" /></svg>
+          </button>
+          <button type="button" onClick={toggle} className="btn btn-solid ml-auto min-w-[6.5rem]">{mode === "running" ? "Pause" : mode === "paused" ? "Resume" : "Run again"}</button>
         </div>
+        {algo && <div id="ts-algo" className="grid gap-x-8 gap-y-4 border-t border-rule px-4 py-4 sm:grid-cols-3 xl:grid-cols-6">
+          {slider("pop", "Population", String)}
+          {slider("gens", "Generations", String)}
+          {slider("pc", "Crossover probability", (v) => v.toFixed(2))}
+          {slider("mut", "Mutated sizes per child", (v) => v.toFixed(1))}
+          {slider("etac", "Crossover index ηc", String)}
+          {slider("etam", "Mutation index ηm", String)}
+        </div>}
 
-        {/* Stage: the front or the selected truss, the other as a thumbnail in the corner that swaps them; numbers below */}
-        <div className="min-w-0 max-md:order-1">
-          <p className="t-small mb-3 text-ink-2" aria-hidden="true">{status}</p>
-          <div ref={stageRef} className="relative h-[clamp(18rem,calc(100svh-31rem),34rem)] w-full">
+        <div className="grid border-t border-rule lg:grid-cols-[minmax(0,1fr)_19rem]">
+          {/* Stage */}
+          <div className="min-w-0 px-4 py-3">
+            <div className="mb-3 flex flex-wrap items-center justify-between gap-x-6 gap-y-2">
+              <div className="w-64"><Segmented label="View" value={view} onChange={(v) => setView(v as "front" | "truss")} options={[{ v: "front", text: "Pareto front" }, { v: "truss", text: "Selected truss" }]} /></div>
+              <p className="t-small text-ink-2" aria-hidden="true">{status}</p>
+            </div>
+            <div ref={stageRef} className="relative h-[clamp(17rem,calc(100svh-30.5rem),32rem)] w-full">
+              {view === "front"
+                ? snap && <FrontChart snap={snap} front={front} sel={sel} onPick={pick} W={stage.w} H={stage.h} />
+                : sel && detail && <TrussSvg L={L} x={sel.x} r={detail} className="absolute inset-0 h-full w-full" />}
+            </div>
             {view === "front"
-              ? snap && <FrontChart snap={snap} front={front} sel={sel} onPick={pick} W={stage.w} H={stage.h} />
-              : sel && detail && <TrussSvg L={L} x={sel.x} r={detail} className="absolute inset-x-0 bottom-0 h-[66%] w-full" />}
-            {sel && detail && snap && (
-              <button type="button" onClick={() => setView((v) => (v === "front" ? "truss" : "front"))}
-                aria-label={view === "front" ? "Show the selected truss full size" : "Show the Pareto front full size"}
-                className="group absolute right-0 top-0 w-[18%] min-w-[9rem] max-w-[14rem] border border-rule bg-canvas p-2.5 transition-colors duration-150 hover:border-ink focus-visible:border-ink">
-                {view === "front" ? <TrussSvg mini L={L} x={sel.x} r={detail} className="block w-full" /> : <FrontChart mini snap={snap} front={front} sel={sel} onPick={pick} W={208} H={144} />}
-                <svg viewBox="0 0 16 16" aria-hidden="true" className="absolute right-1 top-1 h-2.5 w-2.5 text-steel group-hover:text-ink" fill="none" stroke="currentColor" strokeWidth="1.6"><path d="M9.5 2.5h4v4M13.5 2.5 9 7M6.5 13.5h-4v-4M2.5 13.5 7 9" /></svg>
-              </button>
-            )}
+              ? <p className="t-small mt-2 text-ink-2">Filled: designs with {sel?.f[2] ?? "·"} different sections, like the selected one (orange). Arrow keys: ← → along the front, ↑ ↓ between section counts. Grey: other designs; hollow ones fail a member check.</p>
+              : detail && <p className="t-small mt-2 flex flex-wrap items-center gap-x-5 gap-y-1 text-ink-2">
+                  <span>Drawn to scale, tubes at their true diameter</span>
+                  <span className="flex items-center gap-2">Utilization 0 <span className="inline-block h-2 w-16" style={{ background: `linear-gradient(90deg, ${grey(0)}, ${grey(1)})` }} /> 1</span>
+                  <span>Dashed: deflected shape × {ampOf(L, detail)}</span>
+                  <span>Arrows: {p.load} kN each</span>
+                </p>}
+            <p className="sr-only" role="status" aria-live="polite">{mode === "done" ? `Done: ${front.length} designs on the front.` : ""}</p>
           </div>
-          {view === "front"
-            ? <p className="t-small mt-3 text-ink-2">Filled: the {sel?.f[2] ?? "·"}-section designs, like the selected one. Arrow keys: ← → along the front, ↑ ↓ between section counts. Grey: other designs; hollow ones fail a check.</p>
-            : detail && <p className="t-small mt-3 flex flex-wrap items-center gap-x-5 gap-y-1 text-ink-2">
-                <span>Drawn to scale, tubes at their true diameter</span>
-                <span className="flex items-center gap-2">Utilization 0 <span className="inline-block h-2 w-16" style={{ background: `linear-gradient(90deg, ${grey(0)}, ${grey(1)})` }} /> 1</span>
-                <span>Dashed: deflected shape × {ampOf(L, detail)}</span>
-                <span>Arrows: {p.load} kN each</span>
-              </p>}
-          <p className="sr-only" role="status" aria-live="polite">{mode === "done" ? `Done: ${front.length} designs on the front.` : ""}</p>
 
-          {sel && detail && <div className="mt-5 border-t border-rule pt-4">
-            <p className="t-small text-ink-2">Selected design{decided === sel ? `, best by ${METHOD_NAME[method]} for the weights` : !front.includes(sel) ? ", not on the current front" : ""}</p>
-            <dl className="mt-2 grid grid-cols-2 gap-x-8 gap-y-3 sm:grid-cols-3 lg:grid-cols-[repeat(4,auto)_minmax(10rem,1fr)]">
-              {([["Steel", kg(sel.f[0])], ["Deflection", `${mm(sel.f[1])}, length / ${Math.round(span / sel.f[1])}`], ["Sections", `${sel.f[2]} different`], ["Utilization", `${Math.max(...detail.util).toFixed(2)} highest`]] as const).map(([k, v]) => (
-                <div key={k} className="min-w-0"><dt className="t-small text-ink-2">{k}</dt><dd className="t-data mt-0.5">{v}</dd></div>
+          {/* Weights and formulation */}
+          <div className="flex min-w-0 flex-col gap-5 border-t border-rule px-4 py-4 lg:border-l lg:border-t-0">
+            <div className="flex flex-col gap-4">
+              <p className="t-small text-ink-2">Choose with weights</p>
+              <Segmented label="Decision method" value={method} onChange={(v) => choose({ mcdm: v })} options={[{ v: "topsis", text: "TOPSIS" }, { v: "vikor", text: "VIKOR" }]} />
+              {CRITERIA.map(([k, label, swatch], j) => (
+                <Field key={k} label={label} value={`${shares[j]} %`} htmlFor={`ts-${k}`}>
+                  <div className="flex items-center gap-3">
+                    <span className={`h-2.5 w-2.5 shrink-0 ${swatch}`} aria-hidden="true" />
+                    <input id={`ts-${k}`} type="range" min={0} max={1} step={0.01} value={W[j]} onChange={(e) => setWeight(j, Number(e.target.value))} className="w-full accent-ink" />
+                  </div>
+                </Field>
               ))}
-              <div className="min-w-0 max-sm:col-span-2"><dt className="t-small text-ink-2">Hypervolume</dt><dd className="t-data mt-0.5 flex items-center gap-3">{hv.toFixed(3)}<Trace data={snap?.hv ?? []} live={mode === "running"} /></dd></div>
-            </dl>
-          </div>}
+              <div aria-hidden="true">
+                <div className="flex h-2 w-full overflow-hidden">{CRITERIA.map(([k, , swatch], j) => <span key={k} className={`${swatch} transition-[width] duration-150`} style={{ width: `${shares[j]}%` }} />)}</div>
+                <p className="t-small mt-2 text-ink-2">The weights share 100 %: raising one lowers the others in proportion. The best design for them is selected.</p>
+              </div>
+            </div>
+            <div className="min-w-0 border-t border-rule pt-4">
+              <p className="t-small mb-1.5 text-ink-2">Objectives</p>
+              <div className="math sm flex flex-col gap-1 overflow-x-auto overflow-y-hidden">
+                <MathML html={FORMULATION} />
+                <MathML html={SUBJECT} />
+              </div>
+              <p className="t-small mt-2 text-ink-2">Steel mass m, largest vertical deflection δ<sub>max</sub> and number of different sections n<sub>s</sub>; each of the n design variables takes a size from the list S.</p>
+            </div>
+          </div>
         </div>
+
+        {/* Title block: the selected design, with its key plan */}
+        {sel && detail && <dl className="grid grid-cols-2 gap-px border-t border-rule bg-rule sm:grid-cols-3 lg:grid-cols-[minmax(0,1.4fr)_repeat(4,minmax(0,1fr))_minmax(0,1.6fr)]">
+          <div className="min-w-0 bg-canvas px-4 py-3">
+            <dt className="t-small text-ink-2">Selected design</dt>
+            <dd className="mt-1">
+              <button type="button" onClick={() => setView(view === "truss" ? "front" : "truss")} aria-label={view === "truss" ? "Show the Pareto front" : "Show the selected truss large"}
+                className="group flex w-full items-center gap-3 text-left">
+                <TrussSvg mini L={L} x={sel.x} r={detail} className="block h-8 w-auto max-w-[9rem] shrink-0" />
+                <span className="t-small text-ink-2 group-hover:text-ink group-hover:underline">{decided === sel ? `best by ${METHOD_NAME[method]}` : !front.includes(sel) ? "not on the front" : "from the link"}</span>
+              </button>
+            </dd>
+          </div>
+          {([["Steel", kg(sel.f[0])], ["Deflection", `${mm(sel.f[1])}, L / ${Math.round(span / sel.f[1])}`], ["Sections", `${sel.f[2]} different`], ["Utilization", `${Math.max(...detail.util).toFixed(2)} highest`]] as const).map(([k, v]) => (
+            <div key={k} className="min-w-0 bg-canvas px-4 py-3"><dt className="t-small text-ink-2">{k}</dt><dd className="t-data mt-1">{v}</dd></div>
+          ))}
+          <div className="min-w-0 bg-canvas px-4 py-3 max-sm:col-span-2">
+            <dt className="t-small text-ink-2">Hypervolume</dt>
+            <dd className="t-data mt-1 flex items-center gap-3"><span>{hv.toFixed(3)}</span><Trace data={snap?.hv ?? []} live={mode === "running"} /></dd>
+          </div>
+        </dl>}
       </div>
 
       {sel && <section aria-labelledby="design-h" className="mt-12 border-t border-rule pt-8">

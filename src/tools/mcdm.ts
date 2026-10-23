@@ -37,3 +37,16 @@ export function rank(X: number[][], w: number[], method: Method) {
   const i = scores.reduce((b, s, k) => ((method === "topsis" ? s > scores[b] : s < scores[b]) ? k : b), 0);
   return { i, score: scores[i], scores };
 }
+
+/** Linked weights: weight j moves to v and the others share the rest in their current proportion, in hundredths. */
+export function relink(w: number[], j: number, v: number) {
+  const W = normalize(w), x = Math.round(Math.min(1, Math.max(0, v)) * 100), rest = 100 - x;
+  const others = W.map((_, k) => k).filter((k) => k !== j), sum = others.reduce((s, k) => s + W[k], 0), out = W.map(() => 0);
+  out[j] = x;
+  let left = rest;
+  others.forEach((k, i) => {
+    const h = i === others.length - 1 ? left : Math.round(sum > 1e-9 ? (rest * W[k]) / sum : rest / others.length);
+    out[k] = h; left -= h;
+  });
+  return out.map((h) => h / 100);
+}

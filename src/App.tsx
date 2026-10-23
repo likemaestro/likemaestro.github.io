@@ -1,5 +1,5 @@
-import React, { Suspense, lazy } from "react";
-import { Navigate, Route, Routes } from "react-router-dom";
+import React, { Suspense, lazy, useLayoutEffect } from "react";
+import { Navigate, Route, Routes, useLocation, useNavigationType } from "react-router-dom";
 import Home from "./components/Home";
 
 // Tool pages load on demand. scripts/postbuild.js writes a copy of index.html for every page in src/tools/pages.json,
@@ -15,8 +15,16 @@ const GaugeTool = lazy(() => import("./components/tools/GaugeTool/GaugeTool"));
 const CUTTIA = lazy(() => import("./components/tools/CUTT-IA/CUTT-IA"));
 const WorldMap = lazy(() => import("./components/tools/WorldMap/WorldMap"));
 
+/** A new page opens at its top; back and forward keep the browser's scroll, and /#section links scroll themselves. */
+const ScrollToTop: React.FC = () => {
+  const { pathname, hash } = useLocation(), type = useNavigationType();
+  useLayoutEffect(() => { if (type !== "POP" && !hash) window.scrollTo(0, 0); }, [pathname, hash, type]);
+  return null;
+};
+
 const App: React.FC = () => (
   <Suspense fallback={null}>
+    <ScrollToTop />
     <Routes>
       <Route path="/" element={<Home />} />
       <Route path="/publications" element={<Navigate to="/#publications" replace />} />
