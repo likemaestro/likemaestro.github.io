@@ -172,12 +172,12 @@ const LiveCell: React.FC = () => {
       : mode === "converged" ? { icon: ICON.again, text: "Run again" }
         : { icon: ICON.play, text: "Run live" };
 
-  // The square lattice, its top level with the headline's cap height, and to its right a column: objective, matrix,
-  // convergence, then the target and run buttons. The lattice is sized from the viewport height so the whole lab fits
+  // The square lattice, its top level with the headline's cap height, and to its right a column spread over the
+  // lattice's height: objective, matrix, convergence, then the target and run buttons ending level with its bottom. The lattice is sized from the viewport height so the whole lab fits
   // the first screen. Phones: controls, lattice, convergence line; formulation and matrix behind a toggle.
   return (
-    <figure ref={boxRef} className="w-full min-w-0 md:grid md:w-max md:grid-cols-[clamp(21rem,min(calc(100svh-10rem),calc(100vw-22rem)),32rem)_13rem] md:grid-rows-[auto_1fr] md:gap-x-7">
-      <div className="mb-4 flex items-center justify-between gap-2 md:col-start-2 md:row-start-2 md:mb-0 md:mt-6 md:flex-col md:items-start md:justify-start md:gap-3">
+    <figure ref={boxRef} className="w-full min-w-0 md:grid md:w-max md:grid-cols-[clamp(21rem,min(calc(100svh-10rem),calc(100vw-22rem)),32rem)_13rem] md:grid-rows-[auto_auto_auto_auto] md:gap-x-7 md:gap-y-5">
+      <div className="mb-4 flex items-center justify-between gap-2 md:col-start-2 md:row-start-4 md:mb-0 md:flex-col md:items-start md:justify-start md:gap-3 md:self-end">
         <div className="flex min-w-0 flex-1 rounded-[2px] border border-ink md:w-full md:flex-none" role="group" aria-label="Optimization target">
           {TARGETS.map((x, i) => (
             <button
@@ -200,23 +200,23 @@ const LiveCell: React.FC = () => {
           </button>
         )}
       </div>
-      <canvas ref={canvasRef} role="img" aria-label={label} className="block aspect-square w-full md:col-start-1 md:row-span-2 md:row-start-1" />
+      <canvas ref={canvasRef} role="img" aria-label={label} className="block aspect-square w-full md:col-start-1 md:row-span-4 md:row-start-1" />
 
-      <div className="mt-5 flex min-w-0 flex-col gap-4 border-t border-rule pt-4 md:col-start-2 md:row-start-1 md:mt-0 md:gap-6 md:pt-3">
+      <div className="mt-5 flex min-w-0 flex-col gap-4 border-t border-rule pt-4 md:contents">
         <div id={detailsId} className={`flex flex-col gap-5 max-md:order-3 md:contents ${details ? "" : "max-md:hidden"}`}>
-          <div className="min-w-0">
+          <div className="min-w-0 md:col-start-2 md:row-start-1 md:border-t md:border-rule md:pt-3">
             <p className="t-small mb-1.5 text-ink-2">Objective</p>
             <div className="math sm flex flex-col gap-1 overflow-x-auto overflow-y-hidden">
               <div dangerouslySetInnerHTML={{ __html: goalMath(target) }} />
               <div dangerouslySetInnerHTML={{ __html: subjectMath() }} />
             </div>
           </div>
-          <div className="min-w-0">
+          <div className="min-w-0 md:col-start-2 md:row-start-2">
             <p className="t-small mb-0.5 text-ink-2">Homogenized stiffness</p>
             <div className="math sm overflow-x-auto overflow-y-hidden" dangerouslySetInnerHTML={{ __html: tensorMath(r.C, T.active) }} />
           </div>
         </div>
-        <div className="min-w-0 max-md:order-1">
+        <div className="min-w-0 max-md:order-1 md:col-start-2 md:row-start-3">
           <p className="t-small mb-1.5 text-ink-2">Convergence</p>
           <div className="math sm" dangerouslySetInnerHTML={{ __html: quantity(T.track, r) }} />
           <div className="mt-2 flex"><Trace data={r.hist} reference={reference} live={live} /></div>
