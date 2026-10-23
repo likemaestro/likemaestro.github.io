@@ -26,6 +26,12 @@
       "group": "Microstructures"
     },
     {
+      "path": "/tools/truss-sizing",
+      "title": "Truss sizing",
+      "line": "A genetic algorithm sizes every member of a steel truss, trading steel mass against deflection and the number of different sections.",
+      "group": "Structures"
+    },
+    {
       "path": "/tools/vibrometer",
       "title": "Phone vibrometer",
       "line": "Lay your phone on a desk, a floor or a footbridge and read its natural frequency.",

@@ -1,0 +1,383 @@
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useSearchParams } from "react-router-dom";
+import ToolShell from "../ToolShell";
+import { useToolParams } from "../useToolParams";
+import { Field, Segmented } from "../controls";
+import { MathML, Trace } from "../../lab/readout";
+import { download } from "../../lab/export";
+import { createNSGA2, hv3, paretoSet, type Ind } from "./ga";
+import { analyse, bounds, genes, LAYOUTS, SECTIONS, type Analysis, type Layout } from "./truss";
+
+const SPEC = {
+  layout: { kind: "enum", values: ["bridge", "cantilever"], def: "bridge" },
+  load: { kind: "num", min: 20, max: 400, step: 10, def: 100 },
+  pop: { kind: "num", min: 20, max: 200, step: 4, def: 80 },
+  gens: { kind: "num", min: 20, max: 400, step: 10, def: 150 },
+  pc: { kind: "num", min: 0, max: 1, step: 0.05, def: 0.9 },
+  mut: { kind: "num", min: 0, max: 4, step: 0.5, def: 1 },
+  etac: { kind: "num", min: 1, max: 30, step: 1, def: 3 },
+  etam: { kind: "num", min: 1, max: 30, step: 1, def: 3 },
+  seed: { kind: "num", min: 1, max: 999999, step: 1, def: 7 },
+} as const;
+const REDUCED = typeof window !== "undefined" && !!window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+type Mode = "running" | "paused" | "done";
+interface Run { ga: ReturnType<typeof createNSGA2>; hv: number[]; raf: number; gens: number; norm: (f: number[]) => number[] }
+interface Snap { gen: number; evaluations: number; pop: Ind[]; hv: number[] }
+
+const snapOf = (run: Run): Snap => ({ gen: run.ga.state.gen, evaluations: run.ga.state.evaluations, pop: run.ga.state.pop, hv: run.hv.slice() });
+const record = (run: Run) => run.hv.push(hv3(paretoSet(run.ga.state.pop).map((q) => run.norm(q.f)), [1, 1, 1]));
+const key = (x: number[]) => x.map((v) => v.toString(36)).join("");
+const kg = (v: number) => `${Math.round(v).toLocaleString("en")} kg`;
+const mm = (v: number) => `${v < 10 ? v.toFixed(1) : Math.round(v)} mm`;
+const lengthOf = (L: Layout) => Math.max(...L.nodes.map((n) => n[0])) - Math.min(...L.nodes.map((n) => n[0]));
+function ticks(lo: number, hi: number, n = 5) {
+  const raw = (hi - lo) / n, mag = 10 ** Math.floor(Math.log10(raw)), step = [1, 2, 2.5, 5, 10].map((m) => m * mag).find((s) => s >= raw)!;
+  const out: number[] = [];
+  for (let v = Math.ceil(lo / step) * step; v <= hi + 1e-9; v += step) out.push(Number(v.toPrecision(12)));
+  return out;
+}
+/** The front design closest to the ideal mass and deflection, each scaled to the front's own range: the bend of the
+ *  trade-off curve. */
+function knee(F: Ind[]) {
+  const lo = [0, 1].map((k) => Math.min(...F.map((p) => p.f[k]))), hi = [0, 1].map((k) => Math.max(...F.map((p) => p.f[k])));
+  const d = (p: Ind) => [0, 1].reduce((s, k) => s + ((p.f[k] - lo[k]) / (hi[k] - lo[k] || 1)) ** 2, 0);
+  return F.reduce((a, b) => (d(b) < d(a) ? b : a));
+}
+// utilization 0 → steel grey, 1 → laser orange
+const mix = (u: number) => {
+  const t = Math.min(1, Math.max(0, u)), a = [0x81, 0x91, 0x99], b = [0xf0, 0x5a, 0x24];
+  return `rgb(${a.map((v, i) => Math.round(v + (b[i] - v) * t)).join(",")})`;
+};
+
+const FORMULATION = `<math displaystyle="true"><munder><mo movablelimits="false">min</mo><mrow><mi>x</mi><mo>∈</mo><msup><mi>S</mi><mi>n</mi></msup></mrow></munder><mspace width="0.3em"></mspace><mo>(</mo><mi>m</mi><mo>,</mo><mspace width="0.3em"></mspace><msub><mi>δ</mi><mtext>max</mtext></msub><mo>,</mo><mspace width="0.3em"></mspace><msub><mi>n</mi><mtext>s</mtext></msub><mo>)</mo></math>`;
+const SUBJECT = `<math><mtext>subject to</mtext><mspace width="0.5em"></mspace><msub><mi>N</mi><mrow><mtext>Ed</mtext><mo>,</mo><mi>i</mi></mrow></msub><mo>≤</mo><msub><mi>N</mi><mrow><mtext>Rd</mtext><mo>,</mo><mi>i</mi></mrow></msub></math>`;
+
+// The front: steel mass across, largest deflection up. The designs with as many different sections as the selected one
+// are filled and joined; up and down arrows move between those levels.
+const FrontChart: React.FC<{ snap: Snap; front: Ind[]; sel?: Ind; onPick: (p: Ind) => void; mini?: boolean }> = ({ snap, front, sel, onPick, mini }) => {
+  const W = 520, H = 360, M = mini ? { l: 8, r: 8, t: 8, b: 8 } : { l: 52, r: 12, t: 12, b: 44 }, dot = mini ? 2.6 : 1;
+  const feas = snap.pop.filter((p) => p.cv === 0), base = feas.length ? feas : snap.pop;
+  const ext = (k: number) => { const v = base.map((p) => p.f[k]); const lo = Math.min(...v), hi = Math.max(...v), pad = (hi - lo) * 0.05 || 1; return [Math.max(0, lo - pad), hi + pad]; };
+  const [x0, x1] = ext(0), [y0, y1] = ext(1);
+  const sx = (v: number) => M.l + ((v - x0) / (x1 - x0)) * (W - M.l - M.r), sy = (v: number) => H - M.b - ((v - y0) / (y1 - y0)) * (H - M.t - M.b);
+  const inside = (p: Ind) => p.f[0] >= x0 && p.f[0] <= x1 && p.f[1] >= y0 && p.f[1] <= y1;
+  const levels = useMemo(() => {
+    const m = new Map<number, Ind[]>();
+    front.forEach((p) => m.set(p.f[2], [...(m.get(p.f[2]) ?? []), p]));
+    return Array.from(m.entries()).sort((a, b) => a[0] - b[0]).map(([k, ps]) => ({ k, ps: ps.sort((a, b) => a.f[0] - b.f[0]) }));
+  }, [front]);
+  const onFront = new Set(front);
+  const order = useMemo(() => [...front].sort((a, b) => a.f[0] - b.f[0] || a.f[1] - b.f[1]), [front]);
+  const step = (d: number) => { if (!order.length) return; const k = sel ? order.indexOf(sel) : -1; onPick(order[Math.min(order.length - 1, Math.max(0, k + d))]); };
+  const level = (d: number) => {
+    if (!sel) return;
+    const i = levels.findIndex((l) => l.k === sel.f[2]) + d;
+    if (i >= 0 && i < levels.length) onPick(levels[i].ps.reduce((a, b) => (Math.abs(b.f[0] - sel.f[0]) < Math.abs(a.f[0] - sel.f[0]) ? b : a)));
+  };
+  const active = levels.find((l) => l.k === sel?.f[2]);
+
+  if (mini) return (
+    <svg viewBox={`0 0 ${W} ${H}`} className="block w-full" aria-hidden="true">
+      <g stroke="#CBD2D5" strokeWidth="3"><line x1={M.l} x2={W - M.r} y1={H - M.b} y2={H - M.b} /><line x1={M.l} x2={M.l} y1={M.t} y2={H - M.b} /></g>
+      <g fill="#4F5D68">{front.map((p) => <circle key={key(p.x)} cx={sx(p.f[0])} cy={sy(p.f[1])} r={3.6 * dot} />)}</g>
+      {sel && <circle cx={sx(sel.f[0])} cy={sy(sel.f[1])} r={5 * dot} fill="#F05A24" stroke="#172027" strokeWidth="3" />}
+    </svg>
+  );
+  return (
+    <svg viewBox={`0 0 ${W} ${H}`} className="block w-full text-ink outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4"
+      role="group" tabIndex={0} aria-label={`Pareto front, generation ${snap.gen}: ${front.length} designs, steel mass across, deflection up. Left and right arrows move from light to heavy, up and down change the number of different sections.`}
+      onKeyDown={(e) => {
+        const d = { ArrowRight: [step, 1], ArrowLeft: [step, -1], ArrowUp: [level, 1], ArrowDown: [level, -1] }[e.key] as [(d: number) => void, number] | undefined;
+        if (d) { e.preventDefault(); d[0](d[1]); }
+      }}>
+      <g className="text-rule" stroke="currentColor"><line x1={M.l} x2={W - M.r} y1={H - M.b} y2={H - M.b} /><line x1={M.l} x2={M.l} y1={M.t} y2={H - M.b} /></g>
+      <g className="fill-ink-2" fontSize="12">
+        {ticks(x0, x1).map((v) => <text key={v} x={sx(v)} y={H - M.b + 18} textAnchor="middle">{v.toLocaleString("en")}</text>)}
+        {ticks(y0, y1).map((v) => <text key={v} x={M.l - 8} y={sy(v) + 4} textAnchor="end">{v}</text>)}
+        <text x={(M.l + W - M.r) / 2} y={H - 6} textAnchor="middle">Steel mass, kg</text>
+        <text x={14} y={(M.t + H - M.b) / 2} textAnchor="middle" transform={`rotate(-90 14 ${(M.t + H - M.b) / 2})`}>Largest deflection, mm</text>
+      </g>
+      {/* the rest of the population: feasible filled, infeasible hollow */}
+      <g>
+        {snap.pop.filter((p) => !onFront.has(p) && inside(p)).map((p, i) => p.cv === 0
+          ? <circle key={i} cx={sx(p.f[0])} cy={sy(p.f[1])} r={2.2} fill="#CBD2D5" />
+          : <circle key={i} cx={sx(p.f[0])} cy={sy(p.f[1])} r={2.4} fill="none" stroke="#819199" strokeWidth="0.9" />)}
+      </g>
+      <g fill="#F6F7F5" stroke="#4F5D68" strokeWidth="1">
+        {front.map((p) => <circle key={key(p.x)} cx={sx(p.f[0])} cy={sy(p.f[1])} r={3.6} className="cursor-pointer" onClick={() => onPick(p)} />)}
+      </g>
+      {active && <g pointerEvents="none">
+        <polyline points={active.ps.map((p) => `${sx(p.f[0]).toFixed(1)},${sy(p.f[1]).toFixed(1)}`).join(" ")} fill="none" stroke="#172027" strokeWidth="1.4" />
+        {active.ps.map((p) => <circle key={key(p.x)} cx={sx(p.f[0])} cy={sy(p.f[1])} r={3.6} fill="#172027" />)}
+      </g>}
+      {sel && <circle cx={sx(sel.f[0])} cy={sy(sel.f[1])} r={5} fill="#F05A24" stroke="#172027" strokeWidth="1.2" pointerEvents="none" />}
+    </svg>
+  );
+};
+
+/** Deformation scale for the drawing: the largest displacement shows as about 6 % of the length, a round number. */
+const ampOf = (L: Layout, r: Analysis) => Math.max(1, Math.round((0.06 * lengthOf(L)) / r.deflection / 5) * 5);
+
+// The selected design to scale: tube diameters true to the drawing, colour by utilization, dashed deflected shape.
+const TrussSvg: React.FC<{ L: Layout; x: number[]; r: Analysis; mini?: boolean; className?: string }> = ({ L, x, r, mini, className }) => {
+  const xs = L.nodes.map((n) => n[0]), ys = L.nodes.map((n) => n[1]);
+  const span = lengthOf(L), pad = span * (mini ? 0.03 : 0.06);
+  const vb = [Math.min(...xs) - pad, -(Math.max(...ys) + pad * 0.9), span + 2 * pad, Math.max(...ys) - Math.min(...ys) + pad * (mini ? 2 : 2.6)];
+  const amp = ampOf(L, r);
+  const P = (k: number, def = 0) => [L.nodes[k][0] + def * r.u[2 * k], -(L.nodes[k][1] + def * r.u[2 * k + 1])];
+  const fixedNodes = Array.from(new Set(L.fixed.map((d) => d >> 1)));
+  const s = span / 100;   // symbol size
+  return (
+    <svg viewBox={vb.join(" ")} preserveAspectRatio="xMidYMax meet" className={className}
+      role={mini ? undefined : "img"} aria-hidden={mini || undefined}
+      aria-label={mini ? undefined : `Selected design drawn to scale. Highest utilization ${Math.max(...r.util).toFixed(2)}; deflected shape dashed, ${amp} times enlarged.`}>
+      {!mini && L.members.map(([i, j], e) => {
+        const [a, b] = [P(i, amp), P(j, amp)];
+        return <line key={`d${e}`} x1={a[0]} y1={a[1]} x2={b[0]} y2={b[1]} stroke="#819199" strokeOpacity="0.8" strokeWidth={s * 0.14} strokeDasharray={`${s} ${s * 0.8}`} />;
+      })}
+      {L.members.map(([i, j], e) => {
+        const [a, b] = [P(i), P(j)], sec = SECTIONS[x[L.group[e]]];
+        return <line key={e} x1={a[0]} y1={a[1]} x2={b[0]} y2={b[1]} stroke={mix(r.util[e])} strokeWidth={Math.max(sec.D, s * (mini ? 0.5 : 0.25))} strokeLinecap="round">
+          {!mini && <title>{`${sec.name}, ${(r.N[e] / 1e3).toFixed(0)} kN, utilization ${r.util[e].toFixed(2)}`}</title>}
+        </line>;
+      })}
+      {!mini && fixedNodes.map((k) => {
+        const [cx, cy] = P(k), roller = L.fixed.filter((d) => d >> 1 === k).length === 1;
+        return <g key={k} fill="none" stroke="#172027" strokeWidth={s * 0.15}>
+          <path d={`M${cx} ${cy}l${-1.6 * s} ${2.6 * s}h${3.2 * s}z`} />
+          {roller && <line x1={cx - 2 * s} x2={cx + 2 * s} y1={cy + 3.4 * s} y2={cy + 3.4 * s} />}
+        </g>;
+      })}
+      {!mini && L.loaded.map((k) => {
+        const [cx, cy] = P(k);
+        return <g key={`p${k}`} stroke="#172027" strokeWidth={s * 0.15} fill="#172027">
+          <line x1={cx} x2={cx} y1={cy + 1.2 * s} y2={cy + 4.4 * s} />
+          <path d={`M${cx} ${cy + 5.8 * s}l${-0.8 * s} ${-1.6 * s}h${1.6 * s}z`} stroke="none" />
+        </g>;
+      })}
+    </svg>
+  );
+};
+
+const TrussSizing: React.FC = () => {
+  const { values: p, clamped, set } = useToolParams(SPEC);
+  const [sp, setSp] = useSearchParams();
+  const L = LAYOUTS[p.layout];
+  const runRef = useRef<Run | null>(null);
+  const [snap, setSnap] = useState<Snap | null>(null);
+  const [mode, setMode] = useState<Mode>("running");
+  const [showMembers, setShowMembers] = useState(false);
+  const [view, setView] = useState<"front" | "truss">("front");
+  const [showTable, setShowTable] = useState(false);
+
+  const tick = useCallback(() => {
+    const run = runRef.current;
+    if (!run) return;
+    // about 150 frames for a whole run; under reduced motion in larger steps, showing only the end
+    const per = REDUCED ? 20 : Math.max(1, Math.ceil(run.gens / 150));
+    for (let k = 0; k < per && run.ga.state.gen < run.gens; k++) { run.ga.step(); record(run); }
+    const done = run.ga.state.gen >= run.gens;
+    if (!REDUCED || done) setSnap(snapOf(run));
+    if (done) setMode("done");
+    else run.raf = requestAnimationFrame(tick);
+  }, []);
+
+  useEffect(() => {
+    const P = p.load * 1e3, b = bounds(L, P), n = genes(L);
+    const prob = { n, ub: SECTIONS.length - 1, evaluate: (x: number[]) => { const r = analyse(L, x, P); return { f: [r.mass, r.deflection, r.distinct], cv: r.cv }; } };
+    const ga = createNSGA2(prob, { pop: p.pop, pc: p.pc, mut: p.mut, etaC: p.etac, etaM: p.etam, seed: p.seed, initial: SECTIONS.map((_, k) => new Array(n).fill(k)) });
+    const run: Run = { ga, hv: [], raf: 0, gens: p.gens, norm: (f) => f.map((v, k) => (v - b.lo[k]) / (b.hi[k] - b.lo[k])) };
+    runRef.current = run;
+    record(run);
+    setSnap(snapOf(run));
+    setMode("running");
+    run.raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(run.raf);
+  }, [L, p.load, p.pop, p.gens, p.pc, p.mut, p.etac, p.etam, p.seed, tick]);
+
+  const toggle = () => {
+    const run = runRef.current;
+    if (mode === "running" && run) { cancelAnimationFrame(run.raf); setMode("paused"); }
+    else if (mode === "paused") { setMode("running"); tick(); }
+    else set({ seed: 1 + Math.floor(Math.random() * 999998) });
+  };
+
+  const front = useMemo(() => (snap ? paretoSet(snap.pop) : []), [snap]);
+  const sel = useMemo(() => front.find((q) => key(q.x) === sp.get("sel")) ?? (front.length ? knee(front) : undefined), [front, sp]);
+  const pick = (q: Ind) => setSp((prev) => { const next = new URLSearchParams(prev); next.set("sel", key(q.x)); return next; }, { replace: true });
+  const detail = useMemo(() => (sel ? analyse(L, sel.x, p.load * 1e3) : null), [L, sel, p.load]);
+  const hv = snap?.hv[snap.hv.length - 1] ?? 0;
+  const span = lengthOf(L);
+  const status = !snap ? "" : `Generation ${snap.gen} of ${p.gens} · ${snap.evaluations.toLocaleString("en")} designs analysed · ${front.length} on the front`;
+
+  const exportFront = () => download(`truss-front-${p.layout}.csv`,
+    `# Truss sizing, ${window.location.href}\n# ${L.label}, ${p.load} kN per loaded node, generation ${snap?.gen}\n# mass_kg,deflection_mm,sections,sizes_by_variable\n` +
+    [...front].sort((a, b) => a.f[2] - b.f[2] || a.f[0] - b.f[0]).map((q) => `${q.f[0].toFixed(1)},${q.f[1].toFixed(2)},${q.f[2]},${q.x.map((v) => SECTIONS[v].name).join(";")}`).join("\n") + "\n", "text/csv");
+  const exportDesign = () => sel && detail && download(`truss-design-${p.layout}.csv`,
+    `# Truss sizing, ${window.location.href}\n# ${L.label}, ${p.load} kN per loaded node; CHS D x t in mm, S355\n# member,node_i,node_j,length_m,section,area_mm2,force_kN,utilization\n` +
+    L.members.map(([i, j], e) => { const sct = SECTIONS[sel.x[L.group[e]]], len = Math.hypot(L.nodes[j][0] - L.nodes[i][0], L.nodes[j][1] - L.nodes[i][1]) / 1000;
+      return `${e + 1},${i + 1},${j + 1},${len.toFixed(3)},${sct.name},${sct.A.toFixed(0)},${(detail.N[e] / 1e3).toFixed(1)},${detail.util[e].toFixed(3)}`; }).join("\n") + "\n", "text/csv");
+
+  const slider = (k: keyof typeof SPEC, label: string, fmt: (v: number) => string) => {
+    const f = SPEC[k] as { min: number; max: number; step: number };
+    return (
+      <Field label={label} value={fmt(p[k] as number)} htmlFor={`ts-${k}`}>
+        <input id={`ts-${k}`} type="range" min={f.min} max={f.max} step={f.step} value={p[k] as number} onChange={(e) => set({ [k]: e.target.value })} className="w-full accent-ink" />
+      </Field>
+    );
+  };
+
+  return (
+    <ToolShell
+      path="/tools/truss-sizing"
+      slug="truss-sizing"
+      methodRef={{ label: "Deb et al. 2002", href: "https://doi.org/10.1109/4235.996017" }}
+      method={<>
+        <p>Each member gets a hot-finished circular hollow section from a list of 16, in S355 steel. A linear-elastic analysis of the pin-jointed truss gives the member forces and deflections, and each member is checked to EN 1993-1-1: yielding in tension, flexural buckling in compression (curve a, pinned ends, γ<sub>M0</sub> = γ<sub>M1</sub> = 1.0).</p>
+        <p>NSGA-II (Deb et al. 2002) searches the three objectives at once. Constrained domination ranks every design that passes the checks above every design that fails, and failing ones by how far they fail. Children come from binary tournaments, simulated binary crossover and polynomial mutation, rounded to the list; repeated designs are retried. The first population includes the 16 designs that use one size throughout, so the one-section end of the front is there from the start.</p>
+        <p>Hypervolume measures the front: the share of the box from the lightest to the heaviest design, the stiffest to the most flexible, and 1 to {Math.min(genes(L), SECTIONS.length) + 1} sections, that the front dominates. NSGA-II keeps a spread rather than the largest volume, so it can dip slightly between generations.</p>
+      </>}
+      limits={<>
+        <p>Pin-jointed, linear elastic, small displacements. Self-weight, connections, joint eccentricities and out-of-plane stability are left out. The load is one design value per loaded node, and the deflection is reported under the same load.</p>
+        <p>Section properties come from the nominal diameter and wall; check sizes against a manufacturer’s table. National annexes may set other partial factors.</p>
+        <p>The cantilever uses the layout of the classic 10-bar truss with steel tubes and 5 m bays, so its numbers don’t compare with published results for that problem. A research demo, not a design check.</p>
+      </>}
+    >
+      {clamped.length > 0 && <p className="t-small mb-4 text-ink-2">Some link settings were out of range and have been adjusted: {clamped.join(", ")}.</p>}
+      <div className="grid gap-x-8 gap-y-8 md:grid-cols-[14rem_minmax(0,1fr)] xl:grid-cols-[14rem_minmax(0,1fr)_17rem]">
+        {/* Controls */}
+        <div className="flex min-w-0 flex-col gap-4 max-md:order-3">
+          <Field label="Truss"><Segmented label="Truss layout" value={p.layout} onChange={(v) => set({ layout: v })} options={[{ v: "bridge", text: "Bridge" }, { v: "cantilever", text: "10-bar" }]} /></Field>
+          {slider("load", "Load per arrow", (v) => `${v} kN`)}
+          {slider("pop", "Population", String)}
+          {slider("gens", "Generations", String)}
+          <details className="group">
+            <summary className="t-small cursor-pointer text-ink-2 hover:text-ink">Operators</summary>
+            <div className="mt-3 flex flex-col gap-4">
+              {slider("pc", "Crossover probability", (v) => v.toFixed(2))}
+              {slider("mut", "Mutated sizes per child", (v) => v.toFixed(1))}
+              {slider("etac", "Crossover index ηc", String)}
+              {slider("etam", "Mutation index ηm", String)}
+            </div>
+          </details>
+          <Field label="Seed" htmlFor="ts-seed">
+            <div className="flex gap-2">
+              <input id="ts-seed" type="number" inputMode="numeric" min={1} value={p.seed} onChange={(e) => e.target.value && set({ seed: e.target.value })}
+                className="t-data h-9 w-full min-w-0 rounded-[2px] border border-rule bg-transparent px-2 [@media(pointer:coarse)]:h-11" />
+              <button type="button" className="btn shrink-0" onClick={() => set({ seed: 1 + Math.floor(Math.random() * 999998) })}>New</button>
+            </div>
+          </Field>
+          <button type="button" onClick={toggle} className="btn btn-solid self-start">{mode === "running" ? "Pause" : mode === "paused" ? "Resume" : "Run again"}</button>
+        </div>
+
+        {/* Stage: the front or the selected truss, with the other as a thumbnail in the corner that swaps them */}
+        <div className="min-w-0 max-md:order-1">
+          <p className="t-small mb-3 text-ink-2" aria-hidden="true">{status}</p>
+          <div className="max-w-[max(24rem,calc((100svh-23rem)*520/360))]">
+            <div className="relative">
+              {view === "front"
+                ? snap && <FrontChart snap={snap} front={front} sel={sel} onPick={pick} />
+                : sel && detail && <div className="relative aspect-[520/360]"><TrussSvg L={L} x={sel.x} r={detail} className="absolute inset-x-0 bottom-0 h-[58%] w-full" /></div>}
+              {sel && detail && snap && (
+                <button type="button" onClick={() => setView((v) => (v === "front" ? "truss" : "front"))}
+                  aria-label={view === "front" ? "Show the selected truss full size" : "Show the Pareto front full size"}
+                  className="group absolute right-0 top-0 w-[36%] max-w-[15rem] border border-rule bg-canvas p-2 text-left transition-colors duration-150 hover:border-ink focus-visible:border-ink">
+                  {view === "front" ? <TrussSvg mini L={L} x={sel.x} r={detail} className="block w-full" /> : <FrontChart mini snap={snap} front={front} sel={sel} onPick={pick} />}
+                  <span className="t-small mt-1.5 flex items-center justify-between gap-2 text-ink-2 group-hover:text-ink">
+                    {view === "front" ? "Selected truss" : "Pareto front"}
+                    <svg viewBox="0 0 16 16" aria-hidden="true" className="h-3.5 w-3.5 shrink-0" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M9.5 2.5h4v4M13.5 2.5 9 7M6.5 13.5h-4v-4M2.5 13.5 7 9" /></svg>
+                  </span>
+                </button>
+              )}
+            </div>
+            {view === "front"
+              ? <p className="t-small mt-2 text-ink-2">Circles: the front. Filled and joined: designs with as many different sections as the selected one (arrow keys up and down change it). Grey dots: the rest of the population; hollow ones fail a member check.</p>
+              : detail && <p className="t-small mt-2 flex flex-wrap items-center gap-x-5 gap-y-1 text-ink-2">
+                  <span>Drawn to scale, tubes at their true diameter</span>
+                  <span className="flex items-center gap-2">Utilization 0 <span className="inline-block h-2 w-16" style={{ background: `linear-gradient(90deg, ${mix(0)}, ${mix(1)})` }} /> 1</span>
+                  <span>Dashed: deflected shape × {ampOf(L, detail)}</span>
+                  <span>Arrows: {p.load} kN each</span>
+                </p>}
+          </div>
+          <p className="sr-only" role="status" aria-live="polite">{mode === "done" ? `Done: ${front.length} designs on the front.` : ""}</p>
+        </div>
+
+        {/* Readout */}
+        <div className="flex min-w-0 flex-col gap-6 max-md:order-2 md:col-span-2 md:grid md:grid-cols-3 xl:col-span-1 xl:flex">
+          {sel && detail && <div className="min-w-0">
+            <p className="t-small mb-1.5 text-ink-2">Selected design{mode === "running" && !sp.get("sel") ? ", the bend of the current front" : ""}</p>
+            <dl className="t-data grid grid-cols-[auto_1fr] gap-x-4 gap-y-1">
+              <dt className="text-ink-2">Steel</dt><dd>{kg(sel.f[0])}</dd>
+              <dt className="text-ink-2">Deflection</dt><dd>{mm(sel.f[1])} <span className="text-ink-2">(length / {Math.round(span / sel.f[1])})</span></dd>
+              <dt className="text-ink-2">Sections</dt><dd>{sel.f[2]} different</dd>
+              <dt className="text-ink-2">Utilization</dt><dd>{Math.max(...detail.util).toFixed(2)} highest</dd>
+            </dl>
+          </div>}
+          <div className="min-w-0">
+            <p className="t-small text-ink-2">Hypervolume <span className="t-data text-ink">{hv.toFixed(3)}</span></p>
+            <div className="mt-2 flex"><Trace data={snap?.hv ?? []} live={mode === "running"} /></div>
+          </div>
+          <div className="min-w-0">
+            <p className="t-small mb-1.5 text-ink-2">Objectives</p>
+            <div className="math sm flex flex-col gap-1 overflow-x-auto overflow-y-hidden">
+              <MathML html={FORMULATION} />
+              <MathML html={SUBJECT} />
+            </div>
+            <p className="t-small mt-2 text-ink-2">Steel mass m, largest deflection δ<sub>max</sub> and number of different sections n<sub>s</sub>; each of the n design variables takes a size from the list S.</p>
+          </div>
+        </div>
+      </div>
+
+      {sel && <section aria-labelledby="design-h" className="mt-12 border-t border-rule pt-8">
+        <div className="flex flex-wrap items-baseline justify-between gap-3">
+          <h2 id="design-h" className="t-h3">Details</h2>
+          <div className="flex flex-wrap gap-2">
+            <button type="button" className="btn" aria-expanded={showMembers} onClick={() => setShowMembers((v) => !v)}>{showMembers ? "Hide members" : "Show members"}</button>
+            <button type="button" className="btn" aria-expanded={showTable} onClick={() => setShowTable((v) => !v)}>{showTable ? "Hide the front" : "Front as table"}</button>
+            <button type="button" className="btn" onClick={exportDesign}>Design CSV</button>
+            <button type="button" className="btn" onClick={exportFront}>Front CSV</button>
+          </div>
+        </div>
+
+        {showMembers && detail && (
+          <div className="mt-8 overflow-x-auto">
+            <table className="t-data w-full min-w-[36rem] border-collapse text-left">
+              <caption className="sr-only">Members of the selected design</caption>
+              <thead><tr className="border-b border-ink">{["Member", "Nodes", "Length, m", "Section, mm", "Force, kN", "Utilization"].map((h) => <th key={h} scope="col" className="py-2 pr-4 font-[520]">{h}</th>)}</tr></thead>
+              <tbody>
+                {L.members.map(([i, j], e) => (
+                  <tr key={e} className="border-b border-rule">
+                    <td className="py-1.5 pr-4">{e + 1}</td><td className="py-1.5 pr-4">{i + 1}–{j + 1}</td>
+                    <td className="py-1.5 pr-4">{(Math.hypot(L.nodes[j][0] - L.nodes[i][0], L.nodes[j][1] - L.nodes[i][1]) / 1000).toFixed(2)}</td>
+                    <td className="py-1.5 pr-4">{SECTIONS[sel.x[L.group[e]]].name}</td>
+                    <td className="py-1.5 pr-4">{(detail.N[e] / 1e3).toFixed(0)}{detail.N[e] < 0 ? " compr." : ""}</td>
+                    <td className="py-1.5 pr-4">{detail.util[e].toFixed(2)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+        {showTable && (
+          <div className="mt-8 overflow-x-auto">
+            <table className="t-data w-full min-w-[28rem] border-collapse text-left">
+              <caption className="sr-only">Designs on the front</caption>
+              <thead><tr className="border-b border-ink">{["Sections", "Steel, kg", "Deflection, mm"].map((h) => <th key={h} scope="col" className="py-2 pr-4 font-[520]">{h}</th>)}<th scope="col"><span className="sr-only">Select</span></th></tr></thead>
+              <tbody>
+                {[...front].sort((a, b) => a.f[2] - b.f[2] || a.f[0] - b.f[0]).map((q) => (
+                  <tr key={key(q.x)} className={`border-b border-rule ${q === sel ? "bg-wash" : ""}`}>
+                    <td className="py-1.5 pr-4">{q.f[2]}</td><td className="py-1.5 pr-4">{Math.round(q.f[0]).toLocaleString("en")}</td><td className="py-1.5 pr-4">{q.f[1].toFixed(1)}</td>
+                    <td className="py-1.5"><button type="button" className="link" onClick={() => pick(q)}>Show</button></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </section>}
+    </ToolShell>
+  );
+};
+
+export default TrussSizing;
