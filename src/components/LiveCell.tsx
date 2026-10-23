@@ -1,10 +1,10 @@
-import React, { useCallback, useEffect, useId, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { cells, initial, N, PHONE_N, phoneSeeds, seeds } from "../lab/precomputed";
 import type { Objective } from "../lab/unitcell";
 import type { WorkerOut } from "../lab/unitcell.worker";
 import { createWorker } from "../lab/createWorker";
 import { decode, drawLattice } from "../lab/lattice";
-import { goalMath, kappa, kappaHS, quantity, subjectMath, TARGETS, tensorMath, Trace } from "../lab/readout";
+import { TARGETS } from "../lab/readout";
 
 type Mode = "precomputed" | "running" | "paused" | "converged";
 
@@ -19,13 +19,6 @@ const ICON = {
   pause: <path d="M5.5 3.5v9M10.5 3.5v9" />,
   again: <><path d="M13.5 8a5.5 5.5 0 1 1-1.6-3.9" /><path d="M12.6 1.8v2.8H9.8" /></>,
 };
-
-interface Readout { iter: number; vol: number; E1: number; G12: number; nu12: number; K: number; C: number[]; seed?: number; hist: number[] }
-
-function finalReadout(t: Objective): Readout {
-  const c = cells[t], track = TARGETS.find((x) => x.id === t)!.track;
-  return { iter: c.iter, vol: c.vol, E1: c.E1, G12: c.G12, nu12: c.nu12, K: c.K, C: [...c.C], seed: c.seed, hist: [...c.hist[track]] };
-}
 
 const LiveCell: React.FC = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -42,9 +35,7 @@ const LiveCell: React.FC = () => {
   const [target, setTarget] = useState<Objective>("auxetic");
   const [mode, setMode] = useState<Mode>("precomputed");
   const [supported, setSupported] = useState(true);
-  const [r, setR] = useState<Readout>(() => finalReadout("auxetic"));
-  const [details, setDetails] = useState(false);   // phones only: formulation and matrix open on demand
-  const detailsId = useId();
+  const [iter, setIter] = useState<number>(cells.auxetic.iter);
   const modeRef = useRef(mode);
   modeRef.current = mode;
 
@@ -56,7 +47,7 @@ const LiveCell: React.FC = () => {
     runIdRef.current++;
     workerRef.current?.postMessage({ type: "cancel" });
     rhoRef.current = FINAL[t];
-    setR(finalReadout(t));
+    setIter(cells[t].iter);
     setMode("precomputed");
     draw();
   }, [draw]);
@@ -82,7 +73,6 @@ const LiveCell: React.FC = () => {
   const start = useCallback((t: Objective, first?: number) => {
     const w = ensureWorker();
     if (!w) { setSupported(false); showFinal(t); return; }
-    const track = TARGETS.find((x) => x.id === t)!.track;
     const id = ++runIdRef.current;
     // A different vetted seed each run (never the same twice in a row), so every run grows a new design.
     // Touch devices run the coarser mesh from its own pool: about as fast on a phone as the fine mesh on a desktop.
@@ -95,13 +85,12 @@ const LiveCell: React.FC = () => {
       const m = e.data;
       if (m.id !== runIdRef.current) return;
       rhoRef.current = m.rho;
-      const G12 = m.C[8], K = kappa(m.C);
-      setR((p) => ({ iter: m.iter, vol: m.vol, E1: m.E1, G12, nu12: m.nu12, K, C: m.C, seed, hist: [...(m.iter === 1 ? [] : p.hist), { E1: m.E1, G12, nu12: m.nu12, K }[track]] }));
+      setIter(m.iter);
       if (m.done) setMode("converged");
       draw();
     };
     autoPausedRef.current = false;
-    setR({ iter: 0, vol: cells[t].vol, E1: NaN, G12: NaN, nu12: NaN, K: NaN, C: Array(9).fill(NaN), seed, hist: [] });
+    setIter(0);
     setMode("running");
     draw();
     w.postMessage({ type: "run", obj: t, n, id, seed });
@@ -152,90 +141,45 @@ const LiveCell: React.FC = () => {
   }, [draw, start]);
 
   const T = TARGETS.find((x) => x.id === target)!;
-  const live = mode === "running" || mode === "paused";
   const status =
-    mode === "running" ? "Computing in your browser"
-      : mode === "paused" ? `Paused at iteration ${r.iter}`
-        : mode === "converged" ? `Converged at iteration ${r.iter}, computed in your browser`
-          : `Converged at iteration ${r.iter}`;
-  const label = `5 by 5 tiling of a unit cell optimized for ${T.aria}. ${mode === "running" ? `Iteration ${r.iter}.` : status + "."}`;
+    mode === "running" ? "Computing in your browser…"
+      : mode === "paused" ? `Paused at iteration ${iter}`
+        : mode === "converged" ? `Converged at iteration ${iter}, computed in your browser`
+          : `Converged at iteration ${iter}`;
+  const label = `5 by 5 tiling of a unit cell optimized for ${T.aria}. ${mode === "running" ? `Iteration ${iter}.` : status + "."}`;
+  // What a click on the chosen target does next.
+  const next = mode === "running" ? { icon: ICON.pause, text: "pause" } : mode === "paused" ? { icon: ICON.play, text: "resume" } : { icon: ICON.again, text: "run again" };
+  const press = (t: Objective) => (t !== target ? select(t) : supported && toggle());
 
-  const progress =
-    mode === "running" ? `Iteration ${r.iter}`
-      : mode === "paused" ? `Paused at iteration ${r.iter}`
-        : mode === "converged" ? `Converged at iteration ${r.iter}`
-          : `Converged at iteration ${r.iter}`;
-  const reference = target === "auxetic" ? 0 : target === "bulk" ? kappaHS(r.vol) : undefined;
-
-  const run = mode === "running" ? { icon: ICON.pause, text: "Pause" }
-    : mode === "paused" ? { icon: ICON.play, text: "Resume" }
-      : mode === "converged" ? { icon: ICON.again, text: "Run again" }
-        : { icon: ICON.play, text: "Run live" };
-
-  // The square lattice, its top level with the headline's cap height, and to its right a column spread over the
-  // lattice's height: objective, matrix, convergence, then the target and run buttons ending level with its bottom. The lattice is sized from the viewport height so the whole lab fits
-  // the first screen. Phones: controls, lattice, convergence line; formulation and matrix behind a toggle.
+  // The square lattice, its top level with the headline's cap height, and beside it the four targets as a ruled list
+  // ending level with the lattice's bottom. A target runs live; the chosen one is set bold and carries what a click does
+  // next. The numbers live in the unit-cell designer. The lattice is
+  // sized from the viewport height so the hero fits the first screen; side by side (xl) it takes the height left by the
+  // hero's padding, or 62 % of the page width less the column, whichever is smaller. Phones: targets above the lattice.
   return (
-    <figure ref={boxRef} className="w-full min-w-0 md:grid md:w-max md:grid-cols-[clamp(21rem,min(calc(100svh-10rem),calc(100vw-22rem)),32rem)_13rem] md:grid-rows-[auto_auto_auto_auto] md:gap-x-7 md:gap-y-5">
-      <div className="mb-4 flex items-center justify-between gap-2 md:col-start-2 md:row-start-4 md:mb-0 md:flex-col md:items-start md:justify-start md:gap-3 md:self-end">
-        <div className="flex min-w-0 flex-1 rounded-[2px] border border-ink md:w-full md:flex-none" role="group" aria-label="Optimization target">
-          {TARGETS.map((x, i) => (
-            <button
-              key={x.id}
-              type="button"
-              aria-pressed={target === x.id}
-              onClick={() => select(x.id)}
-              className={`t-data h-11 min-w-0 flex-1 px-1 transition-colors duration-150 md:h-8 md:[@media(pointer:coarse)]:h-11 md:px-1 md:text-[0.875rem] ${i ? "border-l border-rule" : ""} ${
-                target === x.id ? "bg-ink font-[600] text-canvas" : "text-ink-2 hover:bg-[#EEF0EE] hover:text-ink"
-              }`}
-            >
+    <figure ref={boxRef} className="w-full min-w-0 md:grid md:w-max md:grid-cols-[clamp(21rem,min(calc(100svh-10rem),calc(100vw-18.5rem)),32rem)_9.5rem] md:gap-x-7 xl:grid-cols-[clamp(21rem,min(calc(100svh-13rem),calc((min(96rem,100vw)-3rem)*0.62-11.25rem)),52rem)_9.5rem]">
+      <div role="group" aria-label="Optimization target"
+        className="mb-4 flex rounded-[2px] border border-ink md:col-start-2 md:row-start-1 md:mb-0 md:flex-col md:self-end md:rounded-none md:border-0 md:border-t md:border-rule">
+        {TARGETS.map((x, i) => {
+          const on = target === x.id;
+          return (
+            <button key={x.id} type="button" aria-pressed={on} onClick={() => press(x.id)}
+              className={`t-data flex h-11 min-w-0 flex-1 items-center justify-center gap-1.5 px-1 transition-colors duration-150 md:flex-none md:justify-start md:gap-2.5 md:border-b md:border-rule md:px-0 md:text-[1.0625rem] ${i ? "border-l border-rule md:border-l-0" : ""} ${
+                on ? "font-[650] text-ink" : "text-ink-2 hover:bg-[#EEF0EE] hover:text-ink md:hover:bg-transparent"
+              }`}>
               {x.label}
+              {on && supported && (
+                <>
+                  <svg viewBox="0 0 16 16" aria-hidden="true" className="h-3.5 w-3.5 shrink-0 md:ml-auto md:text-ink-2" fill="none" stroke="currentColor" strokeWidth="1.6">{next.icon}</svg>
+                  <span className="sr-only">, {next.text}</span>
+                </>
+              )}
             </button>
-          ))}
-        </div>
-        {supported && (
-          <button type="button" onClick={toggle} className="t-data inline-flex h-11 w-11 shrink-0 items-center justify-center gap-2 rounded-[2px] border border-ink bg-ink text-canvas transition-colors duration-150 hover:bg-ink-2 md:h-12 md:w-full md:text-[1.0625rem] md:font-[600]">
-            <svg viewBox="0 0 16 16" aria-hidden="true" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.6">{run.icon}</svg>
-            <span className="max-md:sr-only">{run.text}</span>
-          </button>
-        )}
+          );
+        })}
       </div>
-      <canvas ref={canvasRef} role="img" aria-label={label} className="block aspect-square w-full md:col-start-1 md:row-span-4 md:row-start-1" />
-
-      <div className="mt-5 flex min-w-0 flex-col gap-4 border-t border-rule pt-4 md:contents">
-        <div id={detailsId} className={`flex flex-col gap-5 max-md:order-3 md:contents ${details ? "" : "max-md:hidden"}`}>
-          <div className="min-w-0 md:col-start-2 md:row-start-1 md:border-t md:border-rule md:pt-3">
-            <p className="t-small mb-1.5 text-ink-2">Objective</p>
-            <div className="math sm flex flex-col gap-1 overflow-x-auto overflow-y-hidden">
-              <div dangerouslySetInnerHTML={{ __html: goalMath(target) }} />
-              <div dangerouslySetInnerHTML={{ __html: subjectMath() }} />
-            </div>
-          </div>
-          <div className="min-w-0 md:col-start-2 md:row-start-2">
-            <p className="t-small mb-0.5 text-ink-2">Homogenized stiffness</p>
-            <div className="math sm overflow-x-auto overflow-y-hidden" dangerouslySetInnerHTML={{ __html: tensorMath(r.C, T.active) }} />
-          </div>
-        </div>
-        <div className="min-w-0 max-md:order-1 md:col-start-2 md:row-start-3">
-          <p className="t-small mb-1.5 text-ink-2">Convergence</p>
-          <div className="math sm" dangerouslySetInnerHTML={{ __html: quantity(T.track, r) }} />
-          <div className="mt-2 flex"><Trace data={r.hist} reference={reference} live={live} /></div>
-          <p className="t-small mt-1 flex flex-wrap gap-x-3 text-ink-2" aria-hidden="true">
-            <span>{progress}</span>
-            {r.seed !== undefined && <span>Seed {r.seed}</span>}
-          </p>
-          <p className="sr-only" role="status" aria-live="polite">{mode === "running" ? "Computing in your browser" : status}</p>
-        </div>
-        <button
-          type="button"
-          aria-expanded={details}
-          aria-controls={detailsId}
-          onClick={() => setDetails((v) => !v)}
-          className="t-data link min-h-[44px] self-start text-ink max-md:order-2 md:hidden"
-        >
-          {details ? "Hide technical details" : "Show technical details"}
-        </button>
-      </div>
+      <canvas ref={canvasRef} role="img" aria-label={label} className="block aspect-square w-full md:col-start-1 md:row-start-1" />
+      <p className="sr-only" role="status" aria-live="polite">{status}</p>
     </figure>
   );
 };

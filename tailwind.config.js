@@ -16,7 +16,7 @@ module.exports = {
       fontFamily: {
         sans: ['"Archivo Variable"', "Archivo", "system-ui", "sans-serif"],
       },
-      maxWidth: { page: "85rem" },   // 1360 px at the base size, wider with the root size on large screens
+      maxWidth: { page: "96rem" },   // 1536 px at the base size, wider with the root size on large screens
       animation: {
         "fade-in-down": "fade-in-down 0.5s ease-out",
         featured: "featured 4.5s linear both",   // the featured tools' progress bar; ToolsIndex sets the duration

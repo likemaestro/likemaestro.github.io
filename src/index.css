@@ -20,6 +20,7 @@
     line-height: 1.6;
   }
   [id] { scroll-margin-top: 1.5rem; }
+  a, button, input, select, textarea, label { touch-action: manipulation; }
   :focus-visible {
     outline: 2px solid theme("colors.ink");
     outline-offset: 3px;

@@ -45,11 +45,14 @@ const Home: React.FC = () => {
       <SiteHeader />
 
       <main id="main">
-        <Wrap className="grid gap-y-12 pb-16 pt-10 md:pt-12 lg:pb-20 xl:grid-cols-[minmax(0,1fr)_auto] xl:gap-x-16">
-          <div className="min-w-0">
-            {/* Side by side, the cap height (not the line box) starts level with the lattice: Archivo sits 0.134em lower. */}
-            <h1 className="t-display max-w-[22ch] xl:mt-[-0.134em]">I develop AI and computational methods for structural engineering and sustainable construction.</h1>
-            <p className="mt-6 max-w-[46ch] text-ink-2">
+        {/* Side by side, the hero fills the first screen (less the 4.375rem header) with its content centred in it. */}
+        <Wrap className="grid gap-y-12 pb-16 pt-10 md:pt-12 lg:pb-20 xl:min-h-[calc(100svh-4.375rem)] xl:grid-cols-[minmax(0,1fr)_auto] xl:content-center xl:gap-x-16 xl:py-10">
+          <div className="min-w-0 [container-type:inline-size]">
+            {/* Side by side, the cap height (not the line box) starts level with the lattice: Archivo sits 0.134em lower.
+                The size follows the column, so "computational", the longest word, just fits, and the window height, so
+                seven lines and the sub-line stay within the lattice's height. */}
+            <h1 className="t-display max-w-[22ch] xl:mt-[-0.134em] xl:text-[clamp(2.5rem,min(12.4cqi,calc((100svh-20rem)/7)),6rem)]">I develop AI and computational methods for structural engineering and sustainable construction.</h1>
+            <p className="mt-6 max-w-[46ch] text-ink-2 xl:text-[1.1875rem]">
               PhD candidate at Politecnico di Milano. My work spans optimization methods, BIM-integrated workflows and computational tools for steel fabrication.
             </p>
           </div>
