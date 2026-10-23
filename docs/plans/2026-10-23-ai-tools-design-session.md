@@ -288,6 +288,43 @@ section 5.
 - Arbitrary nodal loads.
 - A stiffness factor per member.
 
+## 9. Round 6: something other than the truss (2026-10-23)
+
+Murat: think of something other than the truss. The GA keeps the truss, and the GP and the autoencoder each get their
+own structure, so the tools show range.
+
+**Panel:**
+- **Footbridge vibration specialist:** "Everyone has felt a bouncy footbridge. Resonance makes the GP's job hard in an
+  honest way" (Živanović et al. 2005; the Millennium Bridge, Dallard et al. 2001).
+- **Steel construction engineer:** "Every engineer knows the IPE and HEB tables. A map of all of them reads at once."
+- **Building energy researcher:** "Daily load curves are the classic autoencoder case in buildings" (Fan et al. 2018).
+- **Site engineer:** "Concrete strength from a few cube tests is GP regression with noise, and the lower band says when
+  to strip the formwork."
+- **Hiring PI:** "Different structures across tools show range; the same methods underneath show depth."
+
+### GP surrogate, options
+
+| Option | Input → output | Model ("expensive") | Why it teaches |
+|---|---|---|---|
+| **A. Bouncy footbridge** (recommended) | span → peak deck acceleration from one walker; later span × damping | First vertical mode of a simply supported deck; a moving walker with harmonic force; modal time integration | Resonance peaks where the frequency meets walking pace: with too few runs the GP misses them. "A surrogate is only as good as its runs." Links to the vibrometer and to FFT |
+| B. Fire protection for a steel beam | section factor × board thickness → minutes to critical temperature | EN 1993-1-2 protected-member heating under ISO 834 | Steel; a smooth 2-D surface; a practical question |
+| C. When to strip the formwork | age × curing temperature → concrete strength, from noisy cube tests | EN 1992-1-1 strength development with temperature-adjusted age | Noise is real, and the lower band drives a decision (GPR for early-age strength: Ly et al. 2022) |
+
+### Autoencoder, options
+
+| Option | Data → latent | Unusual = | Why it teaches |
+|---|---|---|---|
+| **A. Map of European steel sections** (recommended) | IPE, HEA, HEB, HEM: h, b, tw, tf, A, Iy, Iz, Wpl → 2 numbers | a catalog or BIM row with an inconsistent value; the residual bars name the property | The latent plane shows the families as curves, by size and shape. The original and reconstructed sections are drawn on top of each other. Steel, and data quality in BIM |
+| B. A building's daily energy curve | 24 hourly values → 2 numbers | a weekend with the cooling left on, a fault | The reconstructed curve sits on the original; the latent plane separates weekdays, weekends and seasons. Built environment (Fan et al. 2018) |
+| C. Your desk's spectrum (stretch) | vibrometer spectra → 2 numbers | a book on the desk | Live and physical; may be unreliable with phone sensors |
+
+**Data note for A:**
+- Section dimensions come from a free manufacturer catalog (EN 10365 itself is sold).
+- The section properties are computed by our own code from h, b, tw, tf and r.
+
+**Honest note for A:** sections of one family scale by power laws, so PCA on log properties already does well. Say so;
+it shows the simpler method first.
+
 ## References
 
 Checked by web search, 2026-10-23, unless marked.
@@ -302,8 +339,12 @@ Checked by web search, 2026-10-23, unless marked.
 - Dibia. Anomagram: anomaly detection with autoencoders in the browser. anomagram.fastforwardlabs.com;
   github.com/victordibia/anomagram.
 - Gibbons, Orr and Arnold (2025). How to calculate embodied carbon, 3rd ed. IStructE. Free PDF.
+- Dallard, Fitzpatrick, Flint, Le Bourva, Low, Ridsdill Smith and Willford (2001). The London Millennium Footbridge.
+  Struct. Eng. 79(22), 17–33.
 - Echard, Gayton and Lemaire (2011). AK-MCS: an active learning reliability method combining Kriging and Monte Carlo
   simulation. Struct. Saf. 33(2), 145–154. DOI 10.1016/j.strusafe.2011.01.002.
+- Fan, Xiao, Zhao and Wang (2018). Analytical investigation of autoencoder-based methods for unsupervised anomaly
+  detection in building energy data. Appl. Energy 211, 1123–1135. DOI 10.1016/j.apenergy.2017.12.005.
 - Forrester, Sóbester and Keane (2008). Engineering design via surrogate modelling: a practical guide. Wiley.
 - Gardner, Kusner, Xu, Weinberger and Cunningham (2014). Bayesian optimization with inequality constraints. ICML,
   PMLR 32, 937–945.
@@ -319,6 +360,8 @@ Checked by web search, 2026-10-23, unless marked.
   455–492.
 - Kramer (1991). Nonlinear principal component analysis using autoassociative neural networks. AIChE J. 37(2),
   233–243. DOI 10.1002/aic.690370209.
+- Ly et al. (2022). Investigation on factors affecting early strength of high-performance concrete by Gaussian process
+  regression. PLOS ONE.
 - Maes and Lombaert (2020). Monitoring data for railway bridge KW51 in Leuven, Belgium, before, during, and after
   retrofitting. Zenodo, DOI 10.5281/zenodo.3745914, CC BY-NC-SA 4.0. Paper: J. Bridge Eng. 26(3), 2021.
 - McKay, Beckman and Conover (1979). A comparison of three methods for selecting values of input variables in the
@@ -339,3 +382,5 @@ Checked by web search, 2026-10-23, unless marked.
 - Worden, Manson and Fieller (2000). Damage detection using outlier analysis. J. Sound Vib. 229(3), 647–667. (From
   memory; the method is confirmed as standard by secondary sources.)
 - Autoencoders for anomaly detection are unreliable (2025). arXiv 2501.13864.
+- Živanović, Pavić and Reynolds (2005). Vibration serviceability of footbridges under human-induced excitation: a
+  literature review. J. Sound Vib. 279(1–2), 1–74. DOI 10.1016/j.jsv.2004.01.019.
