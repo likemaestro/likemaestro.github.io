@@ -439,6 +439,35 @@ Round 7's 3D ideas were calculators and add-ons. This round looks for 3D where t
 - 5 as the AI piece, since it carries the autoencoder and the FFT work in a form nobody has;
 - 2 if an architecture piece is wanted.
 
+## 12. Round 9: no more topology optimization (2026-10-23)
+
+Murat: the site already has enough topology optimization (the hero, the unit-cell designer, the sketchpad, the
+property map). Round 8's "Grow it" is dropped. Microstructures and the truss are also avoided.
+
+**Council:**
+- **Circular-economy engineer:** "Reuse is where steel's carbon story is going: up to 97 % savings against new steel,
+  in the DISRUPT 2 toolkit's best case. Make the pre-demolition audit playable."
+- **Steel-design educator:** "Lateral-torsional buckling is what students cannot picture. 3D is the honest medium for
+  it."
+- **Game designer:** "Jenga is the oldest structural game. Collapse is the fun, and the order is the puzzle."
+- **ML researcher:** "In the chord idea the AI listens: its decision is visible and audible."
+- **Hiring PI:** "Steel, reuse, carbon and AI together: that is Murat's profile, not anyone else's."
+
+**Concepts:**
+
+| # | Concept | The moment | Ties | Effort |
+|---|---|---|---|---|
+| **1** | **Unbuild it** | A 3D steel building to take apart for reuse. Remove members one by one; in the wrong order the frame collapses (a stiffness check). Reclaimed members go to a stockpile, with the carbon saved against new steel. Option: a GA finds a good order (selective disassembly planning, Sanchez and Haas 2018) | Life cycle, reuse (SCI P427), the metals book, steel, GA | medium |
+| **2** | **The building's chord** (from round 8) | A 3D frame plays its vibration modes as sound; damage a column and the chord changes; an autoencoder flags it | FFT, monitoring, autoencoder, vibrometer | small to medium |
+| 3 | **Why steel beams twist** | Load an IPE or an HEB, move the lateral restraints, and watch it sway and twist in 3D, with Mcr and the EN 1993-1-1 reduction live. LTBeam (CTICM) computes Mcr on the desktop; no 3D web version | Steel design, the course | small to medium |
+| 4 | Scan to model | A synthetic laser scan of an old steel building; clustering and fitting find the columns and beams, a reuse inventory from a scan (Lipman et al. 2010 review) | BIM, AI, reuse; pairs with 1 | medium |
+| 5 | Nervi's floor (from round 8) | Stress-line ribs under a slab | Architecture, Italy | small to medium |
+
+**Recommendation:**
+- 1 as the 3D flagship. It joins the carbon calculator and the reuse story.
+- 2 as the AI piece.
+- 3 if a steel teaching piece is wanted.
+
 ## References
 
 Checked by web search, 2026-10-23, unless marked.
@@ -491,6 +520,8 @@ Checked by web search, 2026-10-23, unless marked.
   50(6), 1175–1196. DOI 10.1007/s00158-014-1107-x.
 - Lorensen and Cline (1987). Marching cubes: a high resolution 3D surface construction algorithm. SIGGRAPH (from
   memory).
+- Lipman, Tang, Huber, Akinci and Lytle (2010). Automatic reconstruction of as-built building information models from
+  laser-scanned point clouds: a review of related techniques. J. Comput. Civ. Eng. (NIST record).
 - Maes and Lombaert (2020). Monitoring data for railway bridge KW51 in Leuven, Belgium, before, during, and after
   retrofitting. Zenodo, DOI 10.5281/zenodo.3745914, CC BY-NC-SA 4.0. Paper: J. Bridge Eng. 26(3), 2021.
 - McKay, Beckman and Conover (1979). A comparison of three methods for selecting values of input variables in the
@@ -501,6 +532,8 @@ Checked by web search, 2026-10-23, unless marked.
   confirmed by the SIMCES project record.)
 - three.js manual: Rendering on demand. threejs.org/manual/en/rendering-on-demand.
 - Rasmussen and Williams (2006). Gaussian processes for machine learning. MIT Press. gaussianprocess.org/gpml.
+- Sanchez and Haas (2018). A novel selective disassembly sequence planning method for adaptive reuse of buildings.
+  J. Clean. Prod. 183, 998–1010. DOI 10.1016/j.jclepro.2018.02.201.
 - Smilkov, Carter, Sculley, Viégas and Wattenberg (2017). Direct-manipulation visualization of deep networks.
   arXiv 1708.03788.
 - Robati, Daly and Kokogiannakis (2019). Uncertainty analysis of whole-life embodied carbon of building materials,
