@@ -84,7 +84,8 @@ export function elementMatrices(nu: number, h: number) {
 
 // ---------- setup ----------
 export function createProblem(opts: Options): Problem {
-  const o = { ...DEFAULTS, ...opts } as Problem["o"];
+  // Options left undefined keep their defaults.
+  const o = { ...DEFAULTS, ...Object.fromEntries(Object.entries(opts).filter(([, v]) => v !== undefined)) } as Problem["o"];
   const n = o.n, nel = n * n, h = 1 / n;
   const { ke, chi0, fe } = elementMatrices(o.nu, h);
 

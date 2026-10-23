@@ -40,8 +40,10 @@
     "eject": "react-scripts eject",
     "predeploy": "npm run build",
     "deploy": "gh-pages -d build",
-    "postbuild": "node -e \"require('fs').copyFileSync('build/index.html','build/404.html')\"",
-    "precompute": "node scripts/precompute-cells.js"
+    "postbuild": "node scripts/postbuild.js",
+    "images": "node scripts/make-images.js",
+    "precompute": "node scripts/precompute-cells.js",
+    "precompute-map": "node scripts/precompute-map.js"
   },
   "eslintConfig": {
     "extends": [

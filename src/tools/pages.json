@@ -1,0 +1,50 @@
+{
+  "site": "https://likemaestro.github.io",
+  "pages": [
+    {
+      "path": "/tools",
+      "title": "Tools",
+      "line": "Tools from my research, and a few others. They run in your browser; nothing you draw, measure or upload leaves your device."
+    },
+    {
+      "path": "/tools/unit-cell",
+      "title": "Unit-cell designer",
+      "line": "Design a periodic microstructure for a target stiffness, then export it for cutting or printing.",
+      "group": "Microstructures",
+      "featured": true
+    },
+    {
+      "path": "/tools/sketchpad",
+      "title": "Cell sketchpad",
+      "line": "Draw a unit cell and see its stiffness and Poisson’s ratio at once. Can you draw an auxetic?",
+      "group": "Microstructures"
+    },
+    {
+      "path": "/tools/property-map",
+      "title": "Property map",
+      "line": "Hundreds of optimized unit cells on one chart of stiffness against Poisson’s ratio. Pick one to see it.",
+      "group": "Microstructures"
+    },
+    {
+      "path": "/tools/vibrometer",
+      "title": "Phone vibrometer",
+      "line": "Lay your phone on a desk, a floor or a footbridge and read its natural frequency.",
+      "group": "Monitoring"
+    },
+    {
+      "path": "/tools/WorldMap",
+      "title": "World map generator",
+      "line": "Editorial world maps with your own colours, projection and highlighted countries.",
+      "group": "Other tools"
+    },
+    {
+      "path": "/tools/gauge-tool",
+      "title": "Gauge",
+      "line": "A gauge that shows a value on a colour scale.",
+      "group": "Other tools"
+    }
+  ],
+  "aliases": [
+    "/publications"
+  ]
+}
