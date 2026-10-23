@@ -157,14 +157,14 @@ const LiveCell: React.FC = () => {
     mode === "running" ? "Computing in your browser"
       : mode === "paused" ? `Paused at iteration ${r.iter}`
         : mode === "converged" ? `Converged at iteration ${r.iter}, computed in your browser`
-          : `Precomputed result, converged at iteration ${r.iter}`;
+          : `Converged at iteration ${r.iter}`;
   const label = `5 by 5 tiling of a unit cell optimized for ${T.aria}. ${mode === "running" ? `Iteration ${r.iter}.` : status + "."}`;
 
   const progress =
     mode === "running" ? `Iteration ${r.iter}`
       : mode === "paused" ? `Paused at iteration ${r.iter}`
         : mode === "converged" ? `Converged at iteration ${r.iter}`
-          : `Precomputed, iteration ${r.iter}`;
+          : `Converged at iteration ${r.iter}`;
   const reference = target === "auxetic" ? 0 : target === "bulk" ? kappaHS(r.vol) : undefined;
 
   const run = mode === "running" ? { icon: ICON.pause, text: "Pause" }
@@ -172,20 +172,20 @@ const LiveCell: React.FC = () => {
       : mode === "converged" ? { icon: ICON.again, text: "Run again" }
         : { icon: ICON.play, text: "Run live" };
 
-  // Controls across the top, then the square lattice with the readout as a column to its right. The lattice is sized
-  // from the viewport height so the whole lab fits the first screen. Phones: controls, lattice, convergence line;
-  // formulation and matrix behind a toggle.
+  // The square lattice, its top level with the headline's cap height, and to its right a column: objective, matrix,
+  // convergence, then the target and run buttons. The lattice is sized from the viewport height so the whole lab fits
+  // the first screen. Phones: controls, lattice, convergence line; formulation and matrix behind a toggle.
   return (
-    <figure ref={boxRef} className="w-full min-w-0 md:grid md:w-max md:grid-cols-[clamp(21rem,min(calc(100svh-12.75rem),calc(100vw-22rem)),32rem)_13rem] md:gap-x-7">
-      <div className="mb-4 flex items-center justify-between gap-2 md:col-span-2 md:mb-3 md:gap-3">
-        <div className="flex min-w-0 flex-1 rounded-[2px] border border-ink md:flex-none" role="group" aria-label="Optimization target">
+    <figure ref={boxRef} className="w-full min-w-0 md:grid md:w-max md:grid-cols-[clamp(21rem,min(calc(100svh-10rem),calc(100vw-22rem)),32rem)_13rem] md:grid-rows-[auto_1fr] md:gap-x-7">
+      <div className="mb-4 flex items-center justify-between gap-2 md:col-start-2 md:row-start-2 md:mb-0 md:mt-6 md:flex-col md:items-start md:justify-start md:gap-3">
+        <div className="flex min-w-0 flex-1 rounded-[2px] border border-ink md:w-full md:flex-none" role="group" aria-label="Optimization target">
           {TARGETS.map((x, i) => (
             <button
               key={x.id}
               type="button"
               aria-pressed={target === x.id}
               onClick={() => select(x.id)}
-              className={`t-data h-11 min-w-0 flex-1 px-1 transition-colors duration-150 md:h-8 md:[@media(pointer:coarse)]:h-11 md:flex-none md:px-2.5 md:text-[0.875rem] ${i ? "border-l border-rule" : ""} ${
+              className={`t-data h-11 min-w-0 flex-1 px-1 transition-colors duration-150 md:h-8 md:[@media(pointer:coarse)]:h-11 md:px-1 md:text-[0.875rem] ${i ? "border-l border-rule" : ""} ${
                 target === x.id ? "bg-ink font-[600] text-canvas" : "text-ink-2 hover:bg-[#EEF0EE] hover:text-ink"
               }`}
             >
@@ -194,15 +194,15 @@ const LiveCell: React.FC = () => {
           ))}
         </div>
         {supported && (
-          <button type="button" onClick={toggle} className="t-data inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-[2px] border border-ink transition-colors duration-150 hover:bg-[#EEF0EE] md:h-8 md:[@media(pointer:coarse)]:h-11 md:w-auto md:gap-1.5 md:pl-2 md:pr-2.5 md:text-[0.875rem]">
-            <svg viewBox="0 0 16 16" aria-hidden="true" className="h-4 w-4 md:h-3.5 md:w-3.5" fill="none" stroke="currentColor" strokeWidth="1.6">{run.icon}</svg>
+          <button type="button" onClick={toggle} className="t-data inline-flex h-11 w-11 shrink-0 items-center justify-center gap-2 rounded-[2px] border border-ink bg-ink text-canvas transition-colors duration-150 hover:bg-ink-2 md:h-12 md:w-full md:text-[1.0625rem] md:font-[600]">
+            <svg viewBox="0 0 16 16" aria-hidden="true" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.6">{run.icon}</svg>
             <span className="max-md:sr-only">{run.text}</span>
           </button>
         )}
       </div>
-      <canvas ref={canvasRef} role="img" aria-label={label} className="block aspect-square w-full" />
+      <canvas ref={canvasRef} role="img" aria-label={label} className="block aspect-square w-full md:col-start-1 md:row-span-2 md:row-start-1" />
 
-      <div className="mt-5 flex min-w-0 flex-col gap-4 border-t border-rule pt-4 md:mt-0 md:gap-6 md:pt-3">
+      <div className="mt-5 flex min-w-0 flex-col gap-4 border-t border-rule pt-4 md:col-start-2 md:row-start-1 md:mt-0 md:gap-6 md:pt-3">
         <div id={detailsId} className={`flex flex-col gap-5 max-md:order-3 md:contents ${details ? "" : "max-md:hidden"}`}>
           <div className="min-w-0">
             <p className="t-small mb-1.5 text-ink-2">Objective</p>
