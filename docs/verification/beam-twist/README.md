@@ -13,7 +13,7 @@ Spec: the reviewed `tool-beam-twist.md` and `shared-foundations.md`, with the de
 | Browser-tested | Yes: headless Chromium 1243 (SwiftShader WebGL), production build, at 375 × 812, 1280 × 800 and 1700 × 950 |
 | Accessibility-tested | Partly: axe-core 4.10.3 (WCAG 2 A/AA) and keyboard path checked; no screen-reader session |
 | Ready for owner review | Yes |
-| Ready to publish | No: needs Murat's review and approval to deploy; optionally one LTBeam run with an intermediate restraint |
+| Ready to publish | Published on 24 October 2026 at Murat's go-ahead. Open: optionally one LTBeam run with an intermediate restraint |
 
 ## Commands and observed results
 

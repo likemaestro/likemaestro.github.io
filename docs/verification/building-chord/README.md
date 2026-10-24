@@ -14,7 +14,7 @@ Date: 24 October 2026. Code: `src/tools/building-chord/`, `src/tools/ml/mlp.ts`,
 | Browser-tested | Yes: headless Chromium 153 (SwiftShader WebGL), production build, at 375 × 812, 1280 × 800 and 1700 × 950 |
 | Accessibility-tested | Partly: axe-core 4.10.3 (WCAG 2 A/AA), keyboard-operable controls, live verdicts; no screen-reader session |
 | Ready for owner review | Yes |
-| Ready to publish | No: needs Murat's review, approval of the copy (the EWSHM credit line) and of the group ("Machine learning" or "Monitoring") |
+| Ready to publish | Published on 24 October 2026 at Murat's go-ahead. Open: the copy (the EWSHM credit line) and the group ("Machine learning" or "Monitoring") |
 
 ## Commands and observed results
 

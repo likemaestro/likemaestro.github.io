@@ -14,7 +14,7 @@ Date: 24 October 2026. Code: `src/tools/embodied-carbon/`, `src/tools/carbon/` (
 | Browser-tested | Yes: headless Chromium 153, production build, at 375 × 812 (touch) and 1280 × 900 |
 | Accessibility-tested | Partly: axe-core 4.10.3 (WCAG 2 A/AA), labelled controls, focus moves checked; no screen-reader session |
 | Ready for owner review | Yes |
-| Ready to publish | No: Murat to approve the datasets (table below), the 3rd-edition question, the copy (the "About this tool" paragraph) and the new group "Life cycle" |
+| Ready to publish | Published on 24 October 2026 at Murat's go-ahead; the datasets (table below) approved. Open: the 3rd-edition question, the copy (the "About this tool" paragraph) and the new group "Life cycle" |
 
 ## Commands and observed results
 

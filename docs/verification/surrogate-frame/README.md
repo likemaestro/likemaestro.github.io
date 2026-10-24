@@ -14,7 +14,7 @@ in `src/tools/truss-sizing/ga.ts`, `src/tools/three/hatch.ts`. Spec: the reviewe
 | Browser-tested | Yes: headless Chromium 1243 (SwiftShader WebGL), production build, at 375 × 812, 1280 × 800 and 1700 × 950 |
 | Accessibility-tested | Partly: axe-core 4.10.3 (WCAG 2 A/AA), keyboard-operable controls; no screen-reader session |
 | Ready for owner review | Yes |
-| Ready to publish | No: needs Murat's review, the commercial-program hand check, approval of the copy (the credit line) and of the group order |
+| Ready to publish | Published on 24 October 2026 at Murat's go-ahead. Open: the commercial-program hand check, the copy (the credit line) and the group order |
 
 ## Commands and observed results
 
