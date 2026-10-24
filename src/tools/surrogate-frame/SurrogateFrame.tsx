@@ -246,12 +246,12 @@ const SurrogateFrame: React.FC = () => {
 
   const legend = (
     <>
-      <div className="t-small pointer-events-none flex flex-col gap-1 bg-canvas/90 p-2 text-ink-2 sm:absolute sm:left-0 sm:top-0 max-sm:mt-2 max-sm:p-0">
+      <div className="t-small mt-2 flex flex-wrap gap-x-4 gap-y-1 text-ink-2">
         <span className="flex items-center gap-2">Utilization 0 <span className="inline-block h-2 w-14" style={{ background: "linear-gradient(90deg, #819199, #172027)" }} /> 1</span>
         <span className="flex items-center gap-2"><span className="inline-block h-3 w-5 border border-ink" style={{ background: "repeating-linear-gradient(135deg, #819199 0 3px, #172027 3px 5px)" }} /> Unsure: the band crosses 1</span>
         <span className="flex items-center gap-2"><span className="inline-block h-3 w-5 border border-ink" style={{ background: "repeating-linear-gradient(135deg, #172027 0 3px, #CBD2D5 3px 5px)" }} /> Over 1</span>
       </div>
-      <span className="t-small pointer-events-none block text-ink-2 sm:absolute sm:bottom-1 sm:left-0">Wind on the long face, qp {p.qp.toFixed(2)} kN/m²</span>
+      <span className="t-small mt-1 block text-ink-2">Wind on the long face, qp {p.qp.toFixed(2)} kN/m²</span>
     </>
   );
 
@@ -365,9 +365,8 @@ const SurrogateFrame: React.FC = () => {
                         windForces={windForces} picked={picked} onPick={setPicked} label={label} />
                     </Suspense>
                   : <No3D><Elevation grey={greyCss} hatch={(g) => groups[g].state !== "ok"} /></No3D>}
-                <div className="max-sm:hidden">{legend}</div>
               </div>
-              <div className="sm:hidden">{legend}</div>
+              {legend}
               <p className="t-small mt-2 text-ink">{caption}</p>
               {fe && <label className="t-small mt-1 flex items-center gap-2 text-ink-2">
                 <input type="checkbox" checked={deformed} onChange={(e) => setDeformed(e.target.checked)} className="accent-ink" />
