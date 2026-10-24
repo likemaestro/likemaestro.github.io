@@ -2,18 +2,11 @@
 // non-dominated sorting, crowding distance, binary tournaments, SBX crossover and polynomial mutation rounded to
 // integers, duplicate children retried. Plus an exact hypervolume for three objectives.
 
-export type Rng = () => number;
-
-/** Small seeded generator (mulberry32), so a link reproduces a run. */
-export const mulberry32 = (seed: number): Rng => () => {
-  seed = (seed + 0x6d2b79f5) | 0;
-  let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
-  t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
-  return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-};
+import { mulberry32, type Rng } from "../rng";
+export { mulberry32, type Rng };
 
 export interface Ind { x: number[]; f: number[]; cv: number; rank: number; crowd: number }
-export interface Problem { n: number; ub: number; evaluate: (x: number[]) => { f: number[]; cv: number } }
+export interface Problem { n: number; ub: number | number[]; evaluate: (x: number[]) => { f: number[]; cv: number } }   // ub: one for all variables, or one each
 export interface Opts { pop: number; pc: number; mut: number; etaC: number; etaM: number; seed: number; initial?: number[][] }
 
 /** a constrained-dominates b: a feasible design beats an infeasible one, the smaller violation wins between infeasible
@@ -80,9 +73,10 @@ function polyMut(y: number, lo: number, hi: number, eta: number, rnd: Rng) {
   return clamp(y + dq * (hi - lo), lo, hi);
 }
 
-/** A stepwise NSGA-II run. Integer variables 0..ub are crossed and mutated as reals, then rounded. */
+/** A stepwise NSGA-II run. Integer variables 0..ub are crossed and mutated as reals, then rounded. One objective works too. */
 export function createNSGA2(prob: Problem, o: Opts) {
   const rnd = mulberry32(o.seed), N = o.pop, pm = Math.min(1, o.mut / prob.n);
+  const ub = (i: number) => (typeof prob.ub === "number" ? prob.ub : prob.ub[i]);
   const make = (x: number[]): Ind => { const e = prob.evaluate(x); return { x, f: e.f, cv: e.cv, rank: 0, crowd: 0 }; };
   const key = (x: number[]) => x.join(",");
   const rank = (P: Ind[]) => { const F = sortFronts(P); F.forEach(crowding); return F; };
@@ -91,7 +85,7 @@ export function createNSGA2(prob: Problem, o: Opts) {
   let pop: Ind[] = (o.initial ?? []).slice(0, N).map(make);
   const seen = new Set<string>(pop.map((i) => key(i.x)));
   for (let tries = 0; pop.length < N && tries < 50 * N; tries++) {
-    const x = Array.from({ length: prob.n }, () => Math.floor(rnd() * (prob.ub + 1)));
+    const x = Array.from({ length: prob.n }, (_, i) => Math.floor(rnd() * (ub(i) + 1)));
     if (!seen.has(key(x)) || tries >= 20 * N) { seen.add(key(x)); pop.push(make(x)); }
   }
   rank(pop);
@@ -106,9 +100,9 @@ export function createNSGA2(prob: Problem, o: Opts) {
       const p1 = pick(), p2 = pick();
       for (let attempt = 0; ; attempt++) {
         const c1 = p1.x.slice(), c2 = p2.x.slice();
-        if (rnd() < o.pc) for (let i = 0; i < prob.n; i++) if (rnd() < 0.5) [c1[i], c2[i]] = sbx(c1[i], c2[i], 0, prob.ub, o.etaC, rnd);
+        if (rnd() < o.pc) for (let i = 0; i < prob.n; i++) if (rnd() < 0.5) [c1[i], c2[i]] = sbx(c1[i], c2[i], 0, ub(i), o.etaC, rnd);
         for (const c of [c1, c2]) for (let i = 0; i < prob.n; i++) {
-          if (rnd() < pm) c[i] = polyMut(c[i], 0, prob.ub, o.etaM, rnd);
+          if (rnd() < pm) c[i] = polyMut(c[i], 0, ub(i), o.etaM, rnd);
           c[i] = Math.round(c[i]);
         }
         const fresh = [c1, c2].filter((c) => !have.has(key(c)));

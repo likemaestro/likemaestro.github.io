@@ -11,6 +11,7 @@ export interface Section {
   id: string; name: string; series: Series;
   h: number; b: number; tw: number; tf: number; r: number;   // depth, width, web, flange, root radius
   A: number; Iy: number; Iz: number; Wel: number; Wpl: number; It: number; Iw: number; mass: number;
+  Wplz: number; Avz: number;   // plastic modulus about z-z; shear area for loads parallel to the web
 }
 
 // [size, h, b, tw, tf, r] in mm
@@ -52,12 +53,14 @@ export function iSection(h: number, b: number, tw: number, tf: number, r: number
   const Iy = (b * h ** 3 - (b - tw) * hw ** 3) / 12 + 4 * (Ic + a * zf * zf);
   const Iz = (2 * tf * b ** 3 + hw * tw ** 3) / 12 + 4 * (Ic + a * yf * yf);
   const Wpl = 2 * (b * tf * (h - tf) / 2 + (tw * hw * hw) / 8 + 2 * a * zf);
+  const Wplz = (tf * b * b) / 2 + (hw * tw * tw) / 4 + 4 * a * yf;
+  const Avz = Math.max(A - 2 * b * tf + (tw + 2 * r) * tf, hw * tw);   // EN 1993-1-1, 6.2.6(3)a, η = 1
   // Saint-Venant torsion: thin rectangles plus a fillet term of the Roark type, in the coefficient form that reproduces
   // the catalog's It (within 0.33 % for all 56 sections); warping: Iw = Iz (h − tf)² / 4 (SCI P385)
   const D = ((r + tw / 2) ** 2 + (r + tf) ** 2 - r * r) / (2 * r + tf);
   const It = (2 / 3) * (b - 0.63 * tf) * tf ** 3 + (hw * tw ** 3) / 3 + 2 * (tw / tf) * (0.145 + (0.1 * r) / tf) * D ** 4;
   const Iw = (Iz * (h - tf) ** 2) / 4;
-  return { A, Iy, Iz, Wel: Iy / (h / 2), Wpl, It, Iw, mass: A * RHO * 1000 };
+  return { A, Iy, Iz, Wel: Iy / (h / 2), Wpl, Wplz, Avz, It, Iw, mass: A * RHO * 1000 };
 }
 
 export const SECTIONS: Section[] = (Object.keys(DIMS) as Series[]).flatMap((series) =>

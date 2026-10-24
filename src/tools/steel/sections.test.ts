@@ -18,6 +18,15 @@ test("computed properties agree with the catalog within its rounding", () => {
   }
 });
 
+test("weak-axis plastic modulus and shear area agree with the catalog", () => {
+  // catalog Wpl,z (cm³) and Av,z (cm²)
+  for (const [id, wz, av] of [["HEB200", 305.8, 24.83], ["HEB300", 870.1, 47.43], ["HEB500", 1292, 89.82], ["IPE270", 0, 22.1], ["IPE400", 0, 42.7], ["IPE600", 0, 83.8]] as const) {
+    const s = section(id)!;
+    if (wz) expect(Math.abs(s.Wplz / 1e3 / wz - 1)).toBeLessThan(0.005);
+    expect(Math.abs(s.Avz / 1e2 / av - 1)).toBeLessThan(0.005);
+  }
+});
+
 test("without fillets the section reduces to thin-rectangle formulas", () => {
   const h = 300, b = 150, tw = 7.1, tf = 10.7, hw = h - 2 * tf, q = iSection(h, b, tw, tf, 0);
   expect(q.A).toBeCloseTo(2 * b * tf + hw * tw, 9);
