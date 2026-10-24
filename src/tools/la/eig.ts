@@ -188,3 +188,31 @@ export function bucklingEig(Ke: Float64Array, Kg: Float64Array, n: number) {
   const r = kx.map((t, i) => t - lambda * gx[i]);
   return { lambda, x, residual: norm(r) / (norm(kx) + lambda * norm(gx)), steps: k };
 }
+
+/**
+ * K φ = ω² M φ for symmetric K and symmetric positive definite M: M = L Lᵀ, C = L⁻¹ K L⁻ᵀ, φ = L⁻ᵀ u. Values ascending;
+ * vectors (columns of a row-major matrix) are mass-normalized, φᵀ M φ = 1.
+ */
+export function generalizedEig(K: Float64Array, M: Float64Array, n: number) {
+  const L = cholesky(M, n), C = new Float64Array(n * n), col = new Float64Array(n);
+  for (let j = 0; j < n; j++) {   // W = L⁻¹ K by columns, then C = L⁻¹ Wᵀ
+    for (let i = 0; i < n; i++) col[i] = K[i * n + j];
+    forward(L, col, n);
+    for (let i = 0; i < n; i++) C[i * n + j] = col[i];
+  }
+  const W = Float64Array.from(C);
+  for (let j = 0; j < n; j++) {
+    for (let i = 0; i < n; i++) col[i] = W[j * n + i];
+    forward(L, col, n);
+    for (let i = 0; i < n; i++) C[i * n + j] = col[i];
+  }
+  for (let i = 0; i < n; i++) for (let j = 0; j < i; j++) C[i * n + j] = C[j * n + i] = 0.5 * (C[i * n + j] + C[j * n + i]);
+  const { values, vectors } = symEig(C, n);
+  const V = new Float64Array(n * n);
+  for (let c = 0; c < n; c++) {
+    for (let i = 0; i < n; i++) col[i] = vectors![i * n + c];
+    backward(L, col, n);
+    for (let i = 0; i < n; i++) V[i * n + c] = col[i];
+  }
+  return { values, vectors: V };
+}

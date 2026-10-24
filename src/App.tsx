@@ -13,6 +13,7 @@ const Vibrometer = lazy(() => import("./tools/vibrometer/Vibrometer"));
 const TrussSizing = lazy(() => import("./tools/truss-sizing/TrussSizing"));
 const BeamTwist = lazy(() => import("./tools/beam-twist/BeamTwist"));
 const SurrogateFrame = lazy(() => import("./tools/surrogate-frame/SurrogateFrame"));
+const BuildingChord = lazy(() => import("./tools/building-chord/BuildingChord"));
 const Decision = lazy(() => import("./tools/decision/Decision"));
 const Gauge = lazy(() => import("./tools/gauge/Gauge"));
 const CUTTIA = lazy(() => import("./components/tools/CUTT-IA/CUTT-IA"));
@@ -43,6 +44,7 @@ const App: React.FC = () => (
       <Route path="/tools/truss-sizing" element={<TrussSizing />} />
       <Route path="/tools/beam-twist" element={<BeamTwist />} />
       <Route path="/tools/surrogate-frame" element={<SurrogateFrame />} />
+      <Route path="/tools/building-chord" element={<BuildingChord />} />
       <Route path="/tools/decision" element={<Decision />} />
       <Route path="/tools/vibrometer" element={<Vibrometer />} />
       <Route path="/tools/world-map" element={<WorldMap />} />

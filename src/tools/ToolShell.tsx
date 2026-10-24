@@ -86,7 +86,7 @@ const ToolShell: React.FC<{
             </section>
             <section id="cite" aria-labelledby="cite-h" className="min-w-0">
               <h2 id="cite-h" className="t-h3">Cite</h2>
-              <pre className="t-small mt-3 overflow-x-auto border border-rule bg-wash p-3 font-mono">{bib}</pre>
+              <pre tabIndex={0} className="t-small mt-3 overflow-x-auto border border-rule bg-wash p-3 font-mono">{bib}</pre>
               <div className="mt-3 flex flex-wrap items-center gap-2">
                 <button type="button" className="btn" onClick={async () => flash((await copy(bib)) ? "Citation copied" : "Select the text to copy it")}>Copy BibTeX</button>
                 <button type="button" className="btn" onClick={async () => flash((await copy(window.location.href)) ? "Link copied, with these settings" : "Copy the address bar instead")}>Copy link</button>

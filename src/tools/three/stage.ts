@@ -9,6 +9,8 @@ export interface Stage {
   /** Calls step(u) with u from 0 to 1 over ms of visible time, rendering each frame, then stops. Returns a cancel. */
   animate(step: (u: number) => void, ms: number): () => void;
   dispose(): void;
+  /** Called after every render, e.g. to place HTML labels over the canvas. */
+  onRender?: () => void;
 }
 
 const COARSE = typeof window !== "undefined" && !!window.matchMedia && window.matchMedia("(pointer: coarse)").matches;
@@ -31,8 +33,9 @@ export function createStage(canvas: HTMLCanvasElement): Stage {
       if (u >= 1) anim = null;
     }
     renderer.render(scene, camera);
+    stage.onRender?.();
     canvas.dataset.frames = String(++frames);   // read by the browser checks: no frames while idle
-    if (anim && visible) frame = requestAnimationFrame(render);
+    if (anim && visible && !frame) frame = requestAnimationFrame(render);   // a step may already have asked for the next frame
   };
   const requestRender = () => { if (!frame && visible) frame = requestAnimationFrame(render); };
 
@@ -58,7 +61,7 @@ export function createStage(canvas: HTMLCanvasElement): Stage {
   document.addEventListener("visibilitychange", onVis);
   resize();
 
-  return {
+  const stage: Stage = {
     renderer, scene, camera, requestRender,
     animate(step, ms) {
       anim = { step, ms, t: 0, last: 0 };
@@ -79,6 +82,7 @@ export function createStage(canvas: HTMLCanvasElement): Stage {
       renderer.dispose();
     },
   };
+  return stage;
 }
 
 /** A hemisphere light and one directional light: a fixed count, so shaders never recompile. No shadows. */
