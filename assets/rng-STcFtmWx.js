@@ -1,0 +1,1 @@
+const o=r=>()=>{r=r+1831565813|0;let t=Math.imul(r^r>>>15,1|r);return t=t+Math.imul(t^t>>>7,61|t)^t,((t^t>>>14)>>>0)/4294967296};function u(r,t){for(let l=t.length-1;l>0;l--){const n=Math.floor(r()*(l+1));[t[l],t[n]]=[t[n],t[l]]}return t}export{o as m,u as s};
