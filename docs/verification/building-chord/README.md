@@ -45,7 +45,9 @@ Default building (6 storeys, moment frame, 15 °C, occupancy 0.3): 0.678, 1.152,
 - K stays with the healthy building: damage moves the notes, it does not retune the chord.
 - In the browser (spied on `AudioBufferSourceNode.start`): no AudioContext before the first gesture. Tap schedules one 4 s
   buffer 0.02 s ahead, peak 0.251. Compare schedules 2 s, 2 s and 3 s buffers 2.3 s and 4.6 s apart (peak 0.252 for the
-  mix at −6 dB each). Mute stops all three; a tap while muted plays nothing and says so.
+  mix at −6 dB each). Mute stops what is playing; a tap while muted plays nothing and says so.
+- The spectrum lights the bars that are playing (3 while the healthy chord plays, 6 while both play). Mute ends the
+  highlight too: a screenshot showed it still following a muted Compare; fixed, and checked (0 lit bars 5 s after Mute).
 
 ### Monitoring (seed 7, default building; `monitor_report.out.txt`)
 

@@ -107,7 +107,7 @@ const BuildingChord: React.FC = () => {
     animateTap();
     const a = await audio();
     if (!a) { setNoAudio(true); return; }
-    stopAll();
+    silence();
     if (muted) { setMutedNote(true); return; }
     setMutedNote(false);
     a.master.gain.setValueAtTime(vol, a.ctx.currentTime);   // the context may be new: give it the current volume
@@ -118,7 +118,7 @@ const BuildingChord: React.FC = () => {
   const doCompare = async () => {
     const a = await audio();
     if (!a) { setNoAudio(true); return; }
-    stopAll();
+    silence();
     if (muted) { setMutedNote(true); return; }
     setMutedNote(false);
     a.master.gain.setValueAtTime(vol, a.ctx.currentTime);
@@ -130,7 +130,8 @@ const BuildingChord: React.FC = () => {
     play(a.ctx, a.master, mix, t0 + 4.6);
     follow(a.ctx, [[t0, t0 + 2, "healthy"], [t0 + 2.3, t0 + 4.3, "current"], [t0 + 4.6, t0 + 7.6, "both"]]);
   };
-  const toggleMute = () => { setMuted((m) => { if (!m) { stopAll(); setPlaying("none"); } return !m; }); };
+  const silence = () => { stopAll(); cancelAnimationFrame(clock.current); setPlaying("none"); };   // the highlight ends with the sound
+  const toggleMute = () => { if (!muted) silence(); setMuted(!muted); };
   const showOne = (j: number) => {
     if (showMode === j) { setShowMode(null); setMotion(null); return; }
     setShowMode(j);
