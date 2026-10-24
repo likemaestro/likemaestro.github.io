@@ -23,4 +23,6 @@ npm run deploy     # publish build/ to GitHub Pages
 
 `python scripts/reference_homogenize.py` regenerates the NumPy reference fixture.
 
-Content (publications, talks, timeline, links) lives in `src/content/site.ts`. The design spec is in `docs/plans/`.
+Content (publications, talks, timeline, links) lives in `src/content/site.ts`. Articles are MDX in `src/articles/`,
+listed in `src/articles/articles.json` (how to add one: `docs/plans/2026-10-24-articles-design.md`). The design spec is in
+`docs/plans/`.
