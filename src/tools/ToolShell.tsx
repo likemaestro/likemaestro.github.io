@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import SiteHeader, { SiteFooter, Wrap } from "../components/SiteHeader";
+import SiteHeader, { Back, SiteFooter, Wrap } from "../components/SiteHeader";
 import registry from "./pages.json";
 
 export const page = (path: string) => registry.pages.find((p) => p.path === path)!;
@@ -9,17 +9,6 @@ export const groupId = (group: string) => group.toLowerCase().replace(/\s+/g, "-
 const REPO = "https://github.com/likemaestro/likemaestro.github.io/tree/master/src/tools";
 /** Güven & Özdemir (2026), Finite Elements in Analysis and Design 260, 104599: the microstructure tools' related paper. */
 export const MICRO_PAPER = "https://doi.org/10.1016/j.finel.2026.104599";
-
-/** Back to /tools: a square button with a "‹", beside the title. From 1600 px it hangs in the left margin, 1.5rem from
- *  the content; below that it stands in front of the title. It sits centred on the title's first line (1.12 × the t-h2 size). */
-const Back: React.FC = () => (
-  <Link to="/tools" aria-label="Back to Tools"
-    className="btn group mt-[calc((clamp(1.75rem,3vw,2.5rem)*1.12-2.75rem)/2)] h-11 w-11 shrink-0 px-0 min-[1600px]:absolute min-[1600px]:right-full min-[1600px]:top-0 min-[1600px]:mr-6">
-    <svg viewBox="0 0 12 24" aria-hidden="true" className="h-[18px] w-auto transition-transform duration-150 group-hover:-translate-x-[2px] group-focus-visible:-translate-x-[2px] motion-reduce:transform-none" fill="none" stroke="currentColor">
-      <path d="M9 3 3 12l6 9" strokeWidth="1.75" vectorEffect="non-scaling-stroke" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  </Link>
-);
 
 /** Copy text to the clipboard; resolves false where the browser refuses (the caller then shows the text). */
 export async function copy(text: string) {
@@ -63,7 +52,7 @@ const ToolShell: React.FC<{
             <span aria-current="page">{p.title}</span>
           </nav>
           <h1 className="t-h2 relative mt-3 flex items-start gap-3">
-            <Back />
+            <Back to="/tools" label="Back to Tools" />
             <span className="min-w-0">{p.title}</span>
           </h1>
           <p className="mt-2 max-w-[78ch] text-ink-2">{p.line}</p>
