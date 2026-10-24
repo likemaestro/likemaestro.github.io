@@ -2,7 +2,7 @@ import { PairFigure, PriorFigure, PosteriorFigure } from "./figures";
 
 Suppose a finite-element model of a footbridge takes an hour to run, and you have run it five times, for five different spans. Now you need the peak deflection for a sixth span. You could run the model again. Or you could ask what the five runs you already have tell you about the one you haven't run.
 
-A *Gaussian process* is one way to answer that question. For every input you haven't tried, it gives a best guess, plus a band around it that shows how far off the guess could plausibly be. That band is what makes Gaussian processes useful as stand-ins for slow simulations, an idea that goes back at least to Sacks, Welch, Mitchell and Wynn (1989). It also lets you choose where to run the next simulation before you run it.
+A *Gaussian process* is one way to answer that question. For every input you haven't tried, it gives a best guess, plus a band around it that shows how far off the guess could plausibly be. The band makes Gaussian processes useful as stand-ins for slow simulations, an idea that goes back at least to Sacks, Welch, Mitchell and Wynn (1989), and it lets you choose where to run the next simulation before you run it.
 
 This article builds a Gaussian process from two numbers up. You need to know what a bell curve is, and what a mean and a standard deviation are. Everything else is explained on the way. The figures are live, so move their sliders.
 
@@ -10,7 +10,7 @@ Before any math, make a guess. Picture five points on a graph, spread unevenly a
 
 ## Two numbers that move together
 
-Start smaller than a curve, with two uncertain numbers. Take the deflection of a beam at two points, A and B, a short distance apart. You don't know either value exactly, because the load and the stiffness are uncertain. But if the beam deflects more than expected at A, it very likely deflects more than expected at B too. The two values are uncertain, and they move together.
+Start smaller than a curve, with two uncertain numbers. Take the deflection of a beam at two points, A and B, a short distance apart. You don't know either value exactly, because the load and the stiffness are uncertain. But if the beam deflects more than expected at A, it very likely deflects more than expected at B too: the two values move together.
 
 To keep the arithmetic simple, measure each value in standard deviations from its expected value. Before you know anything, each one then has a mean of 0 and a standard deviation of 1. How strongly they move together is their *correlation*, written $\rho$ (rho). A correlation of 0 means knowing one tells you nothing about the other; a correlation of 1 means they are always equal.
 
@@ -23,7 +23,7 @@ $$
 \end{aligned}
 $$
 
-Both halves make sense. The best guess for B moves toward what you measured at A, by a fraction set by the correlation. And the spread shrinks, from 1 to $\sqrt{1-\rho^2}$, which is small only when $\rho$ is close to 1. With $\rho = 0.8$ the spread drops to 0.6; with $\rho = 0.3$ it barely moves, to 0.95.
+The best guess for B moves toward what you measured at A, by a fraction set by the correlation. The spread shrinks from 1 to $\sqrt{1-\rho^2}$, which is small only when $\rho$ is close to 1. With $\rho = 0.8$ the spread drops to 0.6; with $\rho = 0.3$ it barely moves, to 0.95.
 
 <PairFigure>Each dot is one possible pair of values at A and B. The dashed line is the value measured at A; the orange dot on it is the best guess for B, and the thick bar is the range that holds 95% of the possibilities. On the right, what we believe about B before the measurement (dashed) and after it (solid), drawn to the same scale.</PairFigure>
 
@@ -39,7 +39,7 @@ $$
 \rho(d) = \exp\!\left(-\frac{d^2}{2\ell^2}\right).
 $$
 
-The number $\ell$ is the *length scale*: the distance over which values stay strongly related. At a distance of one length scale the correlation is 0.61. At three length scales it is 0.01, and the two values have practically nothing to say about each other. This rule is called the squared exponential kernel, and Rasmussen and Williams (2006, eq. 2.31) use it as their running example. A *kernel*, also called a covariance function, is simply the rule that gives the correlation (more generally, the covariance) for any pair of inputs.
+The number $\ell$ is the *length scale*: the distance over which values stay strongly related. At a distance of one length scale the correlation is 0.61. At three length scales it is 0.01, and the two values have practically nothing to say about each other. This rule is called the squared exponential kernel, and Rasmussen and Williams (2006, eq. 2.31) use it as their running example. A *kernel*, also called a covariance function, is the rule that gives the correlation (more generally, the covariance) for any pair of inputs.
 
 That is enough to draw random curves. Pick 121 inputs between 0 and 10, fill in the correlation of every pair with the rule above, and draw one sample from the resulting 121-dimensional bell curve. Each sample is a whole curve.
 
@@ -47,7 +47,7 @@ That is enough to draw random curves. Pick 121 inputs between 0 and 10, fill in 
 
 Move the length scale. Short length scales give curves that wiggle, because values only a little apart are already nearly unrelated. Long ones give slow, gentle curves. Nothing else changes: the figure reuses the same random numbers for every setting, and the rule alone decides how they are tied together.
 
-This is a Gaussian process. The textbook definition sounds abstract, but you have just seen it at work: a Gaussian process is "a collection of random variables, any finite number of which have a joint Gaussian distribution" (Rasmussen & Williams, 2006, p. 13). Pick any inputs you like, two or 121 or a million, and the outputs there follow a bell curve in that many dimensions, with correlations given by the kernel. Two things specify a Gaussian process completely: a mean function (here 0 everywhere, our guess before any data) and the kernel.
+Those draws come from a Gaussian process. The textbook defines one as "a collection of random variables, any finite number of which have a joint Gaussian distribution" (Rasmussen & Williams, 2006, p. 13). Pick any inputs you like, two or 121 or a million, and the outputs there follow a bell curve in that many dimensions, with correlations given by the kernel. Two things specify a Gaussian process completely: a mean function (here 0 everywhere, our guess before any data) and the kernel.
 
 <details>
 <summary>In standard notation</summary>
@@ -68,15 +68,13 @@ Recall your guess from the start, then reveal the result.
 
 <PosteriorFigure>Five measurements of an unknown function (dots). Once revealed: the best guess (black line), the 95% band, and three curves drawn from the updated Gaussian process. The orange bar marks where the band is widest. With the measurement noise at 0 the measurements are exact, as repeated runs of a deterministic simulation are.</PosteriorFigure>
 
-Three things are worth noticing in the starting view.
+In the starting view, the band closes at each measurement. A deterministic simulation run twice with the same input gives the same output, so at a measured input nothing is left to be unsure about. Every drawn curve passes through every dot.
 
-**At each measurement, the band closes.** A deterministic simulation run twice with the same input gives the same output, so at a measured input nothing is left to be unsure about. Every drawn curve passes through every dot.
+Between measurements, the band opens by an amount that depends on the gap. Between the two close points at $x = 2.4$ and $x = 3.1$, the band is about ±0.09 at its widest. Both neighbors are at most 0.35 away, much less than the length scale of 1.2, so they are strongly correlated with everything in between. In the middle of the wide gap, at $x = 4.65$, the nearest measurements are 1.55 away, the correlation with each is only 0.43, and the band grows to about ±1.29.
 
-**Between measurements, the band opens by an amount that depends on the gap.** Between the two close points at $x = 2.4$ and $x = 3.1$, the band is about ±0.09 at its widest. Both neighbors are at most 0.35 away, much less than the length scale of 1.2, so they are strongly correlated with everything in between. In the middle of the wide gap, at $x = 4.65$, the nearest measurements are 1.55 away, the correlation with each is only 0.43, and the band grows to about ±1.29.
+Beyond the last measurement, the band returns to where it started. At $x = 10$ the nearest measurement is 2.7 away, the correlation is 0.08, and the band is ±1.95: practically the ±1.96 it had before any data. Far from everything measured, the model knows only what it knew at the start, and its best guess drifts back to the prior mean of 0.
 
-**Beyond the last measurement, the band returns to where it started.** At $x = 10$ the nearest measurement is 2.7 away, the correlation is 0.08, and the band is ±1.95: practically the ±1.96 it had before any data. Far from everything measured, the model knows only what it knew at the start, and its best guess drifts back to the prior mean of 0.
-
-So the uncertainty is widest far beyond the data, and within the data it is widest in the largest gaps, measured against the length scale. The band is a picture of distance to the data, passed through the correlation rule. A gap is not uncertain in itself: with a length scale of 5, the same gap would barely open.
+So the uncertainty is widest far beyond the data, and within the data it is widest in the largest gaps. The length scale decides what counts as large: with a length scale of 5, the same gap would barely open.
 
 <details>
 <summary>The formulas behind Figure 3</summary>
@@ -96,7 +94,7 @@ With a single measurement and $\sigma_f = 1$, we have $K = 1$, $\mathbf{k}_* = \
 
 ## Does the band depend on what you measured?
 
-A second guess. Suppose the five runs had come back with different numbers, at the same five inputs. Would the band change shape? Decide, then press **New values, same places** in Figure 3.
+Now a second guess: suppose the five runs had come back with different numbers, at the same five inputs. Would the band change shape? Decide, then press **New values, same places** in Figure 3.
 
 The best guess moves; the band does not. Look at the variance formula above: it contains the measured inputs, but not the measured outputs. Rasmussen and Williams (2006, p. 18) put it plainly: the variance "does not depend on the observed targets, but only on the inputs; this is a property of the Gaussian distribution."
 
@@ -106,13 +104,11 @@ One caveat: this holds for a fixed kernel. In practice the length scale is usual
 
 ## The assumptions live in the kernel
 
-Everything Figure 3 shows follows from one choice: the correlation rule and its length scale. Change the length scale, and the answer changes.
-
-Drag it down to 0.4. The best guess now falls back toward 0 between measurements, and the band balloons in every gap: the model assumes the function could do almost anything a short distance from a measurement. Drag it up to 3. The curve becomes stiff and the band thin: the model assumes the function cannot bend quickly, so it trusts its interpolation.
+Everything Figure 3 shows follows from one choice: the correlation rule and its length scale. Drag the length scale down to 0.4. The best guess now falls back toward 0 between measurements, and the band balloons in every gap: the model assumes the function could do almost anything a short distance from a measurement. Drag it up to 3. The curve becomes stiff and the band thin: the model assumes the function cannot bend quickly, so it trusts its interpolation.
 
 Now turn on **Hidden function**. The dots were measured on this curve, which was itself drawn from a Gaussian process with a length scale of 1.2. At that setting the model's assumptions are exactly right, and the band is calibrated: averaged over many hidden functions, it covers the hidden function at about 95% of inputs. Set the length scale to 3 and look for places where the hidden function leaves the narrow band. That is a model being confidently wrong, and nothing in the band warns you.
 
-So how is the length scale chosen? Usually by asking which value makes the measured data most probable under the model, which is called maximizing the *marginal likelihood* (Rasmussen & Williams, 2006, sec. 5.2). It works well in practice, though the same book cautions that it can overfit when there are many settings to tune. With several inputs, such as span, depth and load, each input usually gets its own length scale, and a long one marks an input the output barely depends on (sec. 5.1).
+The length scale is usually chosen by asking which value makes the measured data most probable under the model, which is called maximizing the *marginal likelihood* (Rasmussen & Williams, 2006, sec. 5.2). It works well in practice, though the same book cautions that it can overfit when there are many settings to tune. With several inputs, such as span, depth and load, each input usually gets its own length scale, and a long one marks an input the output barely depends on (sec. 5.1).
 
 The choice of kernel matters too. The squared exponential produces extremely smooth curves, which can be differentiated any number of times. Stein (1999) argued that this is unrealistic for many physical processes and recommended the Matérn family of kernels, which allows rougher curves (as summarized by Rasmussen & Williams, 2006, sec. 4.2.1).
 
@@ -124,11 +120,11 @@ Raise the measurement noise in Figure 3. The band no longer closes at the dots, 
 
 ## Where it stops working
 
-**The band is only as good as the kernel.** It is the uncertainty that follows from the assumptions, not a guarantee. A response with a sharp change, such as a switch from one failure mode to another, breaks the smoothness the kernel assumes. The Gaussian process will round the change off, and its band may not cover it.
+The band is only as good as the kernel: it is the uncertainty that follows from the assumptions, not a guarantee. A response with a sharp change, such as a switch from one failure mode to another, breaks the smoothness the kernel assumes. The Gaussian process will round the change off, and its band may not cover it.
 
-**One length scale everywhere.** The kernel here treats every part of the input range alike. A response that is flat in one region and changes fast in another forces a compromise length scale that suits neither.
+The kernel here also uses one length scale everywhere, treating every part of the input range alike. A response that is flat in one region and changes fast in another forces a compromise length scale that suits neither.
 
-**The cost grows quickly with the data.** Factoring the $n \times n$ matrix $K$ takes about $n^3/6$ operations (Rasmussen & Williams, 2006, Algorithm 2.1), so doubling the number of measurements makes this step eight times slower. Large data sets need approximations (Rasmussen & Williams, 2006, ch. 8). For the problem this article started with, a few dozen expensive simulations, the cost is negligible next to a single run.
+And the cost grows quickly with the data. Factoring the $n \times n$ matrix $K$ takes about $n^3/6$ operations (Rasmussen & Williams, 2006, Algorithm 2.1), so doubling the number of measurements makes this step eight times slower. Large data sets need approximations (Rasmussen & Williams, 2006, ch. 8). For the problem this article started with, a few dozen expensive simulations, the cost is negligible next to a single run.
 
 ## Why it is also called kriging
 
