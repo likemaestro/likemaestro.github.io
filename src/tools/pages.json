@@ -31,6 +31,24 @@
       "group": "Structures"
     },
     {
+      "path": "/tools/beam-twist",
+      "title": "Why steel beams twist",
+      "line": "Load a steel beam and watch it swing sideways and twist: lateral-torsional buckling in 3D, with Mcr and the Eurocode resistance.",
+      "group": "Structures"
+    },
+    {
+      "path": "/tools/surrogate-frame",
+      "title": "Surrogate frame design",
+      "line": "Design a six-storey steel frame with a Gaussian process surrogate: a few FE runs train it, a genetic algorithm searches it, and FE checks the answer.",
+      "group": "Machine learning"
+    },
+    {
+      "path": "/tools/building-chord",
+      "title": "The building’s chord",
+      "line": "Tap a steel building and hear its vibration modes as a chord. Damage changes it, and an autoencoder learns to tell damage from a warm, busy day.",
+      "group": "Machine learning"
+    },
+    {
       "path": "/tools/decision",
       "title": "Multi-criteria choice",
       "line": "Rank a few options on several criteria with TOPSIS and VIKOR, weigh the criteria directly or by AHP, and see with SMAA-2 how the ranking holds when the weights are uncertain.",

@@ -20,6 +20,7 @@ module.exports = {
       animation: {
         "fade-in-down": "fade-in-down 0.5s ease-out",
         featured: "featured 3s linear both",   // the featured tools' progress bar; ToolsIndex sets the duration
+        "fade-in": "fade-in 150ms ease-out",
       },
       keyframes: {
         "fade-in-down": {
@@ -27,6 +28,7 @@ module.exports = {
           "100%": { opacity: "1", transform: "translateY(0)" },
         },
         featured: { "0%": { transform: "scaleX(0)" }, "100%": { transform: "scaleX(1)" } },
+        "fade-in": { "0%": { opacity: "0" }, "100%": { opacity: "1" } },
       },
     },
   },

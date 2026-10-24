@@ -1,0 +1,13 @@
+cL 0 done, 40 s
+cL 1 done, 74 s
+cL 2 done, 109 s
+cL 3 done, 148 s
+cL 4 done, 186 s
+cL 5 done, 225 s
+cL 6 done, 259 s
+cL 7 done, 293 s
+cL 8 done, 326 s
+cL 9 done, 364 s
+cL 10 done, 416 s
+cL 11 done, 453 s
+NumPy exhaustive: feasible 557 of 1296; optimum HEB300 HEB220 IPE360 63.480 t; 453 s

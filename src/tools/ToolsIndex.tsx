@@ -1,12 +1,12 @@
 import React, { useEffect, useRef, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import SiteHeader, { SiteFooter, Wrap } from "../components/SiteHeader";
 import { cells } from "../lab/precomputed";
 import { decode, drawLattice } from "../lab/lattice";
 import registry from "./pages.json";
-import { page } from "./ToolShell";
+import { groupId, page } from "./ToolShell";
 
-const GROUPS = ["Microstructures", "Structures", "Decision support", "Monitoring", "Other tools"];
+const GROUPS = ["Microstructures", "Structures", "Machine learning", "Decision support", "Monitoring", "Other tools"];
 
 const Lattice: React.FC<{ rho: string; tiles: number; className?: string; label?: string }> = ({ rho, tiles, className, label }) => {
   const ref = useRef<HTMLCanvasElement>(null);
@@ -27,6 +27,9 @@ const GLYPH: Record<string, React.ReactNode> = {
   "/tools/world-map": <><circle cx="24" cy="24" r="17" /><ellipse cx="24" cy="24" rx="7" ry="17" /><path d="M7 24h34M10 15h28M10 33h28" /></>,
   "/tools/property-map": <><path d="M8 6v34h34" /><path d="M13 33l3-2M15 29l3-1M17 31l2-2M27 16l2 1M30 21l2 1M33 26l2 1M36 31l2 1" strokeWidth="2.4" strokeLinecap="round" /><path d="M24 6v34" strokeDasharray="2 2" /></>,
   "/tools/truss-sizing": <path d="M4 34h40M10 18h28M4 34l6-16M44 34l-6-16M17 18v16M24 18v16M31 18v16M10 18l7 16M17 18l7 16M38 18l-7 16M31 18l-7 16" />,
+  "/tools/surrogate-frame": <><path d="M8 42V8M24 42V8M40 42V8M8 18h32M8 30h32M8 8h32M4 42h40" /><path d="M8 36c8-10 14 6 22-6s6-14 14-18" strokeDasharray="1.5 2.5" strokeLinecap="round" /></>,
+  "/tools/building-chord": <><path d="M8 42V10h18v32M8 18h18M8 26h18M8 34h18M4 42h40" /><path d="M31 20a6 6 0 0 1 0 8M35 16a11 11 0 0 1 0 16M39 12a16 16 0 0 1 0 24" strokeLinecap="round" /></>,
+  "/tools/beam-twist": <><path d="M6 16h36M6 32h36" strokeDasharray="2 2" /><path d="M6 16c10 9 26 9 36 0M6 32c10 3 26 3 36 0M6 13v22M42 13v22" /></>,
   "/tools/decision": <><path d="M6 10h36v28H6zM6 19h36M6 28h36M18 10v28M30 10v28" /><circle cx="12" cy="23.5" r="2" fill="currentColor" /></>,
   "/tools/vibrometer": <path d="M4 24h6l3-9 4 18 4-24 4 28 4-20 3 12 3-5h9" />,
   "/tools/gauge": <><path d="M8 32a16 16 0 0 1 32 0" /><path d="M24 32l8-10" /><circle cx="24" cy="32" r="1.6" fill="currentColor" /></>,
@@ -148,7 +151,12 @@ const Featured: React.FC = () => {
 
 const ToolsIndex: React.FC = () => {
   const p = page("/tools");
+  const { hash } = useLocation();
   useEffect(() => { document.title = `${p.title} – Murat Güven`; return () => { document.title = "Murat Güven"; }; }, [p.title]);
+  // A tool's breadcrumb links to its group, e.g. /tools#microstructures: jump there, as the home page does.
+  useEffect(() => {
+    if (hash) document.getElementById(hash.slice(1))?.scrollIntoView({ behavior: "instant" as ScrollBehavior });
+  }, [hash]);
 
   return (
     <>
@@ -164,8 +172,8 @@ const ToolsIndex: React.FC = () => {
             const rows = registry.pages.filter((t) => "group" in t && t.group === g);
             if (!rows.length) return null;
             return (
-              <section key={g} aria-labelledby={`g-${g}`} className="mt-14">
-                <h2 id={`g-${g}`} className="t-h3">{g}</h2>
+              <section key={g} id={groupId(g)} aria-labelledby={`${groupId(g)}-h`} className="mt-14">
+                <h2 id={`${groupId(g)}-h`} className="t-h3">{g}</h2>
                 <ul className="mt-4 border-b border-rule">
                   {rows.map((t) => (
                     <li key={t.path} className="border-t border-rule">

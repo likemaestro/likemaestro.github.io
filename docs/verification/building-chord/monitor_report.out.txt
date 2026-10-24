@@ -1,0 +1,14 @@
+seed 7: trained in 1010 ms (node v22.22.0); best epoch 219 of 244; validation loss 3.60e-3; train P99 1.07e-2; AE threshold 9.82e-3; MSD threshold 15.68; redrawn days 0
+false alarms on 5,000 new healthy days: AE 83/5000 (1.7 %), MSD 96/5000 (1.9 %) (target 1 %)
+c1-5 at 0.7: AE 183/200 (91.5 %) flagged, false 6/200; MSD 188/200 (94.0 %), false 4/200; noise-free at 15 °C, 0.3: AE 1.63× threshold, MSD 1.69×
+c1-5 at 0.5: AE 104/200 (52.0 %) flagged, false 6/200; MSD 119/200 (59.5 %), false 4/200; noise-free at 15 °C, 0.3: AE 0.79× threshold, MSD 0.83×
+c1-5 at 0.9: AE 199/200 (99.5 %) flagged, false 6/200; MSD 200/200 (100.0 %), false 4/200; noise-free at 15 °C, 0.3: AE 2.83× threshold, MSD 2.90×
+c1-4 at 0.7: AE 91/200 (45.5 %) flagged, false 6/200; MSD 92/200 (46.0 %), false 4/200; noise-free at 15 °C, 0.3: AE 0.57× threshold, MSD 0.52×
+c1-1 at 0.7: AE 163/200 (81.5 %) flagged, false 6/200; MSD 150/200 (75.0 %), false 4/200; noise-free at 15 °C, 0.3: AE 1.14× threshold, MSD 0.94×
+c3-5 at 0.7: AE 151/200 (75.5 %) flagged, false 6/200; MSD 156/200 (78.0 %), false 4/200; noise-free at 15 °C, 0.3: AE 1.17× threshold, MSD 1.15×
+c6-5 at 0.7: AE 200/200 (100.0 %) flagged, false 6/200; MSD 200/200 (100.0 %), false 4/200; noise-free at 15 °C, 0.3: AE 3.15× threshold, MSD 3.10×
+seed 1: best epoch 130/155; c1-5 at 0.7: AE 136/200 (68.0 %), false 1/200; MSD 173/200 (86.5 %), false 1/200
+seed 2: best epoch 134/159; c1-5 at 0.7: AE 178/200 (89.0 %), false 0/200; MSD 183/200 (91.5 %), false 0/200
+seed 3: best epoch 112/137; c1-5 at 0.7: AE 195/200 (97.5 %), false 0/200; MSD 190/200 (95.0 %), false 1/200
+seed 4: best epoch 65/90; c1-5 at 0.7: AE 189/200 (94.5 %), false 1/200; MSD 182/200 (91.0 %), false 1/200
+seed 5: best epoch 121/146; c1-5 at 0.7: AE 159/200 (79.5 %), false 1/200; MSD 179/200 (89.5 %), false 1/200

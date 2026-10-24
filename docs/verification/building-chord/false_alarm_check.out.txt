@@ -1,0 +1,11 @@
+seed 1: AE 0.71 %, MSD 0.58 %; threshold / P99 of 20,000 days: AE 1.076, MSD 1.087
+seed 2: AE 0.90 %, MSD 0.83 %; threshold / P99 of 20,000 days: AE 1.022, MSD 1.031
+seed 3: AE 0.63 %, MSD 0.78 %; threshold / P99 of 20,000 days: AE 1.092, MSD 1.036
+seed 4: AE 1.15 %, MSD 0.91 %; threshold / P99 of 20,000 days: AE 0.975, MSD 1.017
+seed 5: AE 0.65 %, MSD 0.74 %; threshold / P99 of 20,000 days: AE 1.102, MSD 1.058
+seed 6: AE 1.58 %, MSD 1.17 %; threshold / P99 of 20,000 days: AE 0.915, MSD 0.976
+seed 7: AE 1.55 %, MSD 1.73 %; threshold / P99 of 20,000 days: AE 0.923, MSD 0.912
+seed 8: AE 0.93 %, MSD 1.02 %; threshold / P99 of 20,000 days: AE 1.016, MSD 0.995
+seed 9: AE 0.93 %, MSD 0.69 %; threshold / P99 of 20,000 days: AE 1.010, MSD 1.056
+seed 10: AE 1.32 %, MSD 1.40 %; threshold / P99 of 20,000 days: AE 0.954, MSD 0.953
+mean over 10 seeds: AE 1.03 %, MSD 0.99 %
