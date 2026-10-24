@@ -1,5 +1,5 @@
 // The building in 3D: columns, beams and braces as instanced meshes, translucent floors, the weakened member hatched
-// and labeled, and the modes as motion: after a tap, the sounding modes together, decaying; or one mode, looping.
+// in orange and labeled, and the modes as motion: after a tap, the sounding modes together, decaying; or one mode, looping.
 // Floors move rigidly (ux, uy, θz); members are drawn straight between them. Three's axes: x = x, y = z (up), z = −y.
 import React, { useEffect, useRef } from "react";
 import * as THREE from "three";
@@ -96,8 +96,8 @@ const Building3D: React.FC<Building3DProps> = (p) => {
     });
     const fm = new THREE.MeshBasicMaterial({ color: 0xeef0ee, transparent: true, opacity: 0.4, depthWrite: false, side: THREE.DoubleSide });
     w.floors = Array.from({ length: b.n }, (_, i) => { const f = new THREE.Mesh(new THREE.BoxGeometry(2 * SPAN, 0.1, 2 * SPAN), fm); f.userData.floor = i + 1; w.group.add(f); return f; });
-    // the weakened member: a hatched copy of it, on top of its (hidden) instance
-    const hatchMat = new THREE.MeshStandardMaterial({ color: 0xffffff, map: w.hatch, metalness: 0.1, roughness: 0.7 });
+    // the weakened member: a hatched copy of it in laser orange (the hatch tinted), on top of its (hidden) instance
+    const hatchMat = new THREE.MeshStandardMaterial({ color: 0xf05a24, map: w.hatch, metalness: 0.1, roughness: 0.7 });
     w.weak = [];
     if (dmg) {
       const id = `${dmg.kind}${dmg.storey}-${dmg.at}`;

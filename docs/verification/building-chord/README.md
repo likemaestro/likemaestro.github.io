@@ -95,6 +95,17 @@ and ranges from 0.6 to 1.7 % per seed. That spread is the sampling error of a 99
   replaced by "Your browser can’t play sound here; the spectrum shows the chord."
 - No console errors or warnings. axe: no violations.
 
+### Review changes after the first screenshots
+
+- **"A warm day or damage?"**, now the first monitoring chart: the 1,000 calibration days by first-frequency change and
+  autoencoder score (× threshold, log scale), the threshold line, the reference and the current state. Measured in the
+  browser: healthy days from −6.8 % to +5.9 %, 10 of them above the threshold (the 99th percentile, by construction);
+  step 1 at 0 % and 0.01 ×, step 2 at −6.9 % and 0.28 ×, step 3 at −1.0 % and 1.63 ×. The latent plot, which showed the
+  damaged state next to the reference and the warm day far from it, moved below it, and its caption now says why a dot
+  near the ring can still be flagged (the code maps every day onto the healthy pattern; Kramer 1991, AIChE J. 37(2)).
+- The weakened member is drawn in orange (the hatch tinted), as the label alone carried it before.
+- While training, the new chart computed its axis from no data (NaN in the console); fixed before commit.
+
 ### Shared code changed (no visual change to the other tools)
 
 - `three/stage.ts`: a render that ran an animation step could schedule a second frame when the step itself asked for a

@@ -8,7 +8,7 @@ import { members, modes, parseDamage, REF, track, type Building, type System } f
 import { partials, transposition, visualHz } from "./sound";
 import { features, mahalanobisFrom, restore, score, type Trained } from "./monitor";
 import type { MonitorIn, MonitorOut } from "./monitor.worker";
-import { Health, Latent, Loss, Residuals, Spectrum } from "./Charts";
+import { Health, Latent, Loss, Residuals, Shift, Spectrum } from "./Charts";
 import type { Motion } from "./Building3D";
 
 const Building3D = lazy(() => import("./Building3D"));
@@ -265,9 +265,10 @@ const BuildingChord: React.FC = () => {
         </div>
       </div>
 
-      {/* Monitoring */}
+      {/* Monitoring: the main point first (sideways vs. up), then the scores, residuals and what the code learned */}
       <div className="grid gap-x-8 gap-y-10 border-t border-rule pt-6 sm:grid-cols-2 lg:grid-cols-3">
-        <Latent codes={trained?.latent ?? []} env={trained?.env ?? []} by={p.color as "temp" | "occ"} current={now?.latent ?? null} reference={refScore?.latent ?? null} onBy={(v) => set({ color: v })} />
+        <Shift x={trained ? trained.calib.f1.map((f) => f / ref.modes[0].f - 1) : []} y={trained ? trained.calib.ae.map((v) => v / trained.aeThreshold) : []}
+          current={now && trained ? [rows[0].change, now.ae / trained.aeThreshold] : null} reference={refScore && trained ? [0, refScore.ae / trained.aeThreshold] : null} />
         <div className="flex min-w-0 flex-col gap-4">
           <Health ae={now?.ae ?? null} msd={now?.msd ?? null} aeThr={trained?.aeThreshold ?? 1} msdThr={trained?.msdThreshold ?? 1} training={!trained} />
           <div>
@@ -276,6 +277,7 @@ const BuildingChord: React.FC = () => {
           </div>
         </div>
         <Residuals r={now?.residuals ?? null} />
+        <Latent codes={trained?.latent ?? []} env={trained?.env ?? []} by={p.color as "temp" | "occ"} current={now?.latent ?? null} reference={refScore?.latent ?? null} onBy={(v) => set({ color: v })} />
       </div>
       <section className="mt-8 border-t border-rule pt-6" aria-labelledby="bc-test-h">
         <div className="flex flex-wrap items-center gap-3">

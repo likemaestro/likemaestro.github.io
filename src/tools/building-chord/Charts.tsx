@@ -1,5 +1,6 @@
-// The chord tool's charts, hand-written SVG with a table behind each: the spectrum of the chord, the autoencoder's
-// latent plane, the two health bars, the residuals per mode and the training loss.
+// The chord tool's charts, hand-written SVG with a table behind each: the spectrum of the chord, healthy days by
+// frequency change and anomaly score, the autoencoder's latent plane, the two health bars, the residuals per mode and
+// the training loss.
 import React, { useEffect, useRef, useState } from "react";
 import type { Env } from "./building";
 
@@ -48,6 +49,50 @@ export const Spectrum: React.FC<{ ref_: Bar[]; cur: Bar[]; playing: "none" | "cu
   );
 };
 
+/** Healthy days by first-frequency change and autoencoder score: weather and occupancy move a day sideways; damage can lift
+ *  it above the threshold while moving it less. x as a fraction of the healthy reference, y as a multiple of the threshold. */
+export const Shift: React.FC<{ x: number[]; y: number[]; current: [number, number] | null; reference: [number, number] | null }> = ({ x, y, current, reference }) => {
+  const W = 320, H = 240, M = { l: 38, r: 10, t: 10, b: 30 };
+  const xs = [...x, ...(current ? [current[0]] : []), 0], ys = [...y, ...(current ? [current[1]] : []), ...(reference ? [reference[1]] : [])].filter((v) => v > 0);
+  const x0 = Math.min(...xs) - 0.005, x1 = Math.max(...xs) + 0.005;
+  const l0 = Math.floor(Math.log10(Math.min(0.01, ...ys))), l1 = Math.log10(Math.max(3, ...ys)) + 0.1;   // at least up to 3 × the threshold; also while there are no days yet
+  const sx = (v: number) => M.l + ((v - x0) / (x1 - x0)) * (W - M.l - M.r), sy = (v: number) => H - M.b - ((Math.log10(Math.max(v, 10 ** l0)) - l0) / (l1 - l0)) * (H - M.t - M.b);
+  const span = 100 * (x1 - x0), step = span > 12 ? 4 : span > 6 ? 2 : 1;
+  const xt: number[] = [];
+  for (let t = Math.ceil((100 * x0) / step) * step; t <= 100 * x1; t += step) xt.push(t);
+  const yt = Array.from({ length: Math.floor(l1) - l0 + 1 }, (_, i) => 10 ** (l0 + i));
+  const pct = (v: number) => `${v >= 0 ? "+" : "−"}${Math.abs(100 * v).toFixed(1)} %`, above = y.filter((v) => v > 1).length;
+  const label = x.length
+    ? `${x.length} healthy days: the first frequency moves from ${pct(Math.min(...x))} to ${pct(Math.max(...x))}; ${above} of them score above the threshold.${current ? ` Now: ${pct(current[0])}, ${current[1].toFixed(2)} times the threshold, ${current[1] > 1 ? "flagged" : "normal"}.` : ""}`
+    : "Training: no days yet.";
+  return (
+    <section className="min-w-0">
+      <h3 className="font-[520]">A warm day or damage?</h3>
+      <svg viewBox={`0 0 ${W} ${H}`} className="mt-2 block w-full max-w-[22rem]" role="img" aria-label={label}>
+        {xt.map((t) => <g key={`x${t}`}><line x1={sx(t / 100)} x2={sx(t / 100)} y1={M.t} y2={H - M.b} stroke="#EEF0EE" /><text x={sx(t / 100)} y={H - M.b + 13} textAnchor="middle" fontSize="10" className="fill-ink-2">{t > 0 ? `+${t}` : t < 0 ? `−${-t}` : "0"}</text></g>)}
+        {yt.map((t) => <text key={`y${t}`} x={M.l - 5} y={sy(t) + 3} textAnchor="end" fontSize="10" className="fill-ink-2">{t}</text>)}
+        <line x1={M.l} x2={W - M.r} y1={H - M.b} y2={H - M.b} stroke="#CBD2D5" />
+        <line x1={M.l} x2={M.l} y1={M.t} y2={H - M.b} stroke="#CBD2D5" />
+        {x.map((v, i) => <circle key={i} cx={sx(v)} cy={sy(y[i])} r={1.6} fill="#819199" fillOpacity={0.55} />)}
+        <line x1={M.l} x2={W - M.r} y1={sy(1)} y2={sy(1)} stroke="#F05A24" strokeWidth="1.4" />
+        <text x={W - M.r - 2} y={sy(1) - 4} textAnchor="end" fontSize="10" className="fill-ink-2">threshold</text>
+        {reference && <circle cx={sx(reference[0])} cy={sy(reference[1])} r={6} fill="none" stroke="#172027" strokeWidth="1.4" />}
+        {current && <circle cx={sx(current[0])} cy={sy(current[1])} r={4.5} fill="#F05A24" stroke="#172027" strokeWidth="1" />}
+        <text x={(M.l + W - M.r) / 2} y={H - 3} textAnchor="middle" fontSize="10" className="fill-ink-2">first frequency against the healthy reference, %</text>
+        <text transform={`translate(10 ${(M.t + H - M.b) / 2}) rotate(-90)`} textAnchor="middle" fontSize="10" className="fill-ink-2">autoencoder score, × threshold</text>
+      </svg>
+      <p className="t-small mt-2 text-ink-2">Each grey dot is one of the 1,000 healthy days the threshold was set on (log scale up the side). Weather and occupancy move a day sideways. Damage changes how the modes relate to each other, which can lift a day above the line even when its frequencies move less. Ring: the healthy reference; orange: now. Both are computed without the 0.2 % measurement noise the grey days carry, which is why the ring sits below them.</p>
+      <Toggle table={<table className="t-data w-full border-collapse text-left"><caption className="sr-only">Healthy days and the current state</caption>
+        <thead><tr className="border-b border-ink"><Th>State</Th><Th>First frequency</Th><Th>Score, × threshold</Th></tr></thead>
+        <tbody>
+          <tr className="border-b border-rule"><td className="py-1 pr-3">{x.length} healthy days</td><td className="py-1 pr-3">{x.length ? `${pct(Math.min(...x))} to ${pct(Math.max(...x))}` : "–"}</td><td className="py-1">{x.length ? `${above} above 1` : "–"}</td></tr>
+          {reference && <tr className="border-b border-rule"><td className="py-1 pr-3">Healthy reference</td><td className="py-1 pr-3">{pct(reference[0])}</td><td className="py-1">{reference[1].toFixed(2)}</td></tr>}
+          {current && <tr className="border-b border-rule"><td className="py-1 pr-3">Now</td><td className="py-1 pr-3">{pct(current[0])}</td><td className="py-1">{current[1].toFixed(2)}</td></tr>}
+        </tbody></table>} />
+    </section>
+  );
+};
+
 const ramp = (u: number) => { const t = Math.min(1, Math.max(0, u)), c = [0x81, 0x91, 0x99].map((v, i) => Math.round(v + ([0x17, 0x20, 0x27][i] - v) * t)); return `rgb(${c.join(",")})`; };
 
 /** The training days in the autoencoder's two-number bottleneck, greyed by temperature or occupancy. */
@@ -68,7 +113,7 @@ export const Latent: React.FC<{ codes: [number, number][]; env: Env[]; by: "temp
         {reference && <circle cx={sx(reference[0])} cy={sy(reference[1])} r={6} fill="none" stroke="#172027" strokeWidth="1.4" />}
         {current && <circle cx={sx(current[0])} cy={sy(current[1])} r={4.5} fill="#F05A24" stroke="#172027" strokeWidth="1" className="motion-safe:transition-all motion-safe:duration-200" />}
       </svg>
-      <p className="t-small mt-2 text-ink-2">Each dot is a healthy training day; grey runs from {by === "temp" ? "cold to warm" : "empty to full"}. Ring: the healthy reference; orange: now. The two axes have no fixed physical meaning.</p>
+      <p className="t-small mt-2 text-ink-2">Each dot is a healthy training day; grey runs from {by === "temp" ? "cold to warm" : "empty to full"}. Ring: the healthy reference; orange: now. The code places every day on the healthy pattern, damaged days too, so a dot near the ring is not necessarily healthy: the error in rebuilding the day is what flags it. The two axes have no fixed physical meaning.</p>
     </section>
   );
 };

@@ -80,7 +80,7 @@ export interface Trained {
   params: Float64Array; norm: Normalizer; aeThreshold: number; msdThreshold: number;
   history: { epoch: number; train: number; val: number }[]; best: number;
   latent: [number, number][]; env: Env[];                 // the training days' codes and environments
-  calib: { ae: number[]; msd: number[] }; trainP99: number; redrawn: number;
+  calib: { ae: number[]; msd: number[]; f1: number[] }; trainP99: number; redrawn: number;   // f1: each day's first tracked frequency
   msd: { mu: number[]; cov: Float64Array };                 // the baseline's parameters
 }
 
@@ -102,7 +102,7 @@ export function train(b: Building, seed: number, onProgress?: (h: Trained["histo
   return {
     params: net.params(), norm, aeThreshold: percentile(ae, 99), msdThreshold: percentile(md, 99), history, best: best.epoch,
     latent: Zt.map((z) => { const c = net.encode(z, 2); return [c[0], c[1]] as [number, number]; }), env: tr.env,
-    calib: { ae, msd: md }, trainP99: percentile(Zt.map((z) => reconError(net, z)), 99), redrawn: tr.redrawn + va.redrawn + ca.redrawn,
+    calib: { ae, msd: md, f1: ca.X.map((x) => x[0]) }, trainP99: percentile(Zt.map((z) => reconError(net, z)), 99), redrawn: tr.redrawn + va.redrawn + ca.redrawn,
     msd: { mu: msd.mu, cov: msd.cov },
   };
 }
