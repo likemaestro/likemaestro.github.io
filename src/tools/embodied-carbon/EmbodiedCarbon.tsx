@@ -18,6 +18,8 @@ const r1 = (v: number) => Math.round(v).toLocaleString("en-US").replace(/,/g, "�
 const inputCls = "t-data h-9 w-full rounded-[2px] border border-rule bg-transparent px-2 [@media(pointer:coarse)]:h-11";
 
 interface Result { rows: { in: RowIn; why?: string }[]; totals: Totals }
+/** Option A still the guide's pavilion, unchanged (the note comparing with the guide's 163 holds only then). */
+const isExample = (o: OptionState) => { const d = DEFAULT.o[0]; return o.gia === d.gia && o.cost === d.cost && JSON.stringify(o.rows) === JSON.stringify(d.rows); };
 function evaluate(o: OptionState): Result {
   const rows = o.rows.map((r) => {
     const f = factorOf(r), { kg, why } = toKg(r, f);
@@ -262,7 +264,7 @@ const EmbodiedCarbon: React.FC = () => {
         <h3 className="font-[520]">Comparison</h3>
         <div className="mt-3 max-w-3xl"><Compare items={state.o.map((o, i) => ({ name: o.n, label: o.label, v: results[i].totals.perM2?.a15 ?? null, r: ranges[i] ?? null }))} /></div>
         <p className="t-small mt-3 text-ink">Typical new-build structures fall between 150 and 400 kgCO2e/m² (SCORS B to G) (IStructE, 2.3.3).</p>
-        {state.o[0].label.startsWith("Pavilion (IStructE") && <p className="t-small mt-1 text-ink-2">The guide’s UK factors give 163 kgCO2e/m² for this pavilion; the European factors here give {results[0].totals.perM2 ? r1(results[0].totals.perM2.a15) : "—"}.</p>}
+        {isExample(state.o[0]) && <p className="t-small mt-1 text-ink-2">The guide’s UK factors give 163 kgCO2e/m² for this pavilion; the European factors here give {results[0].totals.perM2 ? r1(results[0].totals.perM2.a15) : "—"}.</p>}
       </div>
     </ToolShell>
   );
