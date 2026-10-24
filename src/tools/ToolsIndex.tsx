@@ -29,7 +29,7 @@ const GLYPH: Record<string, React.ReactNode> = {
   "/tools/truss-sizing": <path d="M4 34h40M10 18h28M4 34l6-16M44 34l-6-16M17 18v16M24 18v16M31 18v16M10 18l7 16M17 18l7 16M38 18l-7 16M31 18l-7 16" />,
   "/tools/surrogate-frame": <><path d="M8 42V8M24 42V8M40 42V8M8 18h32M8 30h32M8 8h32M4 42h40" /><path d="M8 36c8-10 14 6 22-6s6-14 14-18" strokeDasharray="1.5 2.5" strokeLinecap="round" /></>,
   "/tools/building-chord": <><path d="M8 42V10h18v32M8 18h18M8 26h18M8 34h18M4 42h40" /><path d="M31 20a6 6 0 0 1 0 8M35 16a11 11 0 0 1 0 16M39 12a16 16 0 0 1 0 24" strokeLinecap="round" /></>,
-  "/tools/embodied-carbon": <><path d="M4 42h40" /><path d="M8 42V34h6v8M17 42V28h6v14M26 42V20h6v22M35 42V10h6v32" /><path d="M11 30l9-7 9-6 9-10" strokeDasharray="1.5 2.5" strokeLinecap="round" /></>,
+  "/tools/embodied-carbon": <><path d="M4 42h40M9 42V10h30v32M9 24h30" /><circle cx="15.5" cy="33" r="3.4" /><circle cx="24" cy="33" r="3.4" fill="currentColor" /><circle cx="32.5" cy="33" r="3.4" /><path d="M18.9 31.9h1.7M18.9 34.1h1.7M27.4 31.9h1.7M27.4 34.1h1.7" /></>,
   "/tools/beam-twist": <><path d="M6 16h36M6 32h36" strokeDasharray="2 2" /><path d="M6 16c10 9 26 9 36 0M6 32c10 3 26 3 36 0M6 13v22M42 13v22" /></>,
   "/tools/decision": <><path d="M6 10h36v28H6zM6 19h36M6 28h36M18 10v28M30 10v28" /><circle cx="12" cy="23.5" r="2" fill="currentColor" /></>,
   "/tools/vibrometer": <path d="M4 24h6l3-9 4 18 4-24 4 28 4-20 3 12 3-5h9" />,

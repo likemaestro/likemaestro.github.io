@@ -12,7 +12,7 @@ Date: 24 October 2026. Code: `src/tools/embodied-carbon/`, `src/tools/carbon/` (
 | Numerically verified | Yes: the guide's Appendix B worked example reproduced within the stated tolerances; unit tests for every default |
 | Independently benchmarked | Partly: against the guide's worked example. Murat's check against the IStructE Structural Carbon Tool v3 is open |
 | Browser-tested | Yes: headless Chromium 153, production build, at 375 × 812 (touch) and 1280 × 900 |
-| Accessibility-tested | Partly: axe-core 4.10.3 (WCAG 2 A/AA), labelled controls; no screen-reader session |
+| Accessibility-tested | Partly: axe-core 4.10.3 (WCAG 2 A/AA), labelled controls, focus moves checked; no screen-reader session |
 | Ready for owner review | Yes |
 | Ready to publish | No: Murat to approve the datasets (table below), the 3rd-edition question, the copy (the "About this tool" paragraph) and the new group "Life cycle" |
 
@@ -88,14 +88,40 @@ for commonly unmodelled items; updated recommended A1–A3 factors. Its values c
 
 - Default (the guide's pavilion with these European factors): 106 kgCO2e/m², SCORS A, 84 tCO2e; range P5–P95
   96–116. The page notes that the guide's UK factors give 163 for the same pavilion.
-- Typing 63.4 t into the steel row keeps the focus in the field and updates the result (130 kgCO2e/m²).
-- Add option, then SALCOS® steel in option B: 130 vs 108 kgCO2e/m², side by side, with the comparison chart.
-- A per-m² material entered in m³: "Enter mass for this material (no density in its data)". GIA cleared: "—" and
-  "Enter the gross internal area."
-- The link (974 characters) reloads to the same numbers; the CSV has the data release in its header, the rows and the
-  totals; Data and sources lists the 12 datasets with links.
-- 375 × 812 with touch: no horizontal scroll, every control at least 44 px tall; the result shows above the materials.
-- No console messages. axe: no violations.
+- Typing 63.4 t into the steel line keeps the focus in the field and updates the result (130 kgCO2e/m²).
+- The palette lists the 12 materials in four groups with their A1–A3 factors; choosing C35/45 for the concrete gives
+  110 kgCO2e/m² and moves the focus to its quantity. Escape closes an open panel and returns the focus to the
+  material's name.
+- The steel's transport set to European in its settings: 115 kgCO2e/m².
+- "+ Add material" under Frame opens the palette with the focus on the element's default; decking (no density) offers
+  tonnes only; 4.2 t gives 123 kgCO2e/m². Adding the Floors element starts a line that asks for its quantity and is
+  noted as not counted until it has one; removing it moves the focus to "Floors" under "Add another element".
+- Spreads of ± 30 % on the factors: range 108–137 kgCO2e/m².
+- Add an option, then SALCOS® steel in option B: 123 vs 112 kgCO2e/m², side by side at 1,280 px, with the comparison.
+- GIA cleared: "—" and "Enter the gross internal area."
+- The link (1,154 characters) reloads to the same numbers; the CSV has the data release in its header, the rows and
+  the totals; Data and sources lists the 12 datasets with links.
+- 375 × 812 with touch: no horizontal scroll, every control at least 44 px tall, also with the palette, a timber
+  line's settings and the spreads open (measured before any full-page screenshot: Playwright's full-page capture
+  drops the touch emulation afterwards). The result shows above the materials.
+- No `<select>` on the page and no boxed inputs. No console messages. axe: no violations, with two options and the
+  data open, and with the palette and a timber line's settings open.
+
+### Input design (24 October 2026)
+
+After the owner's review ("too many drop downs and too many borders"), the inputs were redesigned; the result card is
+unchanged except for the assumed spreads, which now sit under the range they produce.
+- Materials are grouped by element (substructure, frame, floors, roof, cores and walls, after RICS NRM), each with a
+  hairline rule and its A1–A5 subtotal, like the result table. Elements without materials are offered as links.
+- Each material is two lines: its name (which opens a palette of chips showing every material's A1–A3 factor) with
+  its tCO2e, then its quantity with a unit toggle (m³ or t for concrete and timber, t for steel) and a grey summary of
+  its transport and waste, which opens its settings (transport chips, distances, waste rate, own factor, certified
+  timber, move to another element, the dataset and a link to it, remove).
+- New lines start from the transport the guide's worked example uses for the material group (concrete local, steel
+  and rebar national, timber European) and the usual unit; a default transport follows a change of material.
+- Inputs are underlined, not boxed; one solid button (Add an option to compare), the rest text links.
+- Notes in the result card name the material and element instead of a row number.
+- The tool's icon on /tools is a two-storey frame with a CO₂ molecule in the lower storey.
 
 ## Deviations from the spec, and why
 
