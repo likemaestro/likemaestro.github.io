@@ -22,7 +22,7 @@ const Back: React.FC = () => (
 );
 
 /** Copy text to the clipboard; resolves false where the browser refuses (the caller then shows the text). */
-async function copy(text: string) {
+export async function copy(text: string) {
   try { await navigator.clipboard.writeText(text); return true; } catch { return false; }
 }
 
