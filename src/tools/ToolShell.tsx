@@ -11,7 +11,7 @@ const REPO = "https://github.com/likemaestro/likemaestro.github.io/tree/master/s
 export const MICRO_PAPER = "https://doi.org/10.1016/j.finel.2026.104599";
 
 /** Copy text to the clipboard; resolves false where the browser refuses (the caller then shows the text). */
-async function copy(text: string) {
+export async function copy(text: string) {
   try { await navigator.clipboard.writeText(text); return true; } catch { return false; }
 }
 

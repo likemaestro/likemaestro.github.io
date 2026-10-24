@@ -49,6 +49,12 @@
       "group": "Machine learning"
     },
     {
+      "path": "/tools/embodied-carbon",
+      "title": "Embodied carbon of a structure",
+      "line": "A1–A5 embodied carbon of a building structure per m², with a SCORS rating and a range, from European data. Compare three options and share them.",
+      "group": "Life cycle"
+    },
+    {
       "path": "/tools/decision",
       "title": "Multi-criteria choice",
       "line": "Rank a few options on several criteria with TOPSIS and VIKOR, weigh the criteria directly or by AHP, and see with SMAA-2 how the ranking holds when the weights are uncertain.",

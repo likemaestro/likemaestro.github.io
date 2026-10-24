@@ -1,0 +1,17 @@
+{
+  "release": { "name": "ÖKOBAUDAT", "stock": "OBD_2024_II", "stockUuid": "cc64f7e1-14d8-4a57-b11b-2cf03d200c82", "published": "2026-07-22" },
+  "factors": [
+    { "id": "steel-sections-eaf", "group": "steel", "label": "Steel sections, hot-rolled, electric arc furnace (European average)", "uuid": "20c29cbd-f9a2-4518-a1ce-c681246c29c8", "wasteRate": 0.01 },
+    { "id": "steel-sections-eaf-green", "group": "steel", "label": "Steel sections, electric arc furnace with renewable electricity (SALCOS®)", "uuid": "801a951f-dfc1-4970-a5aa-56170b898bb5", "wasteRate": 0.01 },
+    { "id": "steel-plates-bof", "group": "steel", "label": "Steel heavy plates, blast furnace route (European average)", "uuid": "04d1311a-ae38-4bfb-8e11-8992f1ddb14f", "wasteRate": 0.01 },
+    { "id": "steel-decking", "group": "steel", "label": "Profiled steel sheet, galvanized (decking, European average)", "uuid": "a3460377-cb55-459a-bd70-6e4485faa0bb", "wasteRate": 0.01 },
+    { "id": "rebar", "group": "rebar", "label": "Reinforcing steel bars, electric arc furnace", "uuid": "a8ebf8f2-2fcc-4431-b730-93bf5efd8111", "wasteRate": 0.05 },
+    { "id": "concrete-c25-30", "group": "concrete", "label": "Ready-mixed concrete C25/30 (German average)", "uuid": "8347f9a7-f4ec-4a36-a266-a0281f5fd16d", "wasteRate": 0.05 },
+    { "id": "concrete-c30-37", "group": "concrete", "label": "Ready-mixed concrete C30/37 (German average)", "uuid": "b3fb0ba9-2376-49bf-b21a-7f7a5cd97233", "wasteRate": 0.05 },
+    { "id": "concrete-c35-45", "group": "concrete", "label": "Ready-mixed concrete C35/45 (German average)", "uuid": "90999905-ace2-49ee-90f0-f2a649c8989e", "wasteRate": 0.05 },
+    { "id": "concrete-c45-55", "group": "concrete", "label": "Ready-mixed concrete C45/55 (German average)", "uuid": "fbe36042-d050-4840-abc9-baff055dc0f3", "wasteRate": 0.05 },
+    { "id": "concrete-c30-37-cem3", "group": "concrete", "label": "Concrete C30/37 with blast-furnace cement (one producer)", "uuid": "69cb90b8-560a-4bce-b4f8-7fa5220eccdc", "wasteRate": 0.05 },
+    { "id": "glulam", "group": "timber", "label": "Glued-laminated timber (German average)", "uuid": "78bfe151-3cf3-46cb-a1a5-61a79bbd5476", "wasteRate": 0.01 },
+    { "id": "clt", "group": "timber", "label": "Cross-laminated timber (German average)", "uuid": "8c4eb262-9ae6-4ace-8f3d-0b06f2007f3e", "wasteRate": 0.01 }
+  ]
+}
