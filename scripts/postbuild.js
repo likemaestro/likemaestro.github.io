@@ -1,8 +1,16 @@
-// After `vite build`: one HTML file per page in src/tools/pages.json (plus 404.html and aliases), so GitHub
-// Pages answers those URLs with 200 and each link previews with its own title and description, and the sitemap.
+// After `vite build`: one HTML file per page in src/tools/pages.json and src/articles/articles.json (plus 404.html and
+// aliases), so GitHub Pages answers those URLs with 200 and each link previews with its own title and description, and
+// the sitemap.
 const fs = require("fs");
 const path = require("path");
-const { site, pages, aliases } = require("../src/tools/pages.json");
+const { site, pages: tools, aliases } = require("../src/tools/pages.json");
+const articles = require("../src/articles/articles.json");
+
+const pages = [
+  ...tools,
+  articles.index,
+  ...articles.articles.map((a) => ({ path: `/articles/${a.slug}`, title: a.title, line: a.line, article: true })),
+];
 
 const build = path.join(__dirname, "..", "build");
 const html = fs.readFileSync(path.join(build, "index.html"), "utf8");
@@ -30,6 +38,7 @@ for (const p of pages) {
   d = set(d, /(<meta property="og:description" content=")[^"]*(")/, line);
   d = set(d, /(<meta name="twitter:title" content=")[^"]*(")/, title);
   d = set(d, /(<meta name="twitter:description" content=")[^"]*(")/, line);
+  if (p.article) d = set(d, /(<meta property="og:type" content=")[^"]*(")/, "article");
   put(p.path, d);
 }
 

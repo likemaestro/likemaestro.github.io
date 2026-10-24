@@ -4,7 +4,7 @@ import Home from "./components/Home";
 
 // Tool pages load on demand. scripts/postbuild.js writes a copy of index.html for every page in src/tools/pages.json,
 // with that page's title and description, so GitHub Pages answers those URLs with 200 and links preview correctly:
-// list a new tool there too.
+// list a new tool there too. Articles are listed in src/articles/articles.json, which postbuild reads as well.
 const ToolsIndex = lazy(() => import("./tools/ToolsIndex"));
 const UnitCellDesigner = lazy(() => import("./tools/unit-cell/UnitCellDesigner"));
 const Sketchpad = lazy(() => import("./tools/sketchpad/Sketchpad"));
@@ -15,6 +15,8 @@ const Decision = lazy(() => import("./tools/decision/Decision"));
 const Gauge = lazy(() => import("./tools/gauge/Gauge"));
 const CUTTIA = lazy(() => import("./components/tools/CUTT-IA/CUTT-IA"));
 const WorldMap = lazy(() => import("./tools/world-map/WorldMap"));
+const ArticlesIndex = lazy(() => import("./articles/ArticlesIndex"));
+const ArticlePage = lazy(() => import("./articles/ArticlePage"));
 
 /** A new page opens at its top; back and forward keep the browser's scroll, and /#section links scroll themselves.
  *  Only a new path counts: the tools rewrite their query string whenever a setting moves. */
@@ -44,6 +46,8 @@ const App: React.FC = () => (
       <Route path="/tools/world-map" element={<WorldMap />} />
       <Route path="/tools/gauge" element={<Gauge />} />
       <Route path="/tools/cutt-ia" element={<CUTTIA />} />
+      <Route path="/articles" element={<ArticlesIndex />} />
+      <Route path="/articles/:slug" element={<ArticlePage />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   </Suspense>

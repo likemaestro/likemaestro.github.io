@@ -1,0 +1,17 @@
+{
+  "index": {
+    "path": "/articles",
+    "title": "Articles",
+    "line": "Methods from my work, explained from first principles: the problem each one solves, why it works, and where it stops working."
+  },
+  "articles": [
+    {
+      "slug": "gaussian-processes",
+      "title": "Gaussian processes from first principles",
+      "line": "You have five expensive simulations and need a sixth. How a Gaussian process predicts a value it has never seen, and how unsure it is, built up from two correlated numbers.",
+      "topic": "Machine learning",
+      "date": "2026-10-24",
+      "minutes": 15
+    }
+  ]
+}

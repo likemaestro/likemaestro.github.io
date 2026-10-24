@@ -1,0 +1,152 @@
+import { PairFigure, PriorFigure, PosteriorFigure } from "./figures";
+
+Suppose a finite-element model of a footbridge takes an hour to run, and you have run it five times, for five different spans. Now you need the peak deflection for a sixth span. You could run the model again. Or you could ask what the five runs you already have tell you about the one you haven't run.
+
+A *Gaussian process* is one way to answer that question. For every input you haven't tried, it gives a best guess, plus a band around it that shows how far off the guess could plausibly be. That band is what makes Gaussian processes useful as stand-ins for slow simulations, an idea that goes back at least to Sacks, Welch, Mitchell and Wynn (1989). It also lets you choose where to run the next simulation before you run it.
+
+This article builds a Gaussian process from two numbers up. You need to know what a bell curve is, and what a mean and a standard deviation are. Everything else is explained on the way. The figures are live, so move their sliders.
+
+Before any math, make a guess. Picture five points on a graph, spread unevenly along the horizontal axis: two close together, a wide gap in the middle. Someone asks you to draw a smooth curve through them and to shade the region where the curve could plausibly run. Where would your shading be widest: right at a point, in a gap between points, or beyond the last point? Hold on to your answer. Figure 3 checks it.
+
+## Two numbers that move together
+
+Start smaller than a curve, with two uncertain numbers. Take the deflection of a beam at two points, A and B, a short distance apart. You don't know either value exactly, because the load and the stiffness are uncertain. But if the beam deflects more than expected at A, it very likely deflects more than expected at B too. The two values are uncertain, and they move together.
+
+To keep the arithmetic simple, measure each value in standard deviations from its expected value. Before you know anything, each one then has a mean of 0 and a standard deviation of 1. How strongly they move together is their *correlation*, written $\rho$ (rho). A correlation of 0 means knowing one tells you nothing about the other; a correlation of 1 means they are always equal.
+
+Now measure A and find the value $a$. If the two values follow a joint bell curve (a two-dimensional Gaussian distribution), the standard rule for what you should now believe about B is short (Rasmussen & Williams, 2006, eq. A.6):
+
+$$
+\begin{aligned}
+\text{best guess for } B &= \rho\, a, \\
+\text{spread of } B &= \sqrt{1-\rho^2}.
+\end{aligned}
+$$
+
+Both halves make sense. The best guess for B moves toward what you measured at A, by a fraction set by the correlation. And the spread shrinks, from 1 to $\sqrt{1-\rho^2}$, which is small only when $\rho$ is close to 1. With $\rho = 0.8$ the spread drops to 0.6; with $\rho = 0.3$ it barely moves, to 0.95.
+
+<PairFigure>Each dot is one possible pair of values at A and B. The dashed line is the value measured at A; the orange dot on it is the best guess for B, and the thick bar is the range that holds 95% of the possibilities. On the right, what we believe about B before the measurement (dashed) and after it (solid), drawn to the same scale.</PairFigure>
+
+Set $\rho$ to 0, and the measurement at A changes nothing about B. Set it to 0.99, and B is pinned almost exactly to A. This rule, applied to many numbers at once, is all a Gaussian process does.
+
+## From two numbers to a whole curve
+
+A curve is a long list of numbers: the value at $x = 0$, at $x = 0.1$, at $x = 0.2$, and so on. An uncertain curve is a long list of uncertain numbers. To describe it the way we described A and B, we need a bell curve for each value, which is easy (mean 0, spread 1), and a correlation for every pair of values, which is the interesting part.
+
+For a smooth quantity, nearby inputs should have similar outputs, and inputs far apart can be unrelated. One rule that says exactly this makes the correlation fall with the distance $d$ between two inputs:
+
+$$
+\rho(d) = \exp\!\left(-\frac{d^2}{2\ell^2}\right).
+$$
+
+The number $\ell$ is the *length scale*: the distance over which values stay strongly related. At a distance of one length scale the correlation is 0.61. At three length scales it is 0.01, and the two values have practically nothing to say about each other. This rule is called the squared exponential kernel, and Rasmussen and Williams (2006, eq. 2.31) use it as their running example. A *kernel*, also called a covariance function, is simply the rule that gives the correlation (more generally, the covariance) for any pair of inputs.
+
+That is enough to draw random curves. Pick 121 inputs between 0 and 10, fill in the correlation of every pair with the rule above, and draw one sample from the resulting 121-dimensional bell curve. Each sample is a whole curve.
+
+<PriorFigure>Four curves drawn at random from a Gaussian process whose correlation rule is shown on the right; the orange dot marks a distance of one length scale. The shaded band holds 95% of the draws at every input. There is no data yet, so every input is equally uncertain.</PriorFigure>
+
+Move the length scale. Short length scales give curves that wiggle, because values only a little apart are already nearly unrelated. Long ones give slow, gentle curves. Nothing else changes: the figure reuses the same random numbers for every setting, and the rule alone decides how they are tied together.
+
+This is a Gaussian process. The textbook definition sounds abstract, but you have just seen it at work: a Gaussian process is "a collection of random variables, any finite number of which have a joint Gaussian distribution" (Rasmussen & Williams, 2006, p. 13). Pick any inputs you like, two or 121 or a million, and the outputs there follow a bell curve in that many dimensions, with correlations given by the kernel. Two things specify a Gaussian process completely: a mean function (here 0 everywhere, our guess before any data) and the kernel.
+
+<details>
+<summary>In standard notation</summary>
+
+With a mean function $m(x)$ and a kernel $k(x, x')$, one writes $f \sim \mathcal{GP}(m, k)$. For any inputs $x_1, \dots, x_n$, the vector of outputs is Gaussian, with mean vector $m_i = m(x_i)$ and covariance matrix $K_{ij} = k(x_i, x_j)$. The kernel used here, with an output scale $\sigma_f$ that this article fixes at 1, is
+
+$$
+k(x, x') = \sigma_f^2 \exp\!\left(-\frac{(x - x')^2}{2\ell^2}\right).
+$$
+
+</details>
+
+## Measuring a few points
+
+Now the five runs come in. In the language of the last two sections, five of the uncertain values become known, and we want to update all the others. It is the same move as in Figure 1, with more numbers. Each unknown value is correlated with each measured one, by an amount set by their distance, and the rule for jointly Gaussian values combines all those correlations into a new best guess and a new spread.
+
+Recall your guess from the start, then reveal the result.
+
+<PosteriorFigure>Five measurements of an unknown function (dots). Once revealed: the best guess (black line), the 95% band, and three curves drawn from the updated Gaussian process. The orange bar marks where the band is widest. With the measurement noise at 0 the measurements are exact, as repeated runs of a deterministic simulation are.</PosteriorFigure>
+
+Three things are worth noticing in the starting view.
+
+**At each measurement, the band closes.** A deterministic simulation run twice with the same input gives the same output, so at a measured input nothing is left to be unsure about. Every drawn curve passes through every dot.
+
+**Between measurements, the band opens by an amount that depends on the gap.** Between the two close points at $x = 2.4$ and $x = 3.1$, the band is about ±0.09 at its widest. Both neighbors are at most 0.35 away, much less than the length scale of 1.2, so they are strongly correlated with everything in between. In the middle of the wide gap, at $x = 4.65$, the nearest measurements are 1.55 away, the correlation with each is only 0.43, and the band grows to about ±1.29.
+
+**Beyond the last measurement, the band returns to where it started.** At $x = 10$ the nearest measurement is 2.7 away, the correlation is 0.08, and the band is ±1.95: practically the ±1.96 it had before any data. Far from everything measured, the model knows only what it knew at the start, and its best guess drifts back to the prior mean of 0.
+
+So the uncertainty is widest far beyond the data, and within the data it is widest in the largest gaps, measured against the length scale. The band is a picture of distance to the data, passed through the correlation rule. A gap is not uncertain in itself: with a length scale of 5, the same gap would barely open.
+
+<details>
+<summary>The formulas behind Figure 3</summary>
+
+Collect the measured inputs in $X$ and the measured outputs in $\mathbf{y}$. Let $K$ be the matrix of kernel values between the measured inputs, and $\mathbf{k}_*$ the vector of kernel values between a new input $x_*$ and each measured input. Conditioning the joint Gaussian on the measurements gives (Rasmussen & Williams, 2006, eq. 2.19)
+
+$$
+\begin{aligned}
+\bar{f}(x_*) &= \mathbf{k}_*^\top K^{-1} \mathbf{y}, \\
+\operatorname{var}\, f(x_*) &= k(x_*, x_*) - \mathbf{k}_*^\top K^{-1} \mathbf{k}_*.
+\end{aligned}
+$$
+
+With a single measurement and $\sigma_f = 1$, we have $K = 1$, $\mathbf{k}_* = \rho$ and $\mathbf{y} = a$, and these become $\rho a$ and $1 - \rho^2$: Figure 1's rule. The best guess is also a sum of bumps, one centered on each measurement and shaped like the kernel: $\bar f(x_*) = \sum_i \alpha_i\, k(x_i, x_*)$ with $\boldsymbol{\alpha} = K^{-1}\mathbf{y}$ (eq. 2.27). In code, $K^{-1}$ is never formed; one Cholesky factorization of $K$ serves both formulas (Algorithm 2.1). The [code behind these figures](https://github.com/likemaestro/likemaestro.github.io/tree/master/src/articles/gaussian-processes) follows the same steps.
+
+</details>
+
+## Does the band depend on what you measured?
+
+A second guess. Suppose the five runs had come back with different numbers, at the same five inputs. Would the band change shape? Decide, then press **New values, same places** in Figure 3.
+
+The best guess moves; the band does not. Look at the variance formula above: it contains the measured inputs, but not the measured outputs. Rasmussen and Williams (2006, p. 18) put it plainly: the variance "does not depend on the observed targets, but only on the inputs; this is a property of the Gaussian distribution."
+
+That has a practical consequence: you can see where the next run would teach you the most before you run it. Press **Measure where the band is widest** a few times and watch the band collapse, as each new run goes where the model is least sure. Refined versions of this idea sit under methods engineers use for expensive models. Efficient global optimization chooses each new run by weighing the best guess against the uncertainty, to find a minimum in few runs (Jones, Schonlau & Welch, 1998). In structural reliability, AK-MCS adds runs where the Gaussian process is least sure whether the structure fails or survives, to keep the number of calls to the expensive model small (Echard, Gayton & Lemaire, 2011).
+
+One caveat: this holds for a fixed kernel. In practice the length scale is usually estimated from the measurements, as the next section explains, and then the values do matter, through the length scale they suggest.
+
+## The assumptions live in the kernel
+
+Everything Figure 3 shows follows from one choice: the correlation rule and its length scale. Change the length scale, and the answer changes.
+
+Drag it down to 0.4. The best guess now falls back toward 0 between measurements, and the band balloons in every gap: the model assumes the function could do almost anything a short distance from a measurement. Drag it up to 3. The curve becomes stiff and the band thin: the model assumes the function cannot bend quickly, so it trusts its interpolation.
+
+Now turn on **Hidden function**. The dots were measured on this curve, which was itself drawn from a Gaussian process with a length scale of 1.2. At that setting the model's assumptions are exactly right, and the band is calibrated: averaged over many hidden functions, it covers the hidden function at about 95% of inputs. Set the length scale to 3 and look for places where the hidden function leaves the narrow band. That is a model being confidently wrong, and nothing in the band warns you.
+
+So how is the length scale chosen? Usually by asking which value makes the measured data most probable under the model, which is called maximizing the *marginal likelihood* (Rasmussen & Williams, 2006, sec. 5.2). It works well in practice, though the same book cautions that it can overfit when there are many settings to tune. With several inputs, such as span, depth and load, each input usually gets its own length scale, and a long one marks an input the output barely depends on (sec. 5.1).
+
+The choice of kernel matters too. The squared exponential produces extremely smooth curves, which can be differentiated any number of times. Stein (1999) argued that this is unrealistic for many physical processes and recommended the Matérn family of kernels, which allows rougher curves (as summarized by Rasmussen & Williams, 2006, sec. 4.2.1).
+
+## Exact runs and noisy measurements
+
+A simulation gives the same output every time you run it with the same input. A strain gauge or a load test does not. For noisy measurements, the model treats each observation as the true value plus a random error with standard deviation $\sigma_n$, which adds $\sigma_n^2$ to the diagonal of $K$ (Rasmussen & Williams, 2006, eqs. 2.22–2.24).
+
+Raise the measurement noise in Figure 3. The band no longer closes at the dots, and the best guess no longer passes through them: a single noisy measurement is not the true value, so the curve is allowed to miss it. The band in the figure is for the underlying function; a band for a new noisy measurement would be wider still. For a deterministic simulation, zero noise is the honest setting, and it is how Sacks et al. (1989) treated computer experiments. In code, a tiny value is often kept on the diagonal anyway, for numerical stability.
+
+## Where it stops working
+
+**The band is only as good as the kernel.** It is the uncertainty that follows from the assumptions, not a guarantee. A response with a sharp change, such as a switch from one failure mode to another, breaks the smoothness the kernel assumes. The Gaussian process will round the change off, and its band may not cover it.
+
+**One length scale everywhere.** The kernel here treats every part of the input range alike. A response that is flat in one region and changes fast in another forces a compromise length scale that suits neither.
+
+**The cost grows quickly with the data.** Factoring the $n \times n$ matrix $K$ takes about $n^3/6$ operations (Rasmussen & Williams, 2006, Algorithm 2.1), so doubling the number of measurements makes this step eight times slower. Large data sets need approximations (Rasmussen & Williams, 2006, ch. 8). For the problem this article started with, a few dozen expensive simulations, the cost is negligible next to a single run.
+
+## Why it is also called kriging
+
+In engineering papers, a Gaussian process used as a surrogate model is often called *kriging*. The name comes from geostatistics. Danie Krige (1951) studied how to value gold ore on the Witwatersrand from a limited number of samples, and Georges Matheron, who developed the theory, named the method after him (Rasmussen & Williams, 2006, sec. 2.8). The prediction theory itself goes back at least to the 1940s, to Wiener and Kolmogorov. Sacks et al. (1989) brought it to computer experiments, where each observation is the output of a slow simulation.
+
+## In one sentence
+
+A Gaussian process fixes, before any data, how strongly the outputs at any two inputs are related; each measurement then moves the best guess and shrinks the uncertainty in proportion to that relation, which is why the band is narrow near what you measured and wide far from it.
+
+## References
+
+<div className="references">
+
+- Echard, B., Gayton, N., & Lemaire, M. (2011). AK-MCS: An active learning reliability method combining Kriging and Monte Carlo Simulation. *Structural Safety, 33*(2), 145–154. [doi:10.1016/j.strusafe.2011.01.002](https://doi.org/10.1016/j.strusafe.2011.01.002)
+- Jones, D. R., Schonlau, M., & Welch, W. J. (1998). Efficient global optimization of expensive black-box functions. *Journal of Global Optimization, 13*, 455–492. [doi:10.1023/A:1008306431147](https://doi.org/10.1023/A:1008306431147)
+- Krige, D. G. (1951). A statistical approach to some basic mine valuation problems on the Witwatersrand. *Journal of the Chemical, Metallurgical and Mining Society of South Africa, 52*(6), 119–139.
+- Rasmussen, C. E., & Williams, C. K. I. (2006). *Gaussian Processes for Machine Learning*. MIT Press. Free online at [gaussianprocess.org/gpml](https://gaussianprocess.org/gpml/)
+- Sacks, J., Welch, W. J., Mitchell, T. J., & Wynn, H. P. (1989). Design and analysis of computer experiments. *Statistical Science, 4*(4), 409–423. [doi:10.1214/ss/1177012413](https://doi.org/10.1214/ss/1177012413)
+- Stein, M. L. (1999). *Interpolation of Spatial Data: Some Theory for Kriging*. Springer. [doi:10.1007/978-1-4612-1494-6](https://doi.org/10.1007/978-1-4612-1494-6)
+
+</div>
