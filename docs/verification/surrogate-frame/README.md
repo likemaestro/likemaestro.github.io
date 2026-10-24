@@ -52,13 +52,14 @@ End to end (sample, fit, GA on the GP, verify by FE; `surrogate.test.ts` runs th
 
 | Seeds, N, k | Rounds | FE runs | Verified design | Gap to the exhaustive optimum |
 |---|---|---|---|---|
-| 10 seeds (1–10), N = 24, k = 2 | 1 each | 25 each | 63.48–65.70 t | 0 % (4 seeds), 2.0 % (4), 3.5 % (2) |
+| 10 seeds (1–10), N = 24, k = 2 | 1 each | 25 each | 63.48–65.70 t | 0 % (3 seeds: 4, 5, 8), 2.0 % (5), 3.5 % (2: 9, 10) |
 | seed 7, N = 24, k = 0 | 2 (the first answer failed FE) | 26 | 63.48 t | 0 % |
 | seed 7, N = 24, k = 1 / k = 3 | 1 | 25 | 63.48 / 64.73 t | 0 / 2.0 % |
 | seed 7, N = 12 / N = 40, k = 2 | 1 | 13 / 41 | 64.73 t | 2.0 % |
 
 These are measurements on this model and catalog, not guarantees. The 5 % gap is an empirical target that every run
-above met.
+above met. Remeasured on 24 October 2026 after the GA change below (FE results count where they exist); the first row
+read 4, 4 and 2 seeds before it, the other rows are unchanged.
 
 ### Timing
 
@@ -73,6 +74,31 @@ above met.
 
 CPU throttling (× 4, via the DevTools protocol) did not slow the worker measurably (1.8 s to trained), so it is no
 stand-in for a phone here. Not measured on a real phone.
+
+### The design-space map (rework of 24 October 2026, after Murat's review: "it doesn't show what's going on")
+
+The page now leads with a map of the design space: the 12 × 9 lower-column × beam designs at the chosen upper-column
+size, shaded by the surrogate's verdict (feasible at μ ± 2σ, unsure, not feasible), its predicted limit (μ), the FE
+runs, the GA's population while it searches, the verification rounds and, after Reveal, the true limit from FE with a
+score. "Run FE here" spends one run of a budget (default 40) and joins the training set; the earlier "Check with FE"
+did not train. The GA now treats designs with an FE result as FE says (feasible ones count as feasible; before, only
+infeasible ones were used), so a feasible run found by hand can be the answer.
+
+Unit tests (`surrogate.test.ts`): the verdicts agree with the violation function at k = ±2 and all three occur on the
+default model; the catalog index follows the exhaustive order; the agreement count on a made-up truth; the map's edge
+geometry; the GA keeps one population per generation.
+
+Checked claims behind the page's sentence after Reveal (seed 7, N = 24, h/300): the true optimum HEB 300, HEB 220,
+IPE 360 (63.48 t) is "unsure" for the surrogate; the GA proposes 64.73 t at k = 2 and the true optimum at k = 1, 1.5 or
+0.5 (k = 0 proposes 62.16 t, which FE rejects). After one FE run at the true optimum, the GA at k = 2 returns it.
+
+Browser (production build, 1280 × 800): trained 2.8 s after load; the map shows 47 feasible, 1 unsure and 60 not
+feasible designs at HEB 240; a click on a square selects it; Run FE here: 25 of 40 runs, the run joins training and the
+map updates; Optimize: 24 GA dots on the map at 0.5 s, none at 3.5 s (none at all with reduced motion); Verify: accepted
+after one round, 26 of 40; Reveal (13 s): "right for 1,289 of 1,296 designs (99.5 %); rules out 0 feasible designs and
+accepts 7 that FE rejects", with the true limit drawn and the sentence on the true optimum. With a budget of 25, one run
+spends it and Run FE here is disabled. 375 × 812 with touch: no horizontal scroll, every control at least 44 px tall.
+axe: no violations; no console messages.
 
 ### Browser checks (`vite preview` of the production build)
 

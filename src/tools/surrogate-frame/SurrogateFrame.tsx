@@ -6,10 +6,11 @@ import { hasWebGL2, No3D } from "../three/support";
 import { BEAMS, BUILDING, COLUMNS, CP_NET, feasible, massOf, MODEL, type Design, type Result } from "./frame";
 import { createClient, type Client } from "./client";
 import {
-  incumbent, key, looStats, optimize, OUTS, predictDesign, sampleDesigns, verify,
+  agreement, catalogIndex, cellState, incumbent, key, looStats, optimize, OUTS, predictDesign, sampleDesigns, sliceGrid, verify,
   type GAOpts, type Out, type Outputs, type Round, type Sample, type Surrogate,
 } from "./surrogate";
 import { designName, Elevation, fmtOut, GaChart, LooChart, OUT_LABEL, RoundsTable } from "./Charts";
+import { DesignMap, type MapRun } from "./DesignMap";
 import type { GroupState } from "./Frame3D";
 
 const Frame3D = lazy(() => import("./Frame3D"));
@@ -20,6 +21,7 @@ const SPEC = {
   qk: { kind: "num", min: 1.5, max: 5, step: 0.5, def: 3 },
   lim: { kind: "enum", values: ["300", "400", "500"], def: "300" },
   n: { kind: "num", min: 10, max: 50, step: 1, def: 24 },
+  budget: { kind: "num", min: 20, max: 100, step: 5, def: 40 },
   seed: { kind: "num", min: 1, max: 999999, step: 1, def: 7 },
   k: { kind: "num", min: 0, max: 3, step: 0.5, def: 2 },
   cL: { kind: "num", min: 0, max: 11, step: 1, def: 5 },
@@ -33,7 +35,8 @@ const SPEC = {
   etac: { kind: "num", min: 1, max: 30, step: 1, def: 3 },
   etam: { kind: "num", min: 1, max: 30, step: 1, def: 3 },
 } as const;
-const STEPS = ["Sample", "Train", "Explore", "Optimize", "Verify"];
+const STEPS = ["Sample", "Train", "Explore", "Optimize", "Verify", "Reveal"];
+const REDUCED = typeof window !== "undefined" && !!window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 const GROUP_NAME = ["Columns, storeys 1–3", "Columns, storeys 4–6", "Beams"];
 const sec = (id: string) => id.replace(/^(HEB|IPE)/, "$1 ");
 
@@ -55,7 +58,10 @@ const SurrogateFrame: React.FC = () => {
   const [surrogate, setSurrogate] = useState<Surrogate | null>(null);
   const [fitMs, setFitMs] = useState(0);
   const [check, setCheck] = useState<{ key: string; r: Result } | null>(null);
-  const [opt, setOpt] = useState<{ key: string; best: Design | null; mass: number | null; history: (number | null)[]; ms: number } | null>(null);
+  const [opt, setOpt] = useState<{ key: string; best: Design | null; mass: number | null; history: (number | null)[]; trail: Design[][]; ms: number } | null>(null);
+  const [gen, setGen] = useState<number | null>(null);   // the GA generation on the map while the search animates
+  const [extra, setExtra] = useState(0);                 // FE runs after the initial samples: yours and verification's
+  const epoch = useRef(0), anim = useRef(0);
   const [ver, setVer] = useState<{ key: string; rounds: Round[]; status: string; newRuns: number; accepted: Design | null } | null>(null);
   const [exh, setExh] = useState<{ loads: string; progress: number; id: number | null; out: Float64Array | null; ms: number } | null>(null);
   const [picked, setPicked] = useState<number | null>(null);
@@ -75,7 +81,8 @@ const SurrogateFrame: React.FC = () => {
     if (!c) return;
     let live = true;
     const designs = sampleDesigns(p.n, p.seed);
-    setPhase("sampling"); setStrip(designs.map(() => null)); setFeMs([]); setSamples([]); setSurrogate(null); setCheck(null); setVer(null);
+    epoch.current++;
+    setPhase("sampling"); setStrip(designs.map(() => null)); setFeMs([]); setSamples([]); setSurrogate(null); setCheck(null); setVer(null); setOpt(null); setExtra(0);
     setSaid(`Running ${p.n} frame analyses.`);
     const run = c.fe(designs, loads, (i, _d, r, ms) => {
       if (!live) return;
@@ -115,15 +122,22 @@ const SurrogateFrame: React.FC = () => {
     return { util: b.mu, state: b.mu > 1 ? "over" : b.hi >= 1 ? "unsure" : "ok" };
   }) as [GroupState, GroupState, GroupState], [feOut, pred]);
 
-  const checkFE = () => {
-    const c = client.current;
-    if (!c) return;
-    c.fe([design], loads, (_i, _d, r, _ms, full) => {
-      if (!full) return;
-      setCheck({ key: `${sampleKey}|${key(design)}`, r: full });
-      const e = pred ? (full.drift / pred.drift.mu - 1) : 0;
-      setSaid(`FE: drift 1 in ${Math.round(1 / r.drift)}, largest utilization ${Math.max(r.uCL, r.uCU, r.uB).toFixed(2)}${pred ? `; the GP's drift was ${Math.abs(Math.round(100 * e))} % ${e > 0 ? "low" : "high"}` : ""}.`);
-    }, true);
+  // Run FE here: one analysis from the budget; it joins the training set and the surrogate is refitted, so the
+  // predicted limit on the map moves (infill, Forrester et al. 2008)
+  const runHere = async () => {
+    const c = client.current, e0 = epoch.current;
+    if (!c || !surrogate || known.has(key(design)) || used >= p.budget) return;
+    const before = pred, d = design;
+    setPhase("training");
+    const outs = await c.fe([d], loads, (_i, _d, _r, _ms, full) => { if (full && e0 === epoch.current) setCheck({ key: `${sampleKey}|${key(d)}`, r: full }); }, true).promise;
+    if (e0 !== epoch.current || !outs[0]) return;
+    const r = outs[0], S = [...samples, { d, r }];
+    setSamples(S); setExtra((x) => x + 1);
+    const f = await c.fit(S, p.seed);
+    if (e0 !== epoch.current) return;
+    setSurrogate(f.surrogate); setFitMs(f.ms); setOpt(null); setPhase("ready");
+    const err = before ? r.drift / before.drift.mu - 1 : 0;
+    setSaid(`FE: ${feasible(r, lim) ? "feasible" : "not feasible"}; drift 1 in ${Math.round(1 / r.drift)}, largest utilization ${Math.max(r.uCL, r.uCU, r.uB).toFixed(2)}${before ? `; the surrogate's drift was ${Math.abs(Math.round(100 * err))} % ${err > 0 ? "low" : "high"}` : ""}. The run joined the training set.`);
   };
 
   const runOptimize = () => {
@@ -132,7 +146,15 @@ const SurrogateFrame: React.FC = () => {
     setOpt({ key: optKey, ...o, ms });
     if (o.best) { set({ cL: o.best.cL, cU: o.best.cU, bm: o.best.bm, step: "optimized" }); setSaid(`Optimize: the GA proposes ${designName(o.best)}, ${o.mass!.toFixed(1)} t, predicted feasible.`); }
     else setSaid("Optimize: no design the surrogate calls feasible.");
+    // the search, replayed on the map: one generation every 60 ms
+    cancelAnimationFrame(anim.current);
+    if (REDUCED) { setGen(null); return; }
+    const start = performance.now(), last = o.trail.length - 1;
+    const tick = (now: number) => { const g = Math.min(last, Math.floor((now - start) / 60)); setGen(g < last ? g : null); if (g < last) anim.current = requestAnimationFrame(tick); };
+    setGen(0);
+    anim.current = requestAnimationFrame(tick);
   };
+  useEffect(() => () => cancelAnimationFrame(anim.current), []);
   // a new caution, limit or GA setting re-runs Optimize if it was done; Verify then needs a new run
   const optDone = opt !== null && opt.key.startsWith(sampleKey);
   useEffect(() => { if (optDone && opt!.key !== optKey && phase === "ready") runOptimize(); }, [optKey]);   // eslint-disable-line react-hooks/exhaustive-deps
@@ -144,18 +166,18 @@ const SurrogateFrame: React.FC = () => {
     const rounds: Round[] = [];
     setVer({ key: optKey, rounds: [], status: "running", newRuns: 0, accepted: null });
     const v = await verify({
-      samples, surrogate, lim, k: p.k, ga,
+      samples, surrogate, lim, k: p.k, ga, maxRounds: Math.min(10, p.budget - used),
       fe: (d) => c.fe([d], loads).promise.then((r) => r[0]),
       refit: (S) => c.fit(S, p.seed).then((r) => r.surrogate),
       onRound: (r) => { rounds.push(r); setVer({ key: optKey, rounds: rounds.slice(), status: "running", newRuns: 0, accepted: null }); },
     });
-    setSamples(v.samples); setSurrogate(v.surrogate);
+    setSamples(v.samples); setSurrogate(v.surrogate); setExtra((x) => x + v.newRuns);
     setVer({ key: optKey, rounds: v.rounds, status: v.status, newRuns: v.newRuns, accepted: v.accepted });
     setOpt((o) => (o ? { ...o, key: optKey } : o));
     if (v.accepted) set({ cL: v.accepted.cL, cU: v.accepted.cU, bm: v.accepted.bm, step: "optimized" });
     setPhase("ready");
     setSaid(v.status === "accepted" ? `Verified: ${designName(v.accepted!)}, ${massOf(v.accepted!).toFixed(1)} t, feasible by FE after ${v.rounds.length} round${v.rounds.length > 1 ? "s" : ""}.`
-      : v.status === "no feasible" ? "No design the surrogate calls feasible." : "Not verified after 10 rounds: the surrogate can’t model this region well. Add more samples.");
+      : v.status === "no feasible" ? "No design the surrogate calls feasible." : `Not verified after ${v.rounds.length} round${v.rounds.length === 1 ? "" : "s"}${p.budget - used - v.newRuns <= 0 ? ", and the budget is spent" : ""}: the surrogate can’t model this region well yet.`);
   };
 
   const loadsKey = `${p.gk}|${p.qk}|${p.qp}`;
@@ -167,7 +189,7 @@ const SurrogateFrame: React.FC = () => {
     setExh({ loads: loadsKey, progress: 0, id: job.id, out: null, ms: 0 });
     job.promise.then((r) => {
       setExh((e) => (e && e.id === job.id ? (r ? { ...e, id: null, progress: 1, out: r.out, ms: r.ms } : null) : e));
-      if (r) setSaid(`Exhaustive FE done: 1,296 designs in ${(r.ms / 1000).toFixed(0)} s.`);
+      if (r) setSaid(`Revealed: all 1,296 designs by FE in ${(r.ms / 1000).toFixed(0)} s. The true limit is on the map.`);
     });
   };
   const exhOpt = useMemo(() => {
@@ -180,12 +202,33 @@ const SurrogateFrame: React.FC = () => {
     return { best, n };
   }, [exhNow?.out, lim]);   // eslint-disable-line react-hooks/exhaustive-deps
 
-  const feRuns = samples.length > 0 ? p.n + (ver && ver.key === optKey ? ver.newRuns : 0) : 0;
+  const used = samples.length > 0 ? p.n + extra : 0, feRuns = used, left = Math.max(0, p.budget - used);
   const msPer = feMs.length ? feMs.reduce((a, b) => a + b, 0) / feMs.length : 0;
   const inc = incumbent([...samples, ...(ver?.rounds ?? []).map((r) => ({ d: r.d, r: r.fe }))], lim);   // every FE run of the workflow
   const verifiedMass = ver && ver.key === optKey && ver.accepted ? massOf(ver.accepted) : null;
-  const done = [samples.length > 0, !!surrogate, !!surrogate, optDone, !!ver && ver.key === optKey && ver.status !== "running"];
-  const current = phase === "sampling" ? 0 : phase === "training" ? 1 : phase === "verifying" ? 4 : optDone ? (done[4] ? 4 : 3) : 2;
+  const done = [samples.length > 0, !!surrogate, !!surrogate, optDone, !!ver && ver.key === optKey && ver.status !== "running", !!exhNow?.out];
+  const current = phase === "sampling" ? 0 : phase === "training" && !surrogate ? 1 : phase === "verifying" ? 4 : exhNow?.out ? 5 : optDone ? (done[4] ? 4 : 3) : 2;
+
+  // the map: the surrogate's verdicts at the current upper-column size, the FE runs, the GA's search and the truth
+  const cells = useMemo(() => (surrogate ? sliceGrid(surrogate, design.cU, lim) : null), [surrogate, design.cU, lim]);
+  const truthOf = (d: Design) => { const o = exhNow!.out!.subarray(6 * catalogIndex(d), 6 * catalogIndex(d) + 6); return feasible({ drift: o[0], uCL: o[1], uCU: o[2], uB: o[3], acr: o[4] }, lim); };
+  const truth = useMemo(() => (exhNow?.out ? Array.from({ length: COLUMNS.length * BEAMS.length }, (_, i) => truthOf({ cL: i % COLUMNS.length, cU: design.cU, bm: Math.floor(i / COLUMNS.length) })) : null), [exhNow?.out, design.cU, lim]);   // eslint-disable-line react-hooks/exhaustive-deps
+  const agree = useMemo(() => (exhNow?.out && surrogate ? agreement(surrogate, exhNow.out, lim) : null), [exhNow?.out, surrogate, lim]);
+  const mapRuns: MapRun[] = [
+    ...samples.map((s) => ({ d: s.d, ok: feasible(s.r, lim) })),
+    ...(ver && ver.key.startsWith(sampleKey) ? ver.rounds : []).map((r) => ({ d: r.d, ok: r.ok, round: r.round })),
+  ];
+  const population = gen !== null && opt?.trail ? opt.trail[gen] : null;
+  const lesson = (() => {
+    const tb = exhOpt?.best?.d, mine = (ver && ver.key === optKey ? ver.accepted : null) ?? (opt && opt.key === optKey ? opt.best : null);
+    if (!tb || !surrogate || !mine) return null;
+    if (key(tb) === key(mine)) return "The surrogate’s answer is the true optimum.";
+    const st = cellState(predictDesign(surrogate, tb), lim), where = `${designName(tb)} (dashed square, at upper columns ${COLUMNS[tb.cU].replace("HEB", "HEB ")})`;
+    if (st === "unsure") return `The true optimum, ${where}, lies where the surrogate is unsure: with caution k = ${p.k} the GA kept away from it. Lower k, or run FE there, and the search can reach it.`;
+    if (st === "over") return `The surrogate wrongly rules out the true optimum, ${where}. Run FE there, and the search can use it.`;
+    return `The surrogate calls the true optimum, ${where}, feasible, but the GA stopped at a heavier design; another seed or more generations may find it.`;
+  })();
+  const hours = (n: number) => (n >= 48 ? `${Math.round(n / 24)} days` : `${n} hours`);
 
   const source: "FE" | "GP" = feOut ? "FE" : "GP";
   const band = (o: Out) => (pred ? `${fmtOut(o, pred[o].mu)} (${fmtOut(o, o === "drift" ? pred[o].hi : pred[o].lo)} to ${fmtOut(o, o === "drift" ? pred[o].lo : pred[o].hi)})` : "–");
@@ -229,12 +272,14 @@ const SurrogateFrame: React.FC = () => {
       method={<>
         <p>A Latin hypercube picks N frame designs; each is analysed with a linear 3D frame model: 12-degree-of-freedom beam elements, rigid floors, fixed bases, the EN 1990 combinations 6.10 with the recommended factors, sway imperfections (EN 1993-1-1, 5.3.2), Horne’s αcr with sway amplification (5.2.2) and simplified member screens.</p>
         <p>A Gaussian process per output (drift, utilization of three member groups, αcr; Matérn 5/2 with one length scale per variable) is fitted to these runs by maximizing the marginal likelihood. Its accuracy is measured by leave-one-out with the same hyperparameters.</p>
-        <p>A genetic algorithm then minimizes steel mass on the surrogate, keeping k standard deviations away from every limit, and the frame model checks the answer; a failed check joins the training set and the search runs again (surrogate-assisted evolutionary design, Jin 2011; Forrester et al. 2008). The exhaustive search analyses all 1,296 catalog designs as the honest baseline.</p>
+        <p>The map shows what the surrogate has learned: for every design at one upper-column size, whether it predicts all limits met with its ±2σ band inside them, unsure (the band crosses a limit) or not met, and the predicted limit where μ crosses it. Each FE run you add joins the training set and the surrogate is refitted (infill; Forrester, Sóbester and Keane 2008).</p>
+        <p>A genetic algorithm then minimizes steel mass on the surrogate, keeping k standard deviations away from every limit (designs already analysed count with their FE result), and the frame model checks the answer; a failed check joins the training set and the search runs again (surrogate-assisted evolutionary design, Jin 2011). Reveal analyses all 1,296 catalog designs as the honest baseline and grades the surrogate against it.</p>
         <p>This is the workflow I use in my research: surrogates trained on expensive analyses, searched by an optimizer and checked by the full model.</p>
       </>}
       limits={<>
         <p>A teaching model, not a design tool: one wind direction (on the 18 m face) with a simplified net pressure coefficient of 1.3, rigid floors, fixed bases, no connection design, no checks of the floor beams’ lateral stability (the slab is assumed to hold them), S355 with γM0 = γM1 = 1.0.</p>
         <p>The column check N/(χmin Npl) + My/Mpl,y + Mz/Mpl,z with a storey-height buckling length is a simplified screen, not the EN 1993-1-1 interaction formula. Beams are checked for bending and shear separately. αcr comes from Horne’s storey method in both directions; amplification applies to the sway effects only.</p>
+        <p>The map is a slice at one upper-column size; FE runs at other sizes are drawn faint, and the GA moves in all three variables. The run budget and the hour per analysis are a thought experiment: here one analysis takes milliseconds.</p>
         <p>The drift limits h/300, h/400 and h/500 are illustrative screening limits. The ±2σ bands are model-based intervals of the surrogate, not probabilities of meeting a code; k = 2 is not a 98 % reliability. The exhaustive optimum is exact only within this catalog and this simplified model.</p>
         <p>Loads are stated assumptions you can change. Hand check before publication: the default design against a commercial frame program.</p>
       </>}
@@ -253,7 +298,7 @@ const SurrogateFrame: React.FC = () => {
           ))}
         </ol>
         <p className="t-small text-ink-2 sm:ml-3">
-          FE runs: {phase === "sampling" ? `${strip.filter((s) => s !== null).length} / ${p.n}` : feRuns}
+          FE runs: {phase === "sampling" ? `${strip.filter((s) => s !== null).length} / ${p.n}` : `${feRuns} of a budget of ${p.budget}`}
           {stats && <> · GP accuracy (leave-one-out): R² {minR2.toFixed(2)} or better, worst {Math.round(100 * maxErr)} %</>}
           {stats && !OUTS.every((o) => stats[o].ok) && <> · <span className="text-ink">accuracy insufficient for some outputs: add samples</span></>}
         </p>
@@ -266,6 +311,11 @@ const SurrogateFrame: React.FC = () => {
       {/* Settings */}
       <div className="grid gap-x-6 gap-y-3 border-t border-rule py-4 sm:flex sm:flex-wrap sm:items-end">
         <div className="sm:w-40">{slider("n", "FE samples", String)}</div>
+        <div className="sm:w-40">
+          <Field label="Run budget" value={String(p.budget)} htmlFor="sf-budget">
+            <input id="sf-budget" type="range" min={20} max={100} step={5} value={p.budget} onChange={(e) => set({ budget: e.target.value })} className="w-full accent-ink [@media(pointer:coarse)]:h-11" />
+          </Field>
+        </div>
         <div className="flex items-end gap-2">
           <Field label="Seed" htmlFor="sf-seed">
             <input id="sf-seed" type="number" inputMode="numeric" min={1} value={p.seed} disabled={busy} onChange={(e) => e.target.value && set({ seed: e.target.value })}
@@ -293,23 +343,42 @@ const SurrogateFrame: React.FC = () => {
       </div>}
 
       <div className="grid border-t border-rule lg:grid-cols-[minmax(0,1fr)_21rem]">
-        {/* Stage */}
+        {/* Stage: the design space first, the current design in 3D beside it */}
         <div className="min-w-0 py-4 lg:pr-6">
-          <div className="relative h-[clamp(18rem,55svh,30rem)] w-full lg:h-[clamp(20rem,calc(100svh-22rem),36rem)]">
-            {webgl
-              ? <Suspense fallback={<p className="t-small text-ink-2">Loading the 3D view…</p>}>
-                  <Frame3D design={design} groups={groups} memberUtil={fe?.util ?? null} disp={fe?.disp ?? null} deformed={deformed && !!fe}
-                    windForces={windForces} picked={picked} onPick={setPicked} label={label} />
-                </Suspense>
-              : <No3D><Elevation grey={greyCss} hatch={(g) => groups[g].state !== "ok"} /></No3D>}
-            <div className="max-sm:hidden">{legend}</div>
+          <div className="grid gap-x-6 gap-y-8 xl:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]">
+            <div className="min-w-0">
+              <DesignMap cU={design.cU} cells={cells} truth={truth} runs={mapRuns} current={design} population={population}
+                answer={opt && opt.key === optKey ? opt.best : null} trueBest={exhOpt?.best?.d ?? null} lim={lim}
+                onPick={(cL, bm) => set({ cL, bm, step: "explore" })} />
+              {agree && <p className="t-small mt-3 text-ink">
+                Graded against FE: the surrogate’s predicted limit is right for {agree.agree.toLocaleString("en-US")} of {agree.n.toLocaleString("en-US")} designs ({(100 * agree.agree / agree.n).toFixed(1)} %).
+                It rules out {agree.missed} feasible design{agree.missed === 1 ? "" : "s"} and accepts {agree.wrong} that FE rejects.
+                {lesson && <> {lesson}</>}
+              </p>}
+            </div>
+            <div className="min-w-0">
+              <h3 className="font-[520]">The current design</h3>
+              <div className="relative mt-2 h-[clamp(16rem,42svh,26rem)] w-full">
+                {webgl
+                  ? <Suspense fallback={<p className="t-small text-ink-2">Loading the 3D view…</p>}>
+                      <Frame3D design={design} groups={groups} memberUtil={fe?.util ?? null} disp={fe?.disp ?? null} deformed={deformed && !!fe}
+                        windForces={windForces} picked={picked} onPick={setPicked} label={label} />
+                    </Suspense>
+                  : <No3D><Elevation grey={greyCss} hatch={(g) => groups[g].state !== "ok"} /></No3D>}
+                <div className="max-sm:hidden">{legend}</div>
+              </div>
+              <div className="sm:hidden">{legend}</div>
+              <p className="t-small mt-2 text-ink">{caption}</p>
+              {fe && <label className="t-small mt-1 flex items-center gap-2 text-ink-2">
+                <input type="checkbox" checked={deformed} onChange={(e) => setDeformed(e.target.checked)} className="accent-ink" />
+                Deformed (FE){deformed ? `: × ${Math.round((BUILDING.storeys * BUILDING.h) / 40 / Math.max(1e-9, ...Array.from({ length: fe.disp.length / 6 }, (_, i) => Math.hypot(fe.disp[6 * i], fe.disp[6 * i + 1]))))}, illustrative, characteristic wind` : ""}
+              </label>}
+            </div>
           </div>
-          <div className="sm:hidden">{legend}</div>
-          <p className="t-small mt-2 text-ink">{caption}</p>
-          {fe && <label className="t-small mt-1 flex items-center gap-2 text-ink-2">
-            <input type="checkbox" checked={deformed} onChange={(e) => setDeformed(e.target.checked)} className="accent-ink" />
-            Deformed (FE){deformed ? `: × ${Math.round((BUILDING.storeys * BUILDING.h) / 40 / Math.max(1e-9, ...Array.from({ length: fe.disp.length / 6 }, (_, i) => Math.hypot(fe.disp[6 * i], fe.disp[6 * i + 1]))))}, illustrative, characteristic wind` : ""}
-          </label>}
+          {used > 0 && <p className="t-small mt-4 text-ink-2">
+            Budget: {used} of {p.budget} FE runs used{left === 0 ? " (spent)" : ""}. If each analysis took an hour, these runs would take {hours(used)}, and all 1,296 designs {hours(1296)}.
+            {p.n >= p.budget && " The samples alone use the whole budget."}
+          </p>}
         </div>
 
         {/* Panel */}
@@ -346,10 +415,10 @@ const SurrogateFrame: React.FC = () => {
           </table>
           <p className="t-small text-ink-2">{feOut ? (feasible(feOut, lim) ? `Feasible by FE for h/${lim}.` : `Not feasible by FE for h/${lim}.`) : "GP: μ (μ ± 2σ). A band that crosses a limit is unsure."}</p>
           <div className="flex flex-wrap gap-2">
-            <button type="button" className="btn" disabled={busy} onClick={checkFE}>Check with FE</button>
-            <Tip label="Check with FE">One frame analysis of this design. It is not added to the training set, so you can compare the GP with FE without changing the surrogate.</Tip>
+            <button type="button" className="btn" disabled={busy || !surrogate || !!trained || left === 0} onClick={runHere}>{trained ? "Already run" : "Run FE here"}</button>
+            <Tip label="Run FE here">One frame analysis of this design, from the budget; the surrogate learns from it. Runs in hatched squares or next to the predicted limit teach it most; a run where it is already sure changes little.</Tip>
             <button type="button" className="btn btn-solid" disabled={busy || !surrogate} onClick={runOptimize}>Optimize</button>
-            <button type="button" className="btn" disabled={busy || !optDone} onClick={runVerify}>Verify</button>
+            <button type="button" className="btn" disabled={busy || !optDone || left === 0} onClick={runVerify}>Verify</button>
           </div>
           <Field label="Caution k" value={p.k.toFixed(1)} htmlFor="sf-k">
             <div className="flex items-center gap-2">
@@ -361,8 +430,8 @@ const SurrogateFrame: React.FC = () => {
             {exhNow?.id ? <div className="flex items-center gap-3">
               <div role="progressbar" aria-label="Exhaustive FE" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(100 * exhNow.progress)} className="h-2 flex-1 border border-ink"><div className="h-full bg-ink" style={{ width: `${100 * exhNow.progress}%` }} /></div>
               <button type="button" className="btn" onClick={() => { client.current?.cancel(exhNow.id!); setExh(null); }}>Cancel</button>
-            </div> : <button type="button" className="btn" disabled={busy || !msPer} onClick={runExhaustive}>Exhaustive FE{msPer ? ` (about ${Math.max(1, Math.round((msPer * 1296) / 1000))} s)` : ""}</button>}
-            <p className="t-small mt-2 text-ink-2">All 1,296 catalog designs by FE: the true optimum of this model, and the cost the surrogate saves.</p>
+            </div> : <button type="button" className="btn" disabled={busy || !msPer || !!exhNow?.out} onClick={runExhaustive}>{exhNow?.out ? "Revealed" : `Reveal the truth${msPer ? ` (about ${Math.max(1, Math.round((msPer * 1296) / 1000))} s)` : ""}`}</button>}
+            <p className="t-small mt-2 text-ink-2">All 1,296 designs by FE: the true limit on the map, the true optimum, and a score for the surrogate. Here one analysis takes about {msPer ? Math.max(1, Math.round(msPer)) : "–"} ms, so the truth can be computed to grade the surrogate; the budget plays the part of an expensive analysis.</p>
           </div>
           {opt && opt.key === optKey && !opt.best && <p className="t-small text-ink">No design the surrogate calls feasible for these loads and limits. That is no proof none exists: the exhaustive FE search settles it.</p>}
           <p className="sr-only" role="status" aria-live="polite">{said}</p>

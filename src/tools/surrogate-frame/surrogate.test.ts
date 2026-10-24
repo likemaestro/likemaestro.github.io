@@ -1,5 +1,6 @@
 import { analyse, BEAMS, COLUMNS, feasible, massOf, type Design } from "./frame";
-import { encode, fitSurrogate, GA_DEFAULT, incumbent, key, looStats, optimize, OUTS, sampleDesigns, UB, verify, type Outputs, type Sample } from "./surrogate";
+import { agreement, catalogIndex, cellState, encode, fitSurrogate, GA_DEFAULT, incumbent, key, looStats, optimize, OUTS, predictDesign, predictedFeasible, sampleDesigns, sliceGrid, UB, verify, violation, type Outputs, type Sample } from "./surrogate";
+import { edges } from "./map";
 
 const fe = (d: Design): Outputs => { const r = analyse(d); return { drift: r.drift, uCL: r.uCL, uCU: r.uCU, uB: r.uB, acr: r.acr, mass: r.mass }; };
 
@@ -38,3 +39,43 @@ test("end to end, default settings: verification ends within 10 rounds with an F
   expect(gap).toBeGreaterThanOrEqual(-1e-12);   // nothing feasible is lighter than the true optimum
   console.info(`end to end: ${24 + v.newRuns} FE runs, ${v.rounds.length} rounds, ${COLUMNS[v.accepted!.cL]} ${COLUMNS[v.accepted!.cU]} ${BEAMS[v.accepted!.bm]} ${massOf(v.accepted!).toFixed(2)} t, gap ${(100 * gap).toFixed(1)} %; LOO R² ${OUTS.map((o) => `${o} ${stats[o].r2.toFixed(3)}`).join(", ")}; incumbent ${incumbent(v.samples, 300)?.r.mass.toFixed(2)} t`);
 }, 60000);
+
+test("the map's verdicts: ok is feasible even at μ + 2σ, over is infeasible even at μ − 2σ, unsure in between", () => {
+  const g = fitSurrogate(sampleDesigns(24, 7).map((d) => ({ d, r: fe(d) })), 7);
+  const counts = { ok: 0, unsure: 0, over: 0 };
+  for (let cU = 0; cU < COLUMNS.length; cU++) for (const c of sliceGrid(g, cU, 300)) {
+    const p = predictDesign(g, c.d);
+    expect(c.state).toBe(cellState(p, 300));
+    expect(c.feasible).toBe(predictedFeasible(p, 300));
+    if (c.state === "ok") { expect(violation(p, 300, 2)).toBe(0); expect(c.feasible).toBe(true); }
+    if (c.state === "over") { expect(violation(p, 300, -2)).toBeGreaterThan(0); expect(c.feasible).toBe(false); }
+    expect(c.mass).toBeCloseTo(massOf(c.d), 12);
+    counts[c.state]++;
+  }
+  expect(counts.ok + counts.unsure + counts.over).toBe(1296);
+  expect(counts.ok).toBeGreaterThan(0); expect(counts.over).toBeGreaterThan(0); expect(counts.unsure).toBeGreaterThan(0);
+});
+
+test("the catalog index follows the exhaustive search's order; agreement counts every design once", () => {
+  let k = 0;
+  for (let a = 0; a < COLUMNS.length; a++) for (let b = 0; b < COLUMNS.length; b++) for (let c = 0; c < BEAMS.length; c++, k++) expect(catalogIndex({ cL: a, cU: b, bm: c })).toBe(k);
+  // a made-up truth where every design passes: then nothing can be "wrong", and the missed ones are exactly those the surrogate calls infeasible
+  const g = fitSurrogate(sampleDesigns(24, 7).map((d) => ({ d, r: fe(d) })), 7), out = new Float64Array(6 * 1296);
+  for (let i = 0; i < 1296; i++) out.set([1e-4, 0.5, 0.5, 0.5, 10, 50], 6 * i);
+  let predFeasible = 0;
+  for (let cU = 0; cU < COLUMNS.length; cU++) for (const c of sliceGrid(g, cU, 300)) if (c.feasible) predFeasible++;
+  const a = agreement(g, out, 300);
+  expect(a).toEqual({ agree: predFeasible, missed: 1296 - predFeasible, wrong: 0, n: 1296 });
+});
+
+test("map edges: segments only between neighbors that differ", () => {
+  expect(edges([true, false, false, false], 2, 2)).toEqual([[1, 0, 1, 1], [0, 1, 1, 1]]);
+  expect(edges([true, true, true, true], 2, 2)).toEqual([]);
+  expect(edges([true, false, true, false], 2, 2)).toEqual([[1, 0, 1, 1], [1, 1, 1, 2]]);   // a vertical line through both rows
+});
+
+test("the GA keeps its population per generation for the animation", () => {
+  const g = fitSurrogate(sampleDesigns(16, 3).map((d) => ({ d, r: fe(d) })), 3), o = optimize(g, 300, 2);
+  expect(o.trail).toHaveLength(GA_DEFAULT.gens + 1);
+  for (const pop of o.trail) { expect(pop).toHaveLength(GA_DEFAULT.pop); for (const d of pop) [d.cL, d.cU, d.bm].forEach((v, k) => { expect(v).toBeGreaterThanOrEqual(0); expect(v).toBeLessThanOrEqual(UB[k]); }); }
+});

@@ -74,24 +74,59 @@ export function violation(p: Prediction, lim: number, k: number) {
   return cv + Math.max(0, Math.log(3) - (p.acr.m - k * p.acr.s));
 }
 
+/** The surrogate's verdict on a design: feasible even at μ ± 2σ ("ok"), infeasible even then ("over"), or "unsure"
+ *  when the ±2σ band straddles a limit. The predicted limit itself is μ (k = 0). */
+export type CellState = "ok" | "unsure" | "over";
+export const predictedFeasible = (p: Prediction, lim: number) => violation(p, lim, 0) === 0;
+export function cellState(p: Prediction, lim: number): CellState {
+  if (violation(p, lim, 2) === 0) return "ok";
+  return violation(p, lim, -2) > 0 ? "over" : "unsure";
+}
+
+/** Catalog index of a design, in the exhaustive search's order (lower columns, upper columns, beams). */
+export const catalogIndex = (d: Design) => (d.cL * COLUMNS.length + d.cU) * BEAMS.length + d.bm;
+
+/** The map: every lower-column × beam design at one upper-column size, row by row from the lightest beam. */
+export function sliceGrid(g: Surrogate, cU: number, lim: number) {
+  return Array.from({ length: COLUMNS.length * BEAMS.length }, (_, i) => {
+    const d: Design = { cL: i % COLUMNS.length, cU, bm: Math.floor(i / COLUMNS.length) }, p = predictDesign(g, d);
+    return { d, state: cellState(p, lim), feasible: predictedFeasible(p, lim), mass: massOf(d) };
+  });
+}
+
+/** How often the surrogate's predicted limit (μ) agrees with FE over the whole catalog, from the exhaustive results
+ *  (6 values per design: drift, uCL, uCU, uB, αcr, mass). missed: feasible designs it calls infeasible; wrong: the reverse. */
+export function agreement(g: Surrogate, out: Float64Array, lim: number) {
+  let agree = 0, missed = 0, wrong = 0, n = 0;
+  for (let a = 0; a < COLUMNS.length; a++) for (let b = 0; b < COLUMNS.length; b++) for (let c = 0; c < BEAMS.length; c++, n++) {
+    const d = { cL: a, cU: b, bm: c }, o = out.subarray(6 * n, 6 * n + 6);
+    const truth = feasible({ drift: o[0], uCL: o[1], uCU: o[2], uB: o[3], acr: o[4] }, lim), pred = predictedFeasible(predictDesign(g, d), lim);
+    if (truth === pred) agree++; else if (truth) missed++; else wrong++;
+  }
+  return { agree, missed, wrong, n };
+}
+
 export interface GAOpts { pop: number; gens: number; pc: number; mut: number; etaC: number; etaM: number; seed: number }
 export const GA_DEFAULT: GAOpts = { pop: 24, gens: 40, pc: 0.9, mut: 1, etaC: 3, etaM: 3, seed: 7 };
 
-/** Minimize mass on the surrogate. Designs the frame model already found infeasible are excluded. Returns the lightest
- *  design the surrogate calls feasible (or null) and the best such mass per generation. */
+/** Minimize mass on the surrogate. Designs the frame model has already analysed count with their FE result: feasible
+ *  ones are feasible with certainty, infeasible ones are excluded. Returns the lightest design found feasible (or null),
+ *  the best such mass per generation and the population per generation. */
 export function optimize(g: Surrogate, lim: number, k: number, o: GAOpts = GA_DEFAULT, known: Map<string, Outputs> = new Map()) {
   const ga = createNSGA2({
     n: 3, ub: UB,
     evaluate: (x) => {
       const d = fromArr(x), fe = known.get(key(d));
-      return { f: [massOf(d)], cv: violation(predictDesign(g, d), lim, k) + (fe && !feasible(fe, lim) ? 1 : 0) };
+      if (fe && feasible(fe, lim)) return { f: [massOf(d)], cv: 0 };   // FE has the final word where it has run
+      return { f: [massOf(d)], cv: violation(predictDesign(g, d), lim, k) + (fe ? 1 : 0) };
     },
   }, o);
   const bestOf = () => ga.state.pop.filter((p) => p.cv === 0).sort((a, b) => a.f[0] - b.f[0])[0];
   const history: (number | null)[] = [bestOf()?.f[0] ?? null];
-  for (let i = 0; i < o.gens; i++) { ga.step(); history.push(bestOf()?.f[0] ?? null); }
+  const trail: Design[][] = [ga.state.pop.map((p) => fromArr(p.x))];   // the population, generation by generation
+  for (let i = 0; i < o.gens; i++) { ga.step(); history.push(bestOf()?.f[0] ?? null); trail.push(ga.state.pop.map((p) => fromArr(p.x))); }
   const b = bestOf();
-  return { best: b ? fromArr(b.x) : null, mass: b?.f[0] ?? null, history, evaluations: ga.state.evaluations };
+  return { best: b ? fromArr(b.x) : null, mass: b?.f[0] ?? null, history, trail, evaluations: ga.state.evaluations };
 }
 
 export interface Round { round: number; d: Design; predicted: Prediction; fe: Outputs; ok: boolean; error: number; verdict: string; added: boolean }
