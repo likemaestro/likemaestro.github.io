@@ -141,7 +141,7 @@ const BuildingChord: React.FC = () => {
   const runStep = (k: string) => {
     if (k === "1") set({ step: "1", T: 15, occ: 0.3, dmg: "" });
     if (k === "2") set({ step: "2", T: 30, occ: 0.6, dmg: "" });
-    if (k === "3") set({ step: "3", T: 15, occ: 0.3, dmg: "c1-5", d: 0.7 });   // the ground-storey center column (the spec's "inner column")
+    if (k === "3") { set({ step: "3", T: 15, occ: 0.3, dmg: "c1-5", d: 0.7 }); setFocus((f) => f + 1); }   // the ground-storey center column (the spec's "inner column")
     if (k === "free") set({ step: "free" });
   };
 
@@ -151,7 +151,7 @@ const BuildingChord: React.FC = () => {
     return () => window.clearTimeout(t);
   }, [aeFlag, msdFlag]);
 
-  const [picking, setPicking] = useState(false);
+  const [picking, setPicking] = useState(false), [focus, setFocus] = useState(0);   // focus: counts the visitor's choices of a member, for the camera
   const list = useMemo(() => members(b), [b]);
   const dmgLabel = dmg ? list.find((m) => m.id === p.dmg)?.label ?? p.dmg : null;
   const label = `${b.n}-storey steel building, ${b.sys === "moment" ? "moment frame" : "braced core"}.${dmgLabel ? ` ${dmgLabel} weakened ${Math.round(100 * p.d)} %.` : ""} First mode ${cur.modes[0].f.toFixed(2)} hertz${dmg ? `, ${Math.abs(100 * vsHealthyToday).toFixed(1)} % lower than healthy` : ""}.`;
@@ -199,8 +199,8 @@ const BuildingChord: React.FC = () => {
           <div className="h-[clamp(18rem,55svh,30rem)] w-full lg:h-[clamp(20rem,calc(100svh-24rem),34rem)]">
             {webgl
               ? <Suspense fallback={<p className="t-small text-ink-2">Loading the 3D view…</p>}>
-                  <Building3D b={b} dmg={dmg} picking={picking} tapFloor={tap.floor} motion={motion} still={REDUCED && showMode !== null ? cur.modes[showMode].phi : null} label={label}
-                    onPick={(id) => { set({ dmg: id, step: "free" }); setPicking(false); }} onTapFloor={(f) => set({ tap: `${f}${tap.dir}` })} />
+                  <Building3D b={b} dmg={dmg} focus={focus} picking={picking} tapFloor={tap.floor} motion={motion} still={REDUCED && showMode !== null ? cur.modes[showMode].phi : null} label={label}
+                    onPick={(id) => { set({ dmg: id, step: "free" }); setPicking(false); setFocus((f) => f + 1); }} onTapFloor={(f) => set({ tap: `${f}${tap.dir}` })} />
                 </Suspense>
               : <p className="t-small text-ink-2">Your browser can’t show the 3D view; the sound, the spectrum and the monitoring still work.</p>}
           </div>
@@ -234,7 +234,7 @@ const BuildingChord: React.FC = () => {
           </div>
           <div className="flex flex-col gap-2 border-t border-rule pt-3">
             <Field label="Damage" htmlFor="bc-dmg">
-              <select id="bc-dmg" value={dmg ? p.dmg : ""} onChange={(e) => set({ dmg: e.target.value, step: "free" })} className="t-data h-9 w-full rounded-[2px] border border-rule bg-transparent px-2 [@media(pointer:coarse)]:h-11">
+              <select id="bc-dmg" value={dmg ? p.dmg : ""} onChange={(e) => { set({ dmg: e.target.value, step: "free" }); if (e.target.value) setFocus((f) => f + 1); }} className="t-data h-9 w-full rounded-[2px] border border-rule bg-transparent px-2 [@media(pointer:coarse)]:h-11">
                 <option value="">None</option>
                 {list.map((m) => <option key={m.id} value={m.id}>{m.label}</option>)}
               </select>

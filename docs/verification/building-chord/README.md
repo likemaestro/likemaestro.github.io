@@ -104,13 +104,13 @@ and ranges from 0.6 to 1.7 % per seed. That spread is the sampling error of a 99
   damaged state next to the reference and the warm day far from it, moved below it, and its caption now says why a dot
   near the ring can still be flagged (the code maps every day onto the healthy pattern; Kramer 1991, AIChE J. 37(2)).
 - The weakened member is drawn in orange (the hatch tinted), as the label alone carried it before.
-- **The camera frames the weakened member**: choosing one (list, Pick in 3D or guide step 3) flies the camera in 0.7 s
-  to the member's storey and half a bay around it, keeping the viewer's compass direction but 6° above the horizontal
-  (from 20°, the line of sight crossed the translucent slab above and washed the member out; seen in the screenshots).
-  Measured: from 55.8 m to 15.6 m for c1-5, targets at each member's center (c1-1, c5-5, b2-1), 44 frames, then none.
-  Repair flies back to the whole building, Reset view still shows it, a link with damage opens framed, reduced motion
-  jumps (1 frame), and a drag during a flight takes over. A click on any beam now also sets the tap floor, since a
-  framed view sees the slabs edge-on (the floor click had failed 30 times in a row there).
+- **The camera frames the weakened member**: choosing one (list, Pick in 3D or guide step 3, also when it is already
+  chosen) flies the camera in 0.7 s to the member's storey and half a bay around it, keeping the viewer's compass
+  direction but 6° above the horizontal (from 20°, the line of sight crossed the translucent slab above and washed the
+  member out; seen in the screenshots). A new building, including a link with damage, opens on the whole building
+  (Murat's choice: the visitor sees the building first). Repair and steps 1 and 2 fly back to it; Reset view shows it.
+  Reduced motion jumps (1 frame); a drag during a flight takes over. A click on any beam now also sets the tap floor,
+  since a framed view sees the slabs edge-on (the floor click had failed 30 times in a row there).
 - While training, the new chart computed its axis from no data (NaN in the console); fixed before commit.
 
 ### Shared code changed (no visual change to the other tools)

@@ -16,6 +16,7 @@ export interface Motion { key: number; shapes: Float64Array[]; amps: number[]; h
 
 export interface Building3DProps {
   b: Building; dmg: Damage; picking: boolean; tapFloor: number;
+  focus: number;   // changes each time the visitor chooses a member: the camera flies to it
   motion: Motion | null; still: Float64Array | null;   // still: a shape to show without motion (reduced motion)
   onPick: (id: string) => void; onTapFloor: (floor: number) => void; label: string;
 }
@@ -114,13 +115,12 @@ const Building3D: React.FC<Building3DProps> = (p) => {
     const pts = [-1, 1].flatMap((x) => [0, Ht].flatMap((y) => [-1, 1].map((z) => new THREE.Vector3(x * (SPAN + 1), y, z * (SPAN + 1)))));
     const d = fitDistance(w.stage.camera, target, dir, pts, 0.85);
     w.home = { position: target.clone().addScaledVector(dir, d), target: target.clone() };
-    // a new building opens whole (or on its weakened member, from a link); a new or repaired member is flown to,
-    // keeping the angle the viewer chose. Reset view still returns to the whole building.
+    // a new building always opens whole, even from a link with damage, so the visitor sees the building first; Repair
+    // flies back to it. Reset view shows it too. Flying to a chosen member is the focus effect below.
     const fresh = shown.current !== `${b.n}|${b.sys}`;
     shown.current = `${b.n}|${b.sys}`;
-    const look = fresh ? dir : w.stage.camera.position.clone().sub(w.controls.target).normalize();
-    const view = w.weak.length ? frame(w.weak.map((c) => c.userData.member as Member), look) : w.home;
-    fly(view, fresh || REDUCED ? 0 : 700);
+    if (fresh) fly(w.home, 0);
+    else if (!w.weak.length) fly(w.home, REDUCED ? 0 : 700);
   }, [b.n, b.sys, dmg?.kind, dmg?.storey, dmg?.at]);   // eslint-disable-line react-hooks/exhaustive-deps
 
   /** The view of a member with its storey and half a bay around it, seen from the direction of look but only 6° above
@@ -197,6 +197,15 @@ const Building3D: React.FC<Building3DProps> = (p) => {
   };
 
   // motion: after a tap, or one mode looping; still shapes under reduced motion
+  // a member chosen by the visitor (list, Pick in 3D, guide step 3, again if already chosen): fly to it, keeping the
+  // viewer's compass direction. Runs after the geometry effect above, so the weakened member already exists.
+  useEffect(() => {
+    const w = world.current;
+    if (!w || !p.focus || !w.weak.length) return;
+    const look = w.stage.camera.position.clone().sub(w.controls.target).normalize();
+    fly(frame(w.weak.map((c) => c.userData.member as Member), look), REDUCED ? 0 : 700);
+  }, [p.focus]);   // eslint-disable-line react-hooks/exhaustive-deps
+
   const { motion, still, tapFloor } = p;
   useEffect(() => {
     const w = world.current;
