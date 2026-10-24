@@ -160,3 +160,20 @@ test("the Lanczos solve finds the lowest mode: 100 random cases against a dense 
     expect([t, rel(got.lambda, 1 / mu) < 1e-9, got.residual < 1e-7]).toEqual([t, true, true]);
   }
 });
+
+test("published LTBeamN results for fork-supported beams (E = 210 GPa, G = 81 GPa, the papers' section properties)", () => {
+  // Our G is 80 769 N/mm², so It is scaled to give the papers' G·It; zg = +h/2 for the top flange, 0 at the shear center.
+  // 1) Piotrowski & Szychowski (2022), Materials 15, 1275, Table 6, κω = κν = 0: IPE 300, L = 5 m, central point load on
+  //    the top flange; Iz = 604 cm⁴, It = 20.7 cm⁴, Iω = 125 900 cm⁶: LTBeamN 111.19 kNm.
+  // 2), 3) Materials 19, 120 (2026), Table 8, κω = κu = κv = 0: IPE 500, L = 8 m, load at the shear center;
+  //    Iz = 2141.7 cm⁴, It = 89.006 cm⁴, Iω = 1 254 300 cm⁶: LTBeamN 380.89 kNm (central point load), 316.26 kNm (uniform).
+  const k = 81000 / G;
+  const ipe300 = { h: 300, tf: 10.7, Iz: 604e4, It: 20.7e4 * k, Iw: 125.9e9 };
+  const ipe500 = { h: 500, tf: 16, Iz: 2141.7e4, It: 89.006e4 * k, Iw: 1254.3e9 };
+  const cases: [LtbCase, number][] = [
+    [{ sec: ipe300, L: 5000, load: "point", height: "top", at: [], kind: "top" }, 111.19],
+    [{ sec: ipe500, L: 8000, load: "point", height: "centre", at: [], kind: "top" }, 380.89],
+    [{ sec: ipe500, L: 8000, load: "udl", height: "centre", at: [], kind: "top" }, 316.26],
+  ];
+  for (const [c, ref] of cases) expect([ref, rel(solveLtb(c)!.Mcr / 1e6, ref) < 0.002]).toEqual([ref, true]);
+});

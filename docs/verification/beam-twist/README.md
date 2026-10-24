@@ -9,11 +9,11 @@ Spec: the reviewed `tool-beam-twist.md` and `shared-foundations.md`, with the de
 |---|---|
 | Implemented | Yes |
 | Numerically verified | Yes: closed forms, SN003 κ → 0 limits, hand calculation, mesh convergence (unit tests) |
-| Independently benchmarked | Yes: a Ritz sine series (TypeScript, other basis and constraint route) and a NumPy/SciPy FE with SVD nullspace and `scipy.linalg.eigh` (this folder). Not yet against LTBeam: Murat's two hand checks are open |
+| Independently benchmarked | Yes: a Ritz sine series (TypeScript, other basis and constraint route), a NumPy/SciPy FE with SVD nullspace and `scipy.linalg.eigh` (this folder), and three published LTBeamN results (below). A case with an intermediate restraint has no published LTBeam value yet: one LTBeam run by Murat would close it |
 | Browser-tested | Yes: headless Chromium 1243 (SwiftShader WebGL), production build, at 375 × 812, 1280 × 800 and 1700 × 950 |
 | Accessibility-tested | Partly: axe-core 4.10.3 (WCAG 2 A/AA) and keyboard path checked; no screen-reader session |
 | Ready for owner review | Yes |
-| Ready to publish | No: needs Murat's review, the two LTBeam checks and his approval to deploy |
+| Ready to publish | No: needs Murat's review and approval to deploy; optionally one LTBeam run with an intermediate restraint |
 
 ## Commands and observed results
 
@@ -42,6 +42,20 @@ Spec: the reviewed `tool-beam-twist.md` and `shared-foundations.md`, with the de
 - Section properties from the nominal dimensions against the ArcelorMittal catalog, all 56 sections: A, Iy, Iz, Wel, Wpl
   within 0.6 % (the catalog's rounding), It within 0.33 %, Iw within 1.1 % (IPE 100, printed as 0.35). Class in bending
   matches the catalog for every section and grade it lists.
+
+### Published LTBeamN results (fork supports, E = 210 GPa, G = 81 GPa, the papers' section properties)
+
+LTBeam is a Windows program (CTICM) and cannot run in this container, so the check uses results its authors published.
+Our G is 80 769 N/mm², so It is scaled to the papers' G·It. Kept as a test in `ltb.test.ts`.
+
+| Case | Source | LTBeamN | This tool's solver | Difference |
+|---|---|---|---|---|
+| IPE 300 (Iz 604 cm⁴, It 20.7 cm⁴, Iω 125 900 cm⁶), L = 5 m, central point load on the top flange | [Piotrowski and Szychowski 2022](https://doi.org/10.3390/ma15041275), Table 6, κω = κν = 0 | 111.19 kNm | 111.19 kNm | 0.00 % |
+| IPE 500 (Iz 2141.7 cm⁴, It 89.006 cm⁴, Iω 1 254 300 cm⁶), L = 8 m, central point load at the shear center | [Materials 19, 120 (2026)](https://doi.org/10.3390/ma19010120), Table 8, κ = 0 | 380.89 kNm | 380.67 kNm | −0.06 % |
+| Same beam, uniform load at the shear center | same, Table 8 | 316.26 kNm | 316.24 kNm | −0.01 % |
+
+With the tool's own IPE 300 (It = 20.12 cm⁴ from the nominal dimensions, matching the ArcelorMittal catalog's 20.1)
+and G = 80 769 N/mm², the first case gives 109.87 kNm (−1.2 %): the difference is the input data, not the solver.
 
 ### Sign of the moment term in Kg (a correction to the reviewed spec)
 
