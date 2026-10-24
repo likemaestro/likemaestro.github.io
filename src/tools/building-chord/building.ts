@@ -116,7 +116,8 @@ export function track(ref: { modes: Mode[]; M: Float64Array; N: number }, cur: M
 /** The member list for the damage picker. */
 export function members(b: Building) {
   const out: { id: string; label: string; dmg: Omit<NonNullable<Damage>, "d"> }[] = [];
-  const where = (k: number) => { const [x, y] = lineXY(k); return k === 5 ? "center" : `x ${x} m, y ${y} m`; };
+  const num = (v: number) => (v < 0 ? `−${-v}` : `${v}`);   // a true minus, as elsewhere on the site
+  const where = (k: number) => { const [x, y] = lineXY(k); return k === 5 ? "center" : `x ${num(x)} m, y ${num(y)} m`; };
   for (let s = 1; s <= b.n; s++) {
     for (let k = 1; k <= 9; k++) out.push({ id: `c${s}-${k}`, label: `Column, storey ${s}, ${where(k)}`, dmg: { kind: "c", storey: s, at: k } });
     if (b.sys === "braced") BAYS.forEach((bay, i) => out.push({ id: `b${s}-${i + 1}`, label: `Brace, storey ${s}, ${bay.dir === "x" ? `line y = 0, x ${bay.at[0] < 0 ? "−6 to 0" : "0 to 6"} m` : `line x = 0, y ${bay.at[1] < 0 ? "−6 to 0" : "0 to 6"} m`}`, dmg: { kind: "b", storey: s, at: i + 1 } }));

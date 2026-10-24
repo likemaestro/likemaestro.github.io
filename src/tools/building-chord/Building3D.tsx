@@ -1,5 +1,5 @@
 // The building in 3D: columns, beams and braces as instanced meshes, translucent floors, the weakened member hatched
-// in orange and labeled, and the modes as motion: after a tap, the sounding modes together, decaying; or one mode, looping.
+// in orange, labeled and framed by the camera, and the modes as motion: after a tap, the sounding modes together, decaying; or one mode, looping.
 // Floors move rigidly (ux, uy, θz); members are drawn straight between them. Three's axes: x = x, y = z (up), z = −y.
 import React, { useEffect, useRef } from "react";
 import * as THREE from "three";
@@ -21,6 +21,7 @@ export interface Building3DProps {
 }
 
 const STEEL = 0x819199;
+const REDUCED = typeof window !== "undefined" && !!window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 const P = (x: number, y: number, z: number) => new THREE.Vector3(x, z, -y);
 
 function extruded(h: number, b: number, tw: number, tf: number, along: "x" | "y") {
@@ -53,6 +54,7 @@ const Building3D: React.FC<Building3DProps> = (p) => {
   props.current = p;
   const world = useRef<{ stage: Stage; controls: OrbitControls; home: View; group: THREE.Group; floors: THREE.Mesh[]; meshes: { mesh: THREE.InstancedMesh; members: Member[] }[]; weak: THREE.Mesh[]; hatch: THREE.Texture; disp: Float64Array; anchor: THREE.Vector3 | null } | null>(null);
   const cancel = useRef<(() => void) | null>(null);
+  const flight = useRef(0), shown = useRef("");   // the camera's move to a member; the building last framed
 
   useEffect(() => {
     const canvas = canvasRef.current!, stage = createStage(canvas);
@@ -69,7 +71,8 @@ const Building3D: React.FC<Building3DProps> = (p) => {
       el.style.display = v.z < 1 ? "block" : "none";
       el.style.transform = `translate(${((v.x + 1) / 2) * r.width + 8}px, ${((1 - v.y) / 2) * r.height - 10}px)`;
     };
-    return () => { cancel.current?.(); controls.dispose(); world.current?.hatch.dispose(); stage.dispose(); world.current = null; };
+    controls.addEventListener("start", () => cancelAnimationFrame(flight.current));   // a drag takes over from a flight
+    return () => { cancelAnimationFrame(flight.current); cancel.current?.(); controls.dispose(); world.current?.hatch.dispose(); stage.dispose(); world.current = null; };
   }, []);
 
   // geometry for the building; camera framed when the height changes
@@ -110,11 +113,47 @@ const Building3D: React.FC<Building3DProps> = (p) => {
     const dir = new THREE.Vector3(Math.sin(az) * Math.cos(el), Math.sin(el), Math.cos(az) * Math.cos(el));
     const pts = [-1, 1].flatMap((x) => [0, Ht].flatMap((y) => [-1, 1].map((z) => new THREE.Vector3(x * (SPAN + 1), y, z * (SPAN + 1)))));
     const d = fitDistance(w.stage.camera, target, dir, pts, 0.85);
-    w.stage.camera.position.copy(target).addScaledVector(dir, d);
-    w.controls.target.copy(target);
-    w.controls.update();
-    w.home = { position: w.stage.camera.position.clone(), target: target.clone() };
+    w.home = { position: target.clone().addScaledVector(dir, d), target: target.clone() };
+    // a new building opens whole (or on its weakened member, from a link); a new or repaired member is flown to,
+    // keeping the angle the viewer chose. Reset view still returns to the whole building.
+    const fresh = shown.current !== `${b.n}|${b.sys}`;
+    shown.current = `${b.n}|${b.sys}`;
+    const look = fresh ? dir : w.stage.camera.position.clone().sub(w.controls.target).normalize();
+    const view = w.weak.length ? frame(w.weak.map((c) => c.userData.member as Member), look) : w.home;
+    fly(view, fresh || REDUCED ? 0 : 700);
   }, [b.n, b.sys, dmg?.kind, dmg?.storey, dmg?.at]);   // eslint-disable-line react-hooks/exhaustive-deps
+
+  /** The view of a member with its storey and half a bay around it, seen from the direction of look but only 6° above
+   *  the horizontal: from higher, the line of sight crosses the translucent slab above the member and washes it out. */
+  const frame = (list: Member[], from: THREE.Vector3): View => {
+    const flat = new THREE.Vector3(from.x, 0, from.z), el = (6 * Math.PI) / 180;
+    if (flat.lengthSq() < 1e-6) flat.set(Math.sin((35 * Math.PI) / 180), 0, Math.cos((35 * Math.PI) / 180));   // seen from straight above: the default azimuth
+    const look = flat.normalize().multiplyScalar(Math.cos(el)).add(new THREE.Vector3(0, Math.sin(el), 0));
+    const pts: THREE.Vector3[] = [], pad = list[0].kind === "br" ? 1.5 : 3.5;
+    let z0 = Infinity, z1 = -Infinity;
+    for (const m of list) { z0 = Math.min(z0, m.a[2], m.b[2]); z1 = Math.max(z1, m.a[2], m.b[2]); }
+    for (const m of list) for (const [x, y] of [[m.a[0], m.a[1]], [m.b[0], m.b[1]]]) for (const dx of [-pad, pad]) for (const dy of [-pad, pad]) for (const z of [Math.max(0, z0 * H - 0.6), z1 * H + 0.6]) pts.push(P(x + dx, y + dy, z));
+    const box = new THREE.Box3().setFromPoints(pts), target = box.getCenter(new THREE.Vector3()), w = world.current!;
+    const d = Math.max(w.controls.minDistance, fitDistance(w.stage.camera, target, look, pts, 0.75));
+    return { position: target.clone().addScaledVector(look, d), target };
+  };
+  /** Move the camera to a view over ms (eased), or at once for ms = 0. */
+  const fly = (to: View, ms: number) => {
+    const w = world.current;
+    if (!w) return;
+    cancelAnimationFrame(flight.current);
+    const p0 = w.stage.camera.position.clone(), t0 = w.controls.target.clone(), start = performance.now();
+    const step = (now: number) => {
+      const u = ms ? Math.min(1, (now - start) / ms) : 1, e = u < 0.5 ? 2 * u * u : 1 - (2 - 2 * u) ** 2 / 2;   // ease in and out
+      w.stage.camera.position.lerpVectors(p0, to.position, e);
+      w.controls.target.lerpVectors(t0, to.target, e);
+      w.controls.update();
+      w.stage.requestRender();
+      if (u < 1) flight.current = requestAnimationFrame(step);
+      else w.stage.renderer.domElement.dataset.view = `${to.target.toArray().map((v) => v.toFixed(2)).join(" ")} at ${to.position.distanceTo(to.target).toFixed(1)} m`;   // read by the browser checks
+    };
+    if (ms) flight.current = requestAnimationFrame(step); else step(start);
+  };
 
   /** Place everything for the floor motions in w.disp ([ux, uy, θz] per floor, metres and radians). */
   const pose = () => {
@@ -182,7 +221,7 @@ const Building3D: React.FC<Building3DProps> = (p) => {
   }, [motion?.key, still]);   // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { pose(); }, [tapFloor]);   // eslint-disable-line react-hooks/exhaustive-deps
 
-  // clicks: a floor sets the tap floor; in picking mode a column or brace is chosen for damage
+  // clicks: a floor (or one of its beams) sets the tap floor; in picking mode a column or brace is chosen for damage
   useEffect(() => {
     const canvas = canvasRef.current!, ray = new THREE.Raycaster(), ndc = new THREE.Vector2();
     let down: { x: number; y: number } | null = null;
@@ -201,8 +240,12 @@ const Building3D: React.FC<Building3DProps> = (p) => {
         if (m?.id) props.current.onPick(m.id);
         return;
       }
-      const hit = ray.intersectObjects(w.floors, false)[0];
-      if (hit) props.current.onTapFloor(hit.object.userData.floor as number);
+      // a floor, or any of its beams (seen side-on, as in a framed view, a slab is a thin line)
+      const beams = w.meshes.filter(({ members: l }) => l[0] && (l[0].kind === "bx" || l[0].kind === "by"));
+      const hit = ray.intersectObjects([...w.floors, ...beams.map((x) => x.mesh)], false)[0];
+      if (!hit) return;
+      const own = beams.find((x) => x.mesh === hit.object);
+      props.current.onTapFloor(own && hit.instanceId !== undefined ? own.members[hit.instanceId].a[2] : (hit.object.userData.floor as number));
     };
     canvas.addEventListener("pointerdown", onDown);
     canvas.addEventListener("pointerup", onUp);
